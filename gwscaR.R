@@ -33,7 +33,7 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 		xlim=c(x.min,x.max),ylim=c(y.min, y.max))
 }
 
-fst.plot<-function(fst.dat,ci.dat, sig.col=c("red","yellow"),
+fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
 	fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
 	scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL){
 	if(!is.null(scaffold.order)){
@@ -85,7 +85,7 @@ fst.plot<-function(fst.dat,ci.dat, sig.col=c("red","yellow"),
 	}
 	displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
 	plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max), 
-		ylim=y.lim, 
+		ylim=y.lim, col=pt.col,
 		bty="n",type="n",	axes=F, xlab="", ylab="")
 	for(i in 1:nrow(rect.xs)){
 		if(i%%2 == 0) {
@@ -106,19 +106,16 @@ fst.plot<-function(fst.dat,ci.dat, sig.col=c("red","yellow"),
 	for(i in 1:length(scaff.ord)){
 		points(all.scaff[[scaff.ord[i]]][,bp.name], 
 			all.scaff[[scaff.ord[i]]][,fst.name], 
-			pch=19, cex=0.5,col="grey7",
+			pch=19, cex=0.5,col=pt.col,
 			xlim=c(x.min,x.max),ylim=y.lim)
-		#plot.genome.wide(all.scaff[[i]][,bp.name], 
-		#	all.scaff[[i]][,fst.name],plot.rect=FALSE,
-		#	y.max,x.max, y.min=y.min,x.min=x.min, 
-		#	pt.col="grey7",#rect.xs[i,],rect.color,
-		#	plot.new=TRUE, plot.axis=FALSE,  pt.cex=0.5)
-		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
-		points(temp.sig[,bp.name], temp.sig[,fst.name], 
-			col=sig.col[1], pch=19, cex=0.5)
-		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
-		points(temp.sig[,bp.name], temp.sig[,fst.name], 
-			col=sig.col[2], pch=19, cex=0.5)
+	  if(!is.null(ci.dat)){
+  		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
+  		points(temp.sig[,bp.name], temp.sig[,fst.name], 
+  			col=sig.col[1], pch=19, cex=0.5)
+  		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
+  		points(temp.sig[,bp.name], temp.sig[,fst.name], 
+  			col=sig.col[2], pch=19, cex=0.5)
+	  }
 	}
 	if(axis.size>0){
 		axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
