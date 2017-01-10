@@ -332,23 +332,29 @@ calc.afs.vcf<-function(vcf.row){
   #e.g. apply(vcf,1,afs.vcf)
   al1<-vcf.alleles(vcf.row)
   #calculate frequencies
-  freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
-  if(length(freq1)==1)
-  {
-    if(names(freq1)==vcf.row["REF"])
+  if(length(al1)>0){
+    freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
+    if(length(freq1)==1)
     {
-      freq1<-c(freq1,0)
-      names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
+      if(names(freq1)==vcf.row["REF"])
+      {
+        freq1<-c(freq1,0)
+        names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
+      }
+      else
+      {
+        freq1<-c(freq1,0)
+        names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
+      }
     }
-    else
-    {
-      freq1<-c(freq1,0)
-      names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
-    }
+    return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
+                      RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
+                      Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
+  }else{
+    return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
+                      RefFreq=0,Alt=vcf.row["ALT"],AltFreq=0))
   }
-  return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
-                    RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
-                    Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
+  
 }
 
 
@@ -459,10 +465,10 @@ merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf2<-extract.gt.vcf(vcf2)
   col.id<-c(colnames(vcf1)[1:3],colnames(vcf1)[!(colnames(vcf1) %in% 
                                                    colnames(vcf2))])
-  vcf1<-vcf1[,col.id]
-  vcf1$index<-paste(vcf1$`#CHROM`,vcf1$ID,vcf1$POS,sep=".")
-  vcf2$index<-paste(vcf2$`#CHROM`,vcf1$ID,vcf2$POS,sep=".")
-  vcf<-merge(vcf1,vcf2, by="index")
+  vcf1a<-vcf1[,col.id]
+  vcf1a$index<-paste(vcf1a$`#CHROM`,vcf1a$ID,vcf1a$POS,sep=".")
+  vcf2$index<-paste(vcf2$`#CHROM`,vcf2$ID,vcf2$POS,sep=".")
+  vcf<-merge(vcf1a,vcf2, by="index")
   addedon<-vcf[duplicated(vcf$index),"index"]
   if(!is.null(dim(addedon))) vcf<-vcf[!(vcf$index %in% addedon),]
   drops<-c("index","#CHROM.y","POS.y","ID.y")
