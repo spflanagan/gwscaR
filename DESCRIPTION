@@ -1,0 +1,11 @@
+Package: gwscaR
+Type: Package
+Title: Genome-wide Selection Components Analysis in R
+Version: 0.1.0
+Author: Sarah P. Flanagan
+Maintainer: spflanagan.phd@gmail.com
+Description: Implements an Fst-based genome-wide selection components analysis. Also plots genome-wide statistics and calculates a number of population genetics statistics.
+License: GPL-2
+LazyData: TRUE
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr

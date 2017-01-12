@@ -1,26 +1,32 @@
 #Author: Sarah P. Flanagan (spflanagan.phd@gmail.com)
-#Purpose: Calculate useful population genetics statistics, plot genome-wide statistics, 
+#Purpose: Calculate useful population genetics statistics, plot genome-wide statistics,
 #and run Fst-based selection components analysis
 
-plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0, 
-	plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE, 
+#' Plot statistics genome-wide
+#' @param bp The basepair values (which will be plotted on x-axis).
+#' @param var The variable values to be plotted on the y-axis.
+#' @param y.max The maximum value for the y-axis.
+#' @param x.max The maximum value for the x-axis.
+#' @param rect.xs Whether or not you've already calculated where to plot the rectangles.
+#' Default is NULL, which will identify where to put rectangles?
+#' @param
+#' @export
+plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
+	plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE,
 	pt.cex=1, pt.col="black"){
-	#********************************************
-	#this function plots a variable without scaffold info. 
-	#feed it the basepair (x) values and variable (y) values 
-	#*********************************************
+
 	if(plot.new==TRUE){ par(new=new) }
 	plot(bp, var,xlab="",ylab="", new=plot.new,
-		type="n", bg="transparent", axes=F, bty="n", 
+		type="n", bg="transparent", axes=F, bty="n",
 		xlim=c(x.min,x.max),ylim=c(y.min, y.max))
 	if(plot.rect==TRUE){
 		num.rect<-nrow(rect.xs)
 		if(is.null(num.rect)) {
-			rect(rect.xs[1],y.min,rect.xs[2],y.max, 
+			rect(rect.xs[1],y.min,rect.xs[2],y.max,
 				col=rect.color, border=NA)
 		} else {
 			for(i in 1:nrow(rect.xs)){
-				rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max, 
+				rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
 					col=rect.color, border=NA)
 			}
 		}
@@ -33,6 +39,28 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 		xlim=c(x.min,x.max),ylim=c(y.min, y.max))
 }
 
+#' Plot genome-wide statistics from a data frame.
+#' @param fst.dat The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.
+#' @param ci.dat A vector containing two values, upper and lower cutoff values (in that order).
+#' Points above or below the cutoffs will be colored based on sig.col. Default is NULL, which turns this option off.
+#' @param sig.col A vector containing two color values, the first for points above the upper cutoff value and the second for points below the lower cutoff value.
+#' The defaults are red and yellow.
+#' @param pt.col The color of the points. The default is grey7.
+#' @param fst.name The name of the column containing the statistic to be plotted. Default is "Fst".
+#' @param chrom.name The name of the column containing the chromosome information for each locus. Default is "Chrom".
+#' @param bp.name The name of the column containing the basepair information for each locus. Default is "BP".
+#' @param axis.size The value of cex.axis passed to the plotting of the y-axis. Default is 0.5. Set axis.size = 0 to suppress plotting of the y-axis.
+#' @param scaffold.order A vector or list containing the names of the chromosomes/scaffolds in the order in which you would like them to be plotted.
+#' @param groups A vector indicating which chromosomes to plot (generally to exclude those scaffolds not found in this particular set of statistics due to pruning/filters)
+#' @param print.names A TRUE/FALSE value indicating whether chromosome/scaffold IDs should be printed beneath the x-axis.
+#' @param y.lim The limits for the y-axis.
+#' @examples
+#' od<-fst.plot(plink.both.fst[!is.na(plink.both.fst$Fst),],
+#'  fst.name="Fst",chrom.name="Chrom",bp.name="Pos",axis.size=1,y.lim=c(-2,0.6),
+#'  groups=as.factor(scaffs[scaffs %in% levels(factor(plink.both.fst$Chrom[!is.na(plink.both.fst$Fst)]))]))
+#' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+#' @notes Used in Flanagan & Jones 2017
+#' @export
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
 	fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
 	scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL){
@@ -48,7 +76,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 		scaff.ord<-groups
 	}
   fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
-  
+
 	all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
 	last.max<-0
 	rect.xs<-NULL
@@ -57,7 +85,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 	xs<-NULL
 	for(i in 1:length(scaff.ord)){
 		all.scaff[[scaff.ord[i]]]<-
-			all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]	
+			all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]
 		all.scaff[[scaff.ord[i]]][,bp.name]<-
 			seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1)
 		xs<-c(xs, seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1))
@@ -80,11 +108,11 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
   	} else {
   		y.min<-0
   	}
-  
+
   	y.lim<-c(y.min,y.max)
 	}
 	displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
-	plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max), 
+	plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
 		ylim=y.lim, col=pt.col,
 		bty="n",type="n",	axes=F, xlab="", ylab="")
 	for(i in 1:nrow(rect.xs)){
@@ -93,7 +121,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 		} else {
 			rect.color<-"gray75"
 		}
-		rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2], 
+		rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2],
 			col=rect.color, border=NA)
 		if(print.names==T){
 			text(x=mean(all.scaff[[scaff.ord[i]]][
@@ -104,16 +132,16 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 		}
 	}
 	for(i in 1:length(scaff.ord)){
-		points(all.scaff[[scaff.ord[i]]][,bp.name], 
-			all.scaff[[scaff.ord[i]]][,fst.name], 
+		points(all.scaff[[scaff.ord[i]]][,bp.name],
+			all.scaff[[scaff.ord[i]]][,fst.name],
 			pch=19, cex=0.5,col=pt.col,
 			xlim=c(x.min,x.max),ylim=y.lim)
 	  if(!is.null(ci.dat)){
   		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
-  		points(temp.sig[,bp.name], temp.sig[,fst.name], 
+  		points(temp.sig[,bp.name], temp.sig[,fst.name],
   			col=sig.col[1], pch=19, cex=0.5)
   		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
-  		points(temp.sig[,bp.name], temp.sig[,fst.name], 
+  		points(temp.sig[,bp.name], temp.sig[,fst.name],
   			col=sig.col[2], pch=19, cex=0.5)
 	  }
 	}
@@ -129,8 +157,15 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 	return(xes)
 }
 
-
+#' Read in a vcf file
+#' @param filename The name of the vcf file
+#' @return a dataframe containing the contents of the vcf file, including headers.
+#' @examples
+#' vcf<-parse.vcf("batch_1.vcf")
+#' @notes Used in Flanagan & Jones 2017
+#' @export
 parse.vcf<-function(filename){
+  if(substr(filename,length(filename)-4,length(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
   vcf<-read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F)
   header.start<-grep("#CHROM",scan(filename,what="character"))
   header<-scan(filename,what="character")[header.start:(header.start+ncol(vcf)-1)]
@@ -138,68 +173,109 @@ parse.vcf<-function(filename){
   return(vcf)
 }
 
-vcf.cov.loc<-function(vcf.row,subset){
-  cov<-unlist(lapply(vcf.row[subset],function(x){ 
-    c<-strsplit(as.character(x),split=":")[[1]][3]
-    return(c)
+#' Calculate per-locus coverage from a vcf file
+#' @param vcf A data.frame containing data in vcf format.
+#' @param subset A list of the column names of the individuals to be used (optional)
+#' @return cov.dat A data.frame with one row for each locus and 14 columns:
+#'    Chrom: The chromosome
+#'    Pos: The position/BP on the chromosome
+#'    Locus: The Locus ID
+#'    NumMissing: The number of individuals not gentoyped at this locus
+#'    NumPresent: The number of individuals genotyped at this locus
+#'    PropMissing: The proportion of individuals not genotyped at this locus
+#'    AvgCovRef: The average coverage of the reference allele in genotyped individuals
+#'    AvgCovAlt: The average coverage of the alternative allele in genotyped individuals
+#'    AvgCovRatio: The average ration of Reference/Alternative allele coverage
+#'    AvgCovTotal: The average of the number of reference + alternative reads per individual
+#'    CovVariance: The variance in coverage among individuals
+#'    NumHet: The number of individuals genotyped as heterozygotes
+#'    PropHet: The proportion of individuals genotyped as heterozygotes
+#'    TotalNumReads: The total number of reads at this locus
+#' @export
+vcf.cov.loc<-function(vcf.row,subset=NULL){
+  if(is.null(subset)){
+    subset<-colnames(vcf)[10:ncol(vcf)]
+  }
+  cov.dat<-do.call("rbind",apply(vcf[,subset],1,function(vcf.row){
+    cov<-unlist(lapply(vcf.row,function(x){
+      c<-strsplit(as.character(x),split=":")[[1]][3]
+      return(c)
+    }))
+    miss<-length(cov[cov==".,."])
+    pres<-length(cov[cov!=".,."])
+    ref<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        strsplit(as.character(x),",")[[1]][1]
+                                      }))))/pres
+    alt<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        strsplit(as.character(x),",")[[1]][2]
+                                      }))))/pres
+    tot<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        as.numeric(strsplit(as.character(x),",")[[1]][1]) +
+                                          as.numeric(strsplit(as.character(x),",")[[1]][2])
+                                      }))))
+    var.cov<-var(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                          function(x){
+                                            as.numeric(strsplit(as.character(x),",")[[1]][1]) +
+                                              as.numeric(strsplit(as.character(x),",")[[1]][2])
+                                          }))))
+    het<-unlist(lapply(vcf.row[subset],function(x){
+      strsplit(as.character(x),split=":")[[1]][1]
+    }))
+    het<-length(het[het=="0/1" | het=="1/0"])
+    return(data.frame(Chrom=vcf.row[1],Pos=vcf.row["POS"],Locus=vcf.row["ID"],
+                      NumMissing=miss, NumPresent=pres,PropMissing=miss/(miss+pres),
+                      AvgCovRef=ref,AvgCovAlt=alt, AvgCovRatio=ref/alt,AvgCovTotal=tot/pres, CovVariance=var.cov,
+                      NumHet=het,PropHet=het/pres,TotalNumReads = tot,stringsAsFactors = F))
   }))
-  miss<-length(cov[cov==".,."])
-  pres<-length(cov[cov!=".,."])
-  ref<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      strsplit(as.character(x),",")[[1]][1] 
-                                    }))))/pres
-  alt<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      strsplit(as.character(x),",")[[1]][2] 
-                                    }))))/pres
-  tot<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      as.numeric(strsplit(as.character(x),",")[[1]][1]) + 
-                                        as.numeric(strsplit(as.character(x),",")[[1]][2])
-                                    }))))
-  var.cov<-var(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                        function(x){
-                                          as.numeric(strsplit(as.character(x),",")[[1]][1]) + 
-                                            as.numeric(strsplit(as.character(x),",")[[1]][2])
-                                        }))))
-  het<-unlist(lapply(vcf.row[subset],function(x){ 
-    strsplit(as.character(x),split=":")[[1]][1]
-  }))
-  het<-length(het[het=="0/1" | het=="1/0"])
-  return(data.frame(Chrom=vcf.row[1],Pos=vcf.row["POS"],Locus=vcf.row["ID"],
-                    NumMissing=miss, NumPresent=pres,PropMissing=miss/(miss+pres),
-                    AvgCovRef=ref,AvgCovAlt=alt, AvgCovRatio=ref/alt,AvgCovTotal=tot/pres, CovVariance=var.cov,
-                    NumHet=het,PropHet=het/pres,TotalNumReads = tot,stringsAsFactors = F))
+  return(data.frame(cov.dat))
 }
 
-vcf.cov.ind<-function(vcf.col){
-  cov<-unlist(lapply(vcf.col,function(x){ 
-    c<-strsplit(as.character(x),split=":")[[1]][3]
-    return(c)
-  }))
-  miss<-length(cov[cov==".,."])
-  pres<-length(cov[cov!=".,."])
-  ref<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      strsplit(as.character(x),",")[[1]][1] 
-                                    }))))/pres
-  alt<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      strsplit(as.character(x),",")[[1]][2] 
-                                    }))))/pres
-  tot<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
-                                    function(x){
-                                      as.numeric(strsplit(as.character(x),",")[[1]][1]) + 
-                                        as.numeric(strsplit(as.character(x),",")[[1]][2])
-                                    }))))/pres
-  het<-unlist(lapply(vcf.col,function(x){ 
-    strsplit(as.character(x),split=":")[[1]][1]
-  }))
-  het<-length(het[het=="0/1" | het=="1/0"])
-  return(list(NumMissing=miss,NumPresent=pres,AvgCovRef=ref,AvgCovAlt=alt,AvgCovTot=tot,PropHet=het/pres, NumReads=tot*pres))
+#' Calculate per-individual coverage from a vcf file
+#' @param vcf A data.frame containing data in vcf format.
+#' @return icov A data.frame with one row for each individual and columns:
+#'    NumMissing: The number of missing loci
+#'    NumPresent: The number of loci genotyped in this individual
+#'    AvgCovRef: The average coverage for reference alleles across all genotyped loci in this individual
+#'    AvgCovAlt: The average coverage for alternative alleles across all genotyped loci in this individual
+#'    AvgCovTot: The average total coverage (ref + alt coverage) across all genotyped loci in this individual
+#'    PropHet: Proportion of loci at which this individual is heterozygous
+#'    NumReads: The total number of reads for this individual
+#' @export
+vcf.cov.ind<-function(vcf){
+  icov<-as.data.frame(do.call("rbind",apply(vcf,2,function(vcf.col){
+    cov<-unlist(lapply(vcf.col,function(x){
+      c<-strsplit(as.character(x),split=":")[[1]][3]
+      return(c)
+    }))
+    miss<-length(cov[cov==".,."])
+    pres<-length(cov[cov!=".,."])
+    ref<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        strsplit(as.character(x),",")[[1]][1]
+                                      }))))/pres
+    alt<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        strsplit(as.character(x),",")[[1]][2]
+                                      }))))/pres
+    tot<-sum(as.numeric(unlist(lapply(cov[cov!=".,."],
+                                      function(x){
+                                        as.numeric(strsplit(as.character(x),",")[[1]][1]) +
+                                          as.numeric(strsplit(as.character(x),",")[[1]][2])
+                                      }))))/pres
+    het<-unlist(lapply(vcf.col,function(x){
+      strsplit(as.character(x),split=":")[[1]][1]
+    }))
+    het<-length(het[het=="0/1" | het=="1/0"])
+    return(list(NumMissing=miss,NumPresent=pres,AvgCovRef=ref,AvgCovAlt=alt,AvgCovTot=tot,PropHet=het/pres, NumReads=tot*pres))
+  })))
+  return(as.data.frame(icov))
 }
 
+#' Calculate pairwise fst between two separate vcf files
+#'
 fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
@@ -237,7 +313,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
 }#end function
 
 vcf.alleles<-function(vcf.row){
-  gt1<-unlist(lapply(vcf.row,function(x){ 
+  gt1<-unlist(lapply(vcf.row,function(x){
     c<-strsplit(as.character(x),split=":")[[1]][1]
     return(c)
   }))
@@ -251,8 +327,8 @@ vcf.alleles<-function(vcf.row){
 
 calc.fst.nei<-function(al1,al2){
   hw<-hb<-fst<-0
-  freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
-  freq2<-summary(factor(al2))/sum(summary(factor(al2)))	
+  freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+  freq2<-summary(factor(al2))/sum(summary(factor(al2)))
   al12<-c(al1,al2)
   freqall<-summary(as.factor(al12))/
     sum(summary(as.factor(al12)))
@@ -265,10 +341,10 @@ calc.fst.nei<-function(al1,al2){
   } else {
     hs1<-1-sum(freq1*freq1)
     hs2<-1-sum(freq2*freq2)
-    if(length(freqall)<=1){ 
+    if(length(freqall)<=1){
       hw<-1
       fst<-NA
-    } else{ 
+    } else{
       hw<-1-sum(freqall*freqall)
       fst<-NA
     }
@@ -280,8 +356,8 @@ calc.fst.nei<-function(al1,al2){
 
 calc.fst.wright<-function(al1,al2){
   hs<-ht<-fst<-0
-  freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
-  freq2<-summary(factor(al2))/sum(summary(factor(al2)))	
+  freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+  freq2<-summary(factor(al2))/sum(summary(factor(al2)))
   al12<-c(al1,al2)
   freqall<-summary(as.factor(al12))/
     sum(summary(as.factor(al12)))
@@ -294,10 +370,10 @@ calc.fst.wright<-function(al1,al2){
   } else {
     hs1<-1-sum(freq1*freq1)
     hs2<-1-sum(freq2*freq2)
-    if(length(freqall)<=1){ 
+    if(length(freqall)<=1){
       ht<-1
       fst<-NA
-    } else{ 
+    } else{
       ht<-1-sum(freqall*freqall)
       fst<-NA
     }
@@ -318,11 +394,11 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
     fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(summary(factor(c(al1,al2)))),
                     Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
   }
-  
+
   return(data.frame(Chrom=vcf.row[1],Pos=vcf.row[2],
                     Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
                     Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
-  
+
   return(fst)
 }
 #fsts.both<-do.call("rbind",apply(both.sub,1,fst.one.vcf,group1=c(locus.info,o.ind),group2=c(locus.info,d.ind),cov.thresh=0.5))
@@ -333,7 +409,7 @@ calc.afs.vcf<-function(vcf.row){
   al1<-vcf.alleles(vcf.row)
   #calculate frequencies
   if(length(al1)>0){
-    freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
+    freq1<-summary(factor(al1))/sum(summary(factor(al1)))
     if(length(freq1)==1)
     {
       if(names(freq1)==vcf.row["REF"])
@@ -354,7 +430,7 @@ calc.afs.vcf<-function(vcf.row){
     return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
                       RefFreq=0,Alt=vcf.row["ALT"],AltFreq=0))
   }
-  
+
 }
 
 
@@ -385,7 +461,7 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
     gt2[gt2=="1"]<-"1/2"
     gt2[gt2=="2"]<-"2/2"
     gt2[gt2=="0"]<-"1/1"
-    
+
     if(na1<=(1-cov.thresh)){
       al1<-unlist(strsplit(as.character(gt1),split = "/"))
       if(na2<=(1-cov.thresh)){
@@ -403,7 +479,7 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
     }
     fst.dat[(i-6),]<-cbind(as.character(colnames(raw)[i]),fst["Hs1"],fst["Hs2"],as.numeric(fst["Hs"]),fst["Ht"],
                            as.numeric(fst["Fst"]),fst["NumAlleles"],fst["Num1"],fst["Num2"])
-    
+
   }
   return(fst.dat)
 }#end fst.one.plink
@@ -456,14 +532,14 @@ infer.mat.alleles<-function(dad.kid, vcf){
         mom_allele <- "."
       return(c(y[1:9],mom.allele))
     })
-    
+
   })
 }
 
 merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf1<-extract.gt.vcf(vcf1)
   vcf2<-extract.gt.vcf(vcf2)
-  col.id<-c(colnames(vcf1)[1:3],colnames(vcf1)[!(colnames(vcf1) %in% 
+  col.id<-c(colnames(vcf1)[1:3],colnames(vcf1)[!(colnames(vcf1) %in%
                                                    colnames(vcf2))])
   vcf1a<-vcf1[,col.id]
   vcf1a$index<-paste(vcf1a$`#CHROM`,vcf1a$ID,vcf1a$POS,sep=".")
@@ -480,7 +556,7 @@ merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
 }
 
 gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05){
-  sel<-do.call("rbind",apply(vcf,1,fst.one.vcf,c(locus.info,group1),c(locus.info,group2), 
+  sel<-do.call("rbind",apply(vcf,1,fst.one.vcf,c(locus.info,group1),c(locus.info,group2),
     cov.thresh=prop.ind.thresh,maf=maf.cutoff))
   sel<-sel[!is.na(sel$Fst),]
   sel$Chi<-2*((sel$Num1+sel$Num2)/2)*sel$Fst
@@ -498,15 +574,15 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
     for(j in (i+1):length(pop.order)){
       pop1<-factor(ped.split[[pop.order[i]]][ped.split[[pop.order[i]]]!="0"])
       pop2<-factor(ped.split[[pop.order[j]]][ped.split[[pop.order[j]]]!="0"])
-      freq1<-summary(pop1)/sum(summary(pop1))	
-      freq2<-summary(pop2)/sum(summary(pop2))	
+      freq1<-summary(pop1)/sum(summary(pop1))
+      freq2<-summary(pop2)/sum(summary(pop2))
       freqall<-summary(as.factor(c(pop1,pop2)))/
         sum(summary(as.factor(c(pop1,pop2))))
-      if(length(freq1)>1){ hs1<-2*freq1[1]*freq1[2] 
+      if(length(freq1)>1){ hs1<-2*freq1[1]*freq1[2]
       } else {
         hs1<-0
       }
-      if(length(freq2)>1){ hs2<-2*freq2[1]*freq2[2] 
+      if(length(freq2)>1){ hs2<-2*freq2[1]*freq2[2]
       } else {
         hs2<-0
       }
@@ -566,7 +642,7 @@ pairwise.pst<-function(dat, pop.order){
       #aov.df<-summary.aov(
       #	aov(temp.data[,2]~temp.data[,1]))[[1]]$`Df`
       #dat.var[pop.order[i],pop.order[j]]<-aov.var[2]/(aov.var[2]+
-      #	(2*(aov.var[1]/(aov.df[2]-1))))	
+      #	(2*(aov.var[1]/(aov.df[2]-1))))
     }
   }
   dat.var<-rbind(dat.var,rep(NA, ncol(dat.var)))
@@ -625,25 +701,25 @@ sem<-function(x){
 #***************************************************************************#
 #PLOT ANY GENOME-WIDE STATISTIC
 #***************************************************************************#
-plotting.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0, 
-                               plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE, 
+plotting.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
+                               plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE,
                                pt.cex=1, pt.col="black"){
   #********************************************
-  #this function plots a variable without scaffold info. 
-  #feed it the basepair (x) values and variable (y) values 
+  #this function plots a variable without scaffold info.
+  #feed it the basepair (x) values and variable (y) values
   #*********************************************
   if(plot.new==TRUE){ par(new=new) }
   plot(bp, var,xlab="",ylab="", new=plot.new,
-       type="n", bg="transparent", axes=F, bty="n", 
+       type="n", bg="transparent", axes=F, bty="n",
        xlim=c(x.min,x.max),ylim=c(y.min, y.max))
   if(plot.rect==TRUE){
     num.rect<-nrow(rect.xs)
     if(is.null(num.rect)) {
-      rect(rect.xs[1],y.min,rect.xs[2],y.max, 
+      rect(rect.xs[1],y.min,rect.xs[2],y.max,
            col=rect.color, border=NA)
     } else {
       for(i in 1:nrow(rect.xs)){
-        rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max, 
+        rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
              col=rect.color, border=NA)
       }
     }
@@ -683,7 +759,7 @@ plotting.fsts.scaffs<-function(fst.dat, fst.name="Fst",chrom.name="Chr",
   xs<-NULL
   for(i in 1:length(scaff.ord)){
     all.scaff[[scaff.ord[i]]]<-
-      all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]	
+      all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]
     all.scaff[[scaff.ord[i]]][,bp.name]<-
       seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1)
     xs<-c(xs, seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1))
@@ -707,8 +783,8 @@ plotting.fsts.scaffs<-function(fst.dat, fst.name="Fst",chrom.name="Chr",
   }
   displacement<-y.min-((y.max-y.min)/30)
   if(new==T){
-    plot(c(x.min,x.max),c(y.min,y.max),xlim=c(x.min,x.max), 
-         ylim=c(y.min, y.max), 
+    plot(c(x.min,x.max),c(y.min,y.max),xlim=c(x.min,x.max),
+         ylim=c(y.min, y.max),
          bty="n",type="n",	axes=F, xlab="", ylab="")
     for(i in 1:nrow(rect.xs)){
       if(i%%2 == 0) {
@@ -716,7 +792,7 @@ plotting.fsts.scaffs<-function(fst.dat, fst.name="Fst",chrom.name="Chr",
       } else {
         rect.color<-"gray75"
       }
-      rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max, 
+      rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
            col=rect.color, border=NA)
       if(print.names==T){
         text(x=mean(all.scaff[[scaff.ord[i]]][
@@ -729,22 +805,22 @@ plotting.fsts.scaffs<-function(fst.dat, fst.name="Fst",chrom.name="Chr",
   }
   for(i in 1:length(scaff.ord)){
     if(pt.lty==0){
-      points(all.scaff[[scaff.ord[i]]][,bp.name], 
-             all.scaff[[scaff.ord[i]]][,fst.name], 
+      points(all.scaff[[scaff.ord[i]]][,bp.name],
+             all.scaff[[scaff.ord[i]]][,fst.name],
              pch=pt.pch, cex=0.5,col=pt.col,
              xlim=c(x.min,x.max),ylim=c(y.min, y.max))
     } else {
-      lines(all.scaff[[scaff.ord[i]]][,bp.name], 
-            all.scaff[[scaff.ord[i]]][,fst.name], 
+      lines(all.scaff[[scaff.ord[i]]][,bp.name],
+            all.scaff[[scaff.ord[i]]][,fst.name],
             lty=pt.lty, cex=0.5,col=pt.col,
             xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-      
+
     }
     temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
-    points(temp.sig[,bp.name], temp.sig[,fst.name], 
+    points(temp.sig[,bp.name], temp.sig[,fst.name],
            col=sig.col[1], pch=col.pt.pch, cex=col.pt.pch)
     temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
-    points(temp.sig[,bp.name], temp.sig[,fst.name], 
+    points(temp.sig[,bp.name], temp.sig[,fst.name],
            col=sig.col[2], pch=col.pt.pch, cex=col.pt.pch)
   }
   if(axis.size>0){
@@ -780,7 +856,7 @@ reorder.df<-function(dat,order.list){
 #PLOT A STRUCTURE BARPLOT
 #***************************************************************************#
 
-plotting.structure<-function(structure.out, k, pop.order, 
+plotting.structure<-function(structure.out, k, pop.order,
                              filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,
                              plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL){
   str.split<-split(structure.out,structure.out[,1])
@@ -792,7 +868,7 @@ plotting.structure<-function(structure.out, k, pop.order,
   if(make.file==TRUE){
     jpeg(filename,width=7, height=1.25, units="in", res=300)
     par(mfrow=c(1,length(str.split)))
-  } 
+  }
   #par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
   for(i in 1:length(str.split)){
     pop.index<-pop.order[i]
@@ -803,7 +879,7 @@ plotting.structure<-function(structure.out, k, pop.order,
       mtext(pop.index, 1, line=0.5, cex=1, outer=F)}
     if(!is.null(ylabel)){
       if(i == 1) { mtext(ylabel,2,cex=1) }
-    }	
+    }
   }
   if(make.file==TRUE) {dev.off()}
 }
