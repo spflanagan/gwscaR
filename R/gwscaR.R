@@ -54,11 +54,11 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 #' @param groups A vector indicating which chromosomes to plot (generally to exclude those scaffolds not found in this particular set of statistics due to pruning/filters)
 #' @param print.names A TRUE/FALSE value indicating whether chromosome/scaffold IDs should be printed beneath the x-axis.
 #' @param y.lim The limits for the y-axis.
-#' @param group.boundaries A data.frame with first column naming the chromosomes/linkage groups, second column having the first position, and the third column having the last position.
+#' @param group.boundaries A data.frame with first column naming the chromosomes/linkage groups, second column having the last number of loci on the chromosome for indexing purposes.
 #' e.g.:
-#'  Chrom   Start   End
-#'  LG1     0       3945850
-#'  LG2     0       435215
+#'  Chrom   End
+#'  LG1     3945850
+#'  LG2     435215
 #' This parameter is used to make multiple plots from the same overall dataset have the same widths.
 #' @examples
 #' od<-fst.plot(plink.both.fst[!is.na(plink.both.fst$Fst),],
@@ -66,103 +66,125 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 #'  groups=as.factor(scaffs[scaffs %in% levels(factor(plink.both.fst$Chrom[!is.na(plink.both.fst$Fst)]))]))
 #' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @notes Used in Flanagan & Jones 2017
+#' NOT QUITE RIGHT - BIG GAPS
 #' @export
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
-	fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
-	scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
-	group.boundaries=NULL){
-	if(!is.null(scaffold.order)){
-		scaff.ord<-scaffold.order$component_id
-		lgs<-scaffold.order$object
-	} else{
-		scaff.ord<-levels(factor(fst.dat[,chrom.name]))
-		lgs<-scaff.ord
-	}
-	if(!is.null(groups)){
-		lgs<-groups
-		scaff.ord<-groups
-	}
+                   fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
+                   scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
+                   group.boundaries=NULL){
+
+  if(!is.null(scaffold.order)){
+    scaff.ord<-scaffold.order$component_id
+    lgs<-scaffold.order$object
+  } else{
+    if(!is.null(group.boundaries)){
+      scaff.ord<-levels(factor(group.boundaries[,1]))
+      lgs<-scaff.ord
+    }else{
+      scaff.ord<-levels(factor(fst.dat[,chrom.name]))
+      lgs<-scaff.ord
+    }
+  }
+  if(!is.null(groups)){
+    lgs<-groups
+    scaff.ord<-groups
+  }
   fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
+  these.scaffs<-scaff.ord[scaff.ord %in% factor(fst.dat[,chrom.name])]
+  all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
 
-	all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
-	last.max<-0
-	rect.xs<-NULL
-	addition.values<-0
-	xlist<-NULL
-	xs<-NULL
-	for(i in 1:length(scaff.ord)){
-		all.scaff[[scaff.ord[i]]]<-
-			all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]
-		all.scaff[[scaff.ord[i]]][,bp.name]<-
-			seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1)
-		xs<-c(xs, seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1))
-		new.max<-max(xs)
-		#scaffold.order[i,"new_start"]<-last.max
-		#scaffold.order[i,"new_end"]<-new.max
-		rect.xs<-rbind(rect.xs,c(last.max, new.max))
-		rownames(rect.xs)[i]<-scaff.ord[i]
-		addition.values<-c(addition.values, new.max)
-		last.max<-new.max
-	}
-	#change BP to plot
-	x.max<-max(xs)
-	x.min<-min(xs)
-	if(is.null(y.lim)){
-  	y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
-  	y.min<-min(fst.dat[,fst.name])-0.1*min(fst.dat[,fst.name])
-  	if(min(fst.dat[,fst.name]) < 0) {
-  		y.min<-min(fst.dat[,fst.name]) - 0.1*min(fst.dat[,fst.name])
-  	} else {
-  		y.min<-0
-  	}
+  group.boundaries<-group.boundaries[scaff.ord,]
+  last.max<-0
+  rect.xs<-NULL
+  addition.values<-0
+  xlist<-NULL
+  #set up the rectangles
+  for(i in 1:length(scaff.ord)){
+    if(is.null(group.boundaries)){
+      new.max<-max(last.max+nrow(all.scaff[[scaff.ord[i]]]))
+    }else{
+      new.max<-group.boundaries[scaff.ord[i],2]+last.max
+    }
+    rect.xs<-rbind(rect.xs,c(last.max, new.max))
+    rownames(rect.xs)[i]<-scaff.ord[i]
+    addition.values<-c(addition.values, new.max)
+    last.max<-new.max
+  }
+  rownames(rect.xs)<-scaff.ord
+  for(i in 1:length(all.scaff)){
+    if(is.null(group.boundaries)){
+      #then this is done by relative position only
+      all.scaff[[i]]<-all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
+      all.scaff[[i]][,bp.name]<-
+        seq(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1],rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
+    }else{
+      #then it takes genome space into account
 
-  	y.lim<-c(y.min,y.max)
-	}
-	displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
-	plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
-		ylim=y.lim, col=pt.col,
-		bty="n",type="n",	axes=F, xlab="", ylab="")
-	for(i in 1:nrow(rect.xs)){
-		if(i%%2 == 0) {
-			rect.color<-"white"
-		} else {
-			rect.color<-"gray75"
-		}
-		rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2],
-			col=rect.color, border=NA)
-		if(print.names==T){
-			text(x=mean(all.scaff[[scaff.ord[i]]][
-				all.scaff[[scaff.ord[i]]]$Chrom==rownames(rect.xs)[i],
-				bp.name]),
-				y=displacement,labels=rownames(rect.xs)[i],
-				adj=1,xpd=T,srt=45)
-		}
-	}
-	for(i in 1:length(scaff.ord)){
-		points(all.scaff[[scaff.ord[i]]][,bp.name],
-			all.scaff[[scaff.ord[i]]][,fst.name],
-			pch=19, cex=0.5,col=pt.col,
-			xlim=c(x.min,x.max),ylim=y.lim)
-	  if(!is.null(ci.dat)){
-  		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
-  		points(temp.sig[,bp.name], temp.sig[,fst.name],
-  			col=sig.col[1], pch=19, cex=0.5)
-  		temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
-  		points(temp.sig[,bp.name], temp.sig[,fst.name],
-  			col=sig.col[2], pch=19, cex=0.5)
-	  }
-	}
-	if(axis.size>0){
-		axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
-			round((y.lim[2]-y.lim[1])/2, digits=2)),
-			ylim =y.lim, pos=0,
-			labels=seq(round(y.lim[1],2),round(y.lim[2],2),
-				round((y.lim[2]-y.lim[1])/2, digits=2)),
-			las=1,tck = -0.01, xlab="", ylab="", cex.axis=axis.size)
-	}
-	xes<-do.call("rbind",all.scaff)
-	return(xes)
+      all.scaff[[i]]<-
+        all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
+      all.scaff[[i]][,bp.name]<-
+        as.numeric(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1])+as.numeric(all.scaff[[i]][,bp.name])
+
+    }
+  }
+  #change BP to plot
+  x.max<-max(rect.xs)
+  x.min<-min(rect.xs)
+  if(is.null(y.lim)){
+    y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
+    y.min<-min(fst.dat[,fst.name])-0.1*min(fst.dat[,fst.name])
+    if(min(fst.dat[,fst.name]) < 0) {
+      y.min<-min(fst.dat[,fst.name]) - 0.1*min(fst.dat[,fst.name])
+    } else {
+      y.min<-0
+    }
+
+    y.lim<-c(y.min,y.max)
+  }
+  displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
+  plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
+       ylim=y.lim, col=pt.col,
+       bty="n",type="n",	axes=F, xlab="", ylab="")
+  for(i in 1:nrow(rect.xs)){
+    if(i%%2 == 0) {
+      rect.color<-"white"
+    } else {
+      rect.color<-"gray75"
+    }
+    rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2],
+         col=rect.color, border=NA)
+    if(print.names==T){
+      text(x=mean(rect.xs[i,]),
+           y=displacement,labels=rownames(rect.xs)[i],
+           adj=1,xpd=T,srt=45)
+    }
+  }
+  for(i in 1:length(all.scaff)){
+    points(all.scaff[[i]][,bp.name],
+           all.scaff[[i]][,fst.name],
+           pch=19, cex=0.5,col=pt.col,
+           xlim=c(x.min,x.max),ylim=y.lim)
+    if(!is.null(ci.dat)){
+      temp.sig<-all.scaff[[i]][all.scaff[[i]][,fst.name] >= ci.dat[1],]
+      points(temp.sig[,bp.name], temp.sig[,fst.name],
+             col=sig.col[1], pch=19, cex=0.5)
+      temp.sig<-all.scaff[[i]][all.scaff[[i]][,fst.name] <= ci.dat[2],]
+      points(temp.sig[,bp.name], temp.sig[,fst.name],
+             col=sig.col[2], pch=19, cex=0.5)
+    }
+  }
+  if(axis.size>0){
+    axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
+                     round((y.lim[2]-y.lim[1])/2, digits=2)),
+         ylim =y.lim, pos=0,
+         labels=seq(round(y.lim[1],2),round(y.lim[2],2),
+                    round((y.lim[2]-y.lim[1])/2, digits=2)),
+         las=1,tck = -0.01, xlab="", ylab="", cex.axis=axis.size)
+  }
+  xes<-do.call("rbind",all.scaff)
+  return(xes)
 }
+
 
 #' Read in a vcf file
 #' @param filename The name of the vcf file
