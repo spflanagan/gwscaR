@@ -54,6 +54,12 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 #' @param groups A vector indicating which chromosomes to plot (generally to exclude those scaffolds not found in this particular set of statistics due to pruning/filters)
 #' @param print.names A TRUE/FALSE value indicating whether chromosome/scaffold IDs should be printed beneath the x-axis.
 #' @param y.lim The limits for the y-axis.
+#' @param group.boundaries A data.frame with first column naming the chromosomes/linkage groups, second column having the first position, and the third column having the last position.
+#' e.g.:
+#'  Chrom   Start   End
+#'  LG1     0       3945850
+#'  LG2     0       435215
+#' This parameter is used to make multiple plots from the same overall dataset have the same widths.
 #' @examples
 #' od<-fst.plot(plink.both.fst[!is.na(plink.both.fst$Fst),],
 #'  fst.name="Fst",chrom.name="Chrom",bp.name="Pos",axis.size=1,y.lim=c(-2,0.6),
@@ -63,7 +69,8 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 #' @export
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
 	fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
-	scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL){
+	scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
+	group.boundaries=NULL){
 	if(!is.null(scaffold.order)){
 		scaff.ord<-scaffold.order$component_id
 		lgs<-scaffold.order$object
@@ -275,41 +282,44 @@ vcf.cov.ind<-function(vcf){
 }
 
 #' Calculate pairwise fst between two separate vcf files
-#'
-fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
+#' @param vcf1 A data.frame containing genotype information in
+fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
   #e.g. apply(vcf,1,fst.two.vcf,vcf2=vcf.2,match.index="SNP")
-  hs1<-hs2<-hs<-ht<-0
-  freqall<-gt1<-gt2<-NULL
-  vcf2.row<-vcf2[vcf2[,match.index]%in%vcf1.row[match.index],]
-  if(nrow(vcf2.row)>1)#first make sure we have one reading per locus
-  {
-    print("Multiple instances in vcf2.")
-    fst<-NA
-  }
-  else{
-    if(nrow(vcf2.row)==0)
+  out<-apply(vcf1,1,function(vcf1.row){
+    hs1<-hs2<-hs<-ht<-0
+    freqall<-gt1<-gt2<-NULL
+    vcf2.row<-vcf2[vcf2[,match.index]%in%vcf1.row[match.index],]
+    if(nrow(vcf2.row)>1)#first make sure we have one reading per locus
     {
-      print("No instances in vcf2.")
+      print("Multiple instances in vcf2.")
       fst<-NA
-    }else #we're good to go
-    {
-      al1<-vcf.alleles(vcf1.row)
-      al2<-vcf.alleles(vcf2.row)
-      if((length(al1)/2)/(length(vcf1.row)-10)>=cov.thresh & (length(al2)/2)/(ncol(vcf2.row)-10)>=cov.thresh){
-        #calculate frequencies
-        fst<-calc.fst.wright(al1,al2)
-      }else {
-        # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
-        fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
-                        Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
-      }
-    }#good to go
-  }
-  return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
-                    Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
-                    Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
+    }
+    else{
+      if(nrow(vcf2.row)==0)
+      {
+        print("No instances in vcf2.")
+        fst<-NA
+      }else #we're good to go
+      {
+        al1<-vcf.alleles(vcf1.row)
+        al2<-vcf.alleles(vcf2.row)
+        if((length(al1)/2)/(length(vcf1.row)-10)>=cov.thresh & (length(al2)/2)/(ncol(vcf2.row)-10)>=cov.thresh){
+          #calculate frequencies
+          fst<-calc.fst.wright(al1,al2)
+        }else {
+          # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
+          fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
+                          Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
+        }
+      }#good to go
+    }
+
+    return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
+                      Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
+                      Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
+  })
 }#end function
 
 vcf.alleles<-function(vcf.row){
