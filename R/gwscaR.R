@@ -66,7 +66,6 @@ plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
 #'  groups=as.factor(scaffs[scaffs %in% levels(factor(plink.both.fst$Chrom[!is.na(plink.both.fst$Fst)]))]))
 #' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @notes Used in Flanagan & Jones 2017
-#' NOT QUITE RIGHT - BIG GAPS
 #' @export
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
                    fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
@@ -101,9 +100,9 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
   #set up the rectangles
   for(i in 1:length(scaff.ord)){
     if(is.null(group.boundaries)){
-      new.max<-max(last.max+nrow(all.scaff[[scaff.ord[i]]]))
+      new.max<-last.max+nrow(all.scaff[[scaff.ord[i]]])
     }else{
-      new.max<-group.boundaries[scaff.ord[i],2]+last.max
+      new.max<-as.numeric(group.boundaries[scaff.ord[i],2])+as.numeric(last.max)
     }
     rect.xs<-rbind(rect.xs,c(last.max, new.max))
     rownames(rect.xs)[i]<-scaff.ord[i]
@@ -116,7 +115,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
       #then this is done by relative position only
       all.scaff[[i]]<-all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
       all.scaff[[i]][,bp.name]<-
-        seq(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1],rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
+        seq(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+1,rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
     }else{
       #then it takes genome space into account
 
@@ -190,7 +189,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 #' @param filename The name of the vcf file
 #' @return a dataframe containing the contents of the vcf file, including headers.
 #' @examples
-#' vcf<-parse.vcf("batch_1.vcf")
+#' vcf<-parse.vcf("sdRAD_data.vcf")
 #' @notes Used in Flanagan & Jones 2017
 #' @export
 parse.vcf<-function(filename){
@@ -304,7 +303,22 @@ vcf.cov.ind<-function(vcf){
 }
 
 #' Calculate pairwise fst between two separate vcf files
-#' @param vcf1 A data.frame containing genotype information in
+#' @param vcf1 A data.frame containing genotype information in vcf format
+#' @param vcf2 A data.frame containing genotype information in vcf format (for another set of individuals/samples)
+#' @param match.index The name of the column that should be used to pair the two vcfs (I usually create a new column in which Chrom and Pos are concatenated)
+#' @param cov.thresh A coverage threshold specifying the proportion of individuals that should be included in each population. The default is 0.2
+#' @return A data.frame with the columns:
+#'  Chrom
+#'  Pos
+#'  Hs1 = expected heterozygosity in population 1 (vcf1)
+#'  Hs2 = expected heterozygosity in population 2 (vcf2)
+#'  Hs = weighted average expected heterozygosity within populations
+#'  Ht = expected heterozygosity among populations
+#'  Fst= Fst
+#'  NumAlleles=The number of alleles (2 for biallelic loci)
+#'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
+#'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
+#'  @export
 fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
@@ -344,6 +358,10 @@ fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
   })
 }#end function
 
+#' Calculate allele frequencies from a vcf file
+#' @param vcf.row A row from a vcf file
+#' @example apply(vcf,1,vcf.alleles)
+#' @return al1 A table of allele frequencies
 vcf.alleles<-function(vcf.row){
   gt1<-unlist(lapply(vcf.row,function(x){
     c<-strsplit(as.character(x),split=":")[[1]][1]
@@ -357,6 +375,20 @@ vcf.alleles<-function(vcf.row){
   return(al1)
 }
 
+#' Calculate Fst values
+#' @param al1 A table of allele frequencies for pop 1
+#' @param al2 A table of allele frequencies for pop 2
+#' @notes Calculates Fst as described by Wright (1943) and re-formulated by Nei
+#' @return data.frame containing the columns:
+#'  Hs1 = expected heterozygosity in population 1 (vcf1)
+#'  Hs2 = expected heterozygosity in population 2 (vcf2)
+#'  Hs = weighted average expected heterozygosity within populations
+#'  Ht = expected heterozygosity among populations
+#'  Fst= Fst
+#'  NumAlleles=The number of alleles (2 for biallelic loci)
+#'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
+#'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
+#'  @export
 calc.fst.nei<-function(al1,al2){
   hw<-hb<-fst<-0
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
@@ -385,7 +417,20 @@ calc.fst.nei<-function(al1,al2){
                     Num1=length(al1),Num2=length(al2)))
 }
 
-
+#' Calculate Fst values
+#' @param al1 A table of allele frequencies for pop 1
+#' @param al2 A table of allele frequencies for pop 2
+#' @notes Calculates Fst as described by Wright (1943)
+#' @return data.frame containing the columns:
+#'  Hs1 = expected heterozygosity in population 1 (vcf1)
+#'  Hs2 = expected heterozygosity in population 2 (vcf2)
+#'  Hs = weighted average expected heterozygosity within populations
+#'  Ht = expected heterozygosity among populations
+#'  Fst= Fst
+#'  NumAlleles=The number of alleles (2 for biallelic loci)
+#'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
+#'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
+#'  @export
 calc.fst.wright<-function(al1,al2){
   hs<-ht<-fst<-0
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
@@ -414,7 +459,26 @@ calc.fst.wright<-function(al1,al2){
                     Num1=length(al1),Num2=length(al2)))
 }
 
-fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
+#' Calculate pairwise fst between individuals in a single vcf file
+#' @param vcf A data.frame containing genotype information in vcf format
+#' @param group1 A list of individualID/column names for population 1. This should include column names for all louc information as well.
+#' @param group1 A list of individualID/column names for population 2. This should include column names for all louc information as well.
+#' @param cov.thresh A coverage threshold specifying the proportion of individuals that should be included in each population. The default is 0.2
+#' @param maf A minimum allele frequency cutoff (default = 0.05)
+#' @return A data.frame with the columns:
+#'  Chrom
+#'  Pos
+#'  Hs1 = expected heterozygosity in population 1 (vcf1)
+#'  Hs2 = expected heterozygosity in population 2 (vcf2)
+#'  Hs = weighted average expected heterozygosity within populations
+#'  Ht = expected heterozygosity among populations
+#'  Fst= Fst
+#'  NumAlleles=The number of alleles (2 for biallelic loci)
+#'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
+#'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
+#'  @export
+fst.one.vcf<-function(vcf,group1,group2, cov.thresh=0.2, maf=0.05){
+  out<-apply(vcf,1,function(vcf.row){
   al1<-vcf.alleles(vcf.row[group1])
   al2<-vcf.alleles(vcf.row[group2])
   f1<-table(al1)/sum(table(al1))
@@ -430,10 +494,10 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
   return(data.frame(Chrom=vcf.row[1],Pos=vcf.row[2],
                     Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
                     Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
-
-  return(fst)
+  })
+  return(out)
 }
-#fsts.both<-do.call("rbind",apply(both.sub,1,fst.one.vcf,group1=c(locus.info,o.ind),group2=c(locus.info,d.ind),cov.thresh=0.5))
+
 
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply
