@@ -2,43 +2,6 @@
 #Purpose: Calculate useful population genetics statistics, plot genome-wide statistics,
 #and run Fst-based selection components analysis
 
-#' Plot statistics genome-wide
-#' @param bp The basepair values (which will be plotted on x-axis).
-#' @param var The variable values to be plotted on the y-axis.
-#' @param y.max The maximum value for the y-axis.
-#' @param x.max The maximum value for the x-axis.
-#' @param rect.xs Whether or not you've already calculated where to plot the rectangles.
-#' Default is NULL, which will identify where to put rectangles?
-#' @param
-#' @export
-plot.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
-	plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE,
-	pt.cex=1, pt.col="black"){
-
-	if(plot.new==TRUE){ par(new=new) }
-	plot(bp, var,xlab="",ylab="", new=plot.new,
-		type="n", bg="transparent", axes=F, bty="n",
-		xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-	if(plot.rect==TRUE){
-		num.rect<-nrow(rect.xs)
-		if(is.null(num.rect)) {
-			rect(rect.xs[1],y.min,rect.xs[2],y.max,
-				col=rect.color, border=NA)
-		} else {
-			for(i in 1:nrow(rect.xs)){
-				rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
-					col=rect.color, border=NA)
-			}
-		}
-	}
-	if(plot.axis){
-	axis(2, at = seq(y.min,y.max,round((y.max-y.min)/2, digits=2)),
-		ylim = c(y.min, y.max), pos=0,
-		las=1,tck = -0.01, xlab="", ylab="", cex.axis=0.75)}
-	points(bp, var, pch=19, cex=pt.cex,col=pt.col,
-		xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-}
-
 #' Plot genome-wide statistics from a data frame.
 #' @param fst.dat The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.
 #' @param ci.dat A vector containing two values, upper and lower cutoff values (in that order).
@@ -304,7 +267,16 @@ vcf.cov.ind<-function(vcf){
 }
 
 #' Calculate pairwise fst between two separate vcf files
-#' @param vcf1 A data.frame containing genotype information in
+#' @param vcf1 A data.frame containing genotype information in vcf format
+#' @param vcf2 A data.frame containing genotype information in vcf format
+#' @param match.index The column used to match the two. Usually I make a column of the chromosome and position as a SNP index.
+#' @param cov.thresh A proportion of the individuals needed to be sampled in each of the populations. Default is 0.2
+#' @param maf A minimum allele frequency (default is 0.05)
+#' @return out A data.frame with columns:
+#' Hs1 (expected heterozygosity in pop 1), Hs2 (expected heterozygosity in pop2),
+#' Hs (expected heterozygosity within pops), Ht (expected heterozygosity between pops),
+#' Fst, NumAlleles, Num1 (number of individuals in pop1), and Num2 (number of individuals in pop2)
+#' @export
 fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
@@ -338,12 +310,15 @@ fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
       }#good to go
     }
 
-    return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
-                      Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
-                      Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
+    return(fst)
   })
-}#end function
+  return(out)
+}
 
+#' Extract alleles from a vcf row
+#' @param vcf.row A vcf row (containing only the individuals and locus info)
+#' @return al1 A list of alleles
+#' @export
 vcf.alleles<-function(vcf.row){
   gt1<-unlist(lapply(vcf.row,function(x){
     c<-strsplit(as.character(x),split=":")[[1]][1]
@@ -357,6 +332,11 @@ vcf.alleles<-function(vcf.row){
   return(al1)
 }
 
+#' Calculate Fst using Nei's formulation (1-(Hw/2Hb))
+#' @param al1 A list of alleles in pop1
+#' @param al2 A list of alleles in pop2
+#' @return data.frame with columns Hs1, Hs2, Hs, Ht, Fst, NumAlleles, Num1 and Num2
+#' @export
 calc.fst.nei<-function(al1,al2){
   hw<-hb<-fst<-0
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
@@ -385,7 +365,11 @@ calc.fst.nei<-function(al1,al2){
                     Num1=length(al1),Num2=length(al2)))
 }
 
-
+#' Calculate Fst using Wright's formulation ((ht-hs)/ht)
+#' @param al1 A list of alleles in pop1
+#' @param al2 A list of alleles in pop2
+#' @return data.frame with columns Hs1, Hs2, Hs, Ht, Fst, NumAlleles, Num1 and Num2
+#' @export
 calc.fst.wright<-function(al1,al2){
   hs<-ht<-fst<-0
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
@@ -414,58 +398,77 @@ calc.fst.wright<-function(al1,al2){
                     Num1=length(al1),Num2=length(al2)))
 }
 
-fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
-  al1<-vcf.alleles(vcf.row[group1])
-  al2<-vcf.alleles(vcf.row[group2])
-  f1<-table(al1)/sum(table(al1))
-  f2<-table(al2)/sum(table(al2))
-  if(((length(al2)/2)/(length(group2)-10))>=cov.thresh & ((length(al1)/2)/(length(group1)-10))>=cov.thresh & min(f1,f2)>=maf){
-        fst<-calc.fst.wright(al1,al2)
-  }else {
-    # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
-    fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(summary(factor(c(al1,al2)))),
-                    Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
-  }
-
-  return(data.frame(Chrom=vcf.row[1],Pos=vcf.row[2],
-                    Hs1=fst["Hs1"],Hs2=fst["Hs2"],Hs=fst["Hs"],Ht=fst["Ht"],Fst=as.numeric(fst["Fst"]),NumAlleles=fst["NumAlleles"],
-                    Num1=fst["Num1"],Num2=fst["Num2"],stringsAsFactors=FALSE))
-
-  return(fst)
-}
-#fsts.both<-do.call("rbind",apply(both.sub,1,fst.one.vcf,group1=c(locus.info,o.ind),group2=c(locus.info,d.ind),cov.thresh=0.5))
-
-calc.afs.vcf<-function(vcf.row){
-  #use in conjunction with apply
-  #e.g. apply(vcf,1,afs.vcf)
-  al1<-vcf.alleles(vcf.row)
-  #calculate frequencies
-  if(length(al1)>0){
-    freq1<-summary(factor(al1))/sum(summary(factor(al1)))
-    if(length(freq1)==1)
-    {
-      if(names(freq1)==vcf.row["REF"])
-      {
-        freq1<-c(freq1,0)
-        names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
-      }
-      else
-      {
-        freq1<-c(freq1,0)
-        names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
-      }
+#' Calculate fsts from a single vcf
+#' @param vcf A data.frame in vcf format
+#' @param group1 A list of individual names for pop1
+#' @param group2 A list of individual names for pop2
+#' @param cov.thresh A proportion of individuals required for genotyping individuals (default is 0.2)
+#' @param maf A minimum allele frequency (default is 0.05)
+#' @return out A data.frame with columns:
+#' Hs1 (expected heterozygosity in pop 1), Hs2 (expected heterozygosity in pop2),
+#' Hs (expected heterozygosity within pops), Ht (expected heterozygosity between pops),
+#' Fst, NumAlleles, Num1 (number of individuals in pop1), and Num2 (number of individuals in pop2)
+#' @export
+fst.one.vcf<-function(vcf,group1,group2, cov.thresh=0.2, maf=0.05){
+  out<-do.call("rbind",apply(vcf,1,function(vcf.row){
+    al1<-vcf.alleles(vcf.row[group1])
+    al2<-vcf.alleles(vcf.row[group2])
+    f1<-table(al1)/sum(table(al1))
+    f2<-table(al2)/sum(table(al2))
+    if(((length(al2)/2)/(length(group2)-10))>=cov.thresh & ((length(al1)/2)/(length(group1)-10))>=cov.thresh & min(f1,f2)>=maf){
+          fst<-calc.fst.wright(al1,al2)
+    }else {
+      # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
+      fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(summary(factor(c(al1,al2)))),
+                      Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
     }
-    return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
-                      RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
-                      Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
-  }else{
-    return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
-                      RefFreq=0,Alt=vcf.row["ALT"],AltFreq=0))
-  }
+
+    return(fst)
+  }))
+  return(out)
+}
+
+#' A function that calculates the allele frequencies from a vcf
+#' @param vcf A data.frame with genotype data in vcf format
+#' @return out A data.frame with columns Chrom, Pos, Ref (the reference allele),
+#' RefFreq (frequency of reference allele), Alt (alternative allele), and AltFreq (frequency of the alternative allele)
+#' @export
+calc.afs.vcf<-function(vcf){
+  #use in conjunction with apply
+  out<-apply(vcf,1,function(vcf.row){
+    al1<-vcf.alleles(vcf.row)
+    #calculate frequencies
+    if(length(al1)>0){
+      freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+      if(length(freq1)==1)
+      {
+        if(names(freq1)==vcf.row["REF"])
+        {
+          freq1<-c(freq1,0)
+          names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
+        }
+        else
+        {
+          freq1<-c(freq1,0)
+          names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
+        }
+      }
+      return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
+                        RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
+                        Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
+    }else{
+      return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
+                        RefFreq=0,Alt=vcf.row["ALT"],AltFreq=0))
+    }
+  })
+  return(out)
 
 }
 
-
+#' Choose one SNP per RAD locus from a vcf
+#' @param vcf A data.frame in vcf format
+#' @return new.vcf A data.frame with only one SNP per RAD locus
+#' @export
 choose.one.snp<-function(vcf){
   keep.col<-colnames(vcf)
   vcf$id.pos<-paste(vcf$ID,vcf$POS,sep=".")
@@ -475,7 +478,22 @@ choose.one.snp<-function(vcf){
 }
 
 
-
+#' Calculate pairwise fsts from a dataset in ped format
+#' @param raw A data.frame with data in ped format
+#' @param group1 A list with the individuals in group 1
+#' @param group2 A list with the individuals in group 2
+#' @param cov.thresh A threshold for the number of individuals in the populations (default is 0.2)
+#' @return fst.dat A data.frame with columns:
+#'  Locus Name = the locus name
+#'  Hs1 = expected heterozygosity in pop 1
+#'  Hs2 = expected heterozygosity in pop 2
+#'  Hs = expected heterozygosity within populations
+#'  Ht = expected heterozygosity among populations
+#'  Fst = Fst
+#'  NumAlleles = number of alleles at the locus
+#'  Num1 = the number of individuals in pop 1
+#'  Num2 = the number of individuals in pop 2
+#' @export
 fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
   fst.dat<-data.frame(Locus=character(),
                       Hs1=numeric(),Hs2=numeric(),Hs=numeric(),Ht=numeric(),Fst=numeric(),NumAlleles=numeric(),
@@ -516,6 +534,10 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
   return(fst.dat)
 }#end fst.one.plink
 
+#' A function to pull out only the genotype fields from vcf-format data
+#' @param vcf A data.frame with genotype data in vcf format
+#' @return vcf A new vcf with only the GT data
+#' @export
 extract.gt.vcf<-function(vcf){
   if(length(strsplit(as.character(vcf[1,10]),":")[[1]])>1){
     new<-vcf[,1:3]
@@ -531,6 +553,11 @@ extract.gt.vcf<-function(vcf){
   return(vcf)
 }
 
+#' A function to infer maternal alleles from a vcf file
+#' @param dad.kid A data.frame with two columns, each one with matching father and offspring IDs
+#' @param vcf A data.frame with genomic data in vcf format
+#' @return mat A data.frame of inferred maternal alleles
+#' @export
 infer.mat.alleles<-function(dad.kid, vcf){
   #dad.kid<-read.table("both.dad.kid.pairs.txt")
   vcf<-extract.gt.vcf(vcf)
@@ -566,8 +593,15 @@ infer.mat.alleles<-function(dad.kid, vcf){
     })
 
   })
+  return(mat)
 }
 
+#' A function to merge two vcf data frames
+#' @param vcf1 A dataframe with genomic data in vcf format
+#' @param vcf2 A dataframe with genomic data in vcf format
+#' @param vcf.name A name for a file with the new vcf file (default is merge.vcf)
+#' @return vcf A new data.frame in vcf format
+#' @export
 merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf1<-extract.gt.vcf(vcf1)
   vcf2<-extract.gt.vcf(vcf2)
@@ -587,6 +621,15 @@ merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   return(vcf)
 }
 
+#' Conduct selection components analysis
+#' @param vcf A data.frme with genotype data in vcf format
+#' @param locus.info A list of column names with the locus info (e.g. c(#CHROM,POS))
+#' @param group1 A list of column names with individuals from the first group
+#' @param group2 A list of column names with individuals from the second group
+#' @param prop.ind.thresh A proportion of indidivudals requried in each population (default is 0.5)
+#' @param maf.cutoff A minimum allele frequency cutoff (default is 0.05)
+#' @return sel A dataframe with the Fst values and Chi-squared values
+#' @export
 gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05){
   sel<-do.call("rbind",apply(vcf,1,fst.one.vcf,c(locus.info,group1),c(locus.info,group2),
     cov.thresh=prop.ind.thresh,maf=maf.cutoff))
@@ -597,6 +640,13 @@ gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05
   return(sel)
 }
 
+#' Calculate pairwise Fst values
+#' @param ped A dataframe with data in ped format, where each allele for each locus is in its own column
+#' @param allele1 An index for the first allele at the locus
+#' @param allele2 An index for the second allele at the locus
+#' @param pop.order A list with the Pop IDs in the correct order
+#' @return dat.var A matrix of pairwise fst values (calculated as (ht-hs)/ht)
+#' @export
 pairwise.fst<-function(ped,allele1,allele2,pop.order){
   #V1 of ped should be pop index
   ped.split<-split(ped[,c(allele1,allele2)], factor(ped[,1]))
@@ -619,7 +669,7 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
         hs2<-0
       }
       if(length(freqall)>1){
-        hs<-mean(c(hs1,hs2))
+        hs<-(hs1*length(pop1)+hs2*length(pop2))/(length(pop1)+length(pop2))
         ht<-2*freqall[1]*freqall[2]
         fst<-(ht-hs)/ht
       }
@@ -632,9 +682,12 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
   return(as.matrix(dat.var))
 }
 
-#***************************************************************************#
-#CALCULATE ISOLATION BY DISTANCE PER LOCUS
-#***************************************************************************#
+#' Calculate isolation by distance per locus
+#' @param ped.file A data.frame in ped format
+#' @param dist.mat A distance matrix containing the geeographic distances between populations
+#' @param pop.order A list with the order for the populations
+#' @return results.mantel A data.frame with two columns containing the mantel test results
+#' @export
 fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
   results.mantel<-data.frame()
   for(i in seq(7,ncol(ped.file),2)){
@@ -648,9 +701,11 @@ fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
   return(results.mantel)
 }
 
-#***************************************************************************#
-#CALCULATE PAIRWISE PST BETWEEN POPULATION PAIRS
-#***************************************************************************#
+#' Calculate pairwise Pst between population pairs
+#' @param dat A dataframe with the trait values, first column must be the pop ID
+#' @param pop.order A list of the order of the populations
+#' @return dat.var A data.frame with the pairwise Pst values
+#' @export
 pairwise.pst<-function(dat, pop.order){
   #first column must be pop id/grouping factor
   library(nlme)
@@ -682,9 +737,12 @@ pairwise.pst<-function(dat, pop.order){
   return(dat.var)
 }
 
-#***************************************************************************#
-#CALCULATE PAIRWISE PSTS FOR ALL TRAITS AND TEST FOR IBD
-#***************************************************************************#
+#' Calulate pairwise Psts and test for IBD
+#' @param trait.df A data frame with trait values for all traits and all individuals
+#' @param comp.df A dataframe with the distance values
+#' @param id.index The index value for the trait being calculated
+#' @return results.mantel A data.frame with the results of the mantel test
+#' @export
 all.traits.pst.mantel<-function(trait.df,comp.df,id.index){
   results.mantel<-data.frame()
   for(i in 3:ncol(trait.df)){
@@ -700,9 +758,13 @@ all.traits.pst.mantel<-function(trait.df,comp.df,id.index){
 }
 
 
-#***************************************************************************#
-#COMPARE FST AND PST PER LOCUS
-#***************************************************************************#
+#' Compare Pst and Fst locus by locus from a ped file
+#' @param ped.file A data.frame with data in ped format
+#' @param trait.df A data.frame containing all of the traits data
+#' @param pop.order An order in which the populations should be analyzed
+#' @param trait.ind The trait index in the trait.df
+#' @return results.list A dataframe containing the restuls of the mantel test (one column for observations and one for p-values)
+#' @export
 fst.pst.byloc<-function(ped.file,trait.df,pop.order,trait.ind){
   results.list<-list()
   for(j in 3:ncol(trait.df)){
@@ -722,154 +784,21 @@ fst.pst.byloc<-function(ped.file,trait.df,pop.order,trait.ind){
   return(results.list)
 }
 
-#***************************************************************************#
-#CALCULATE STANDARD ERROR OF THE MEAN
-#***************************************************************************#
+#' Calculate the standard error of the mean
+#' @param x A list of values
+#' @return sem A value of the standard error of the mean
+#' @export
 sem<-function(x){
   sem<-sd(x)/sqrt(length(x))
   return(sem)
 }
 
-#***************************************************************************#
-#PLOT ANY GENOME-WIDE STATISTIC
-#***************************************************************************#
-plotting.genome.wide<-function(bp,var,y.max,x.max, rect.xs=NULL,y.min=0,x.min=0,
-                               plot.new=FALSE, plot.axis=TRUE, rect.color="white",plot.rect=TRUE,
-                               pt.cex=1, pt.col="black"){
-  #********************************************
-  #this function plots a variable without scaffold info.
-  #feed it the basepair (x) values and variable (y) values
-  #*********************************************
-  if(plot.new==TRUE){ par(new=new) }
-  plot(bp, var,xlab="",ylab="", new=plot.new,
-       type="n", bg="transparent", axes=F, bty="n",
-       xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-  if(plot.rect==TRUE){
-    num.rect<-nrow(rect.xs)
-    if(is.null(num.rect)) {
-      rect(rect.xs[1],y.min,rect.xs[2],y.max,
-           col=rect.color, border=NA)
-    } else {
-      for(i in 1:nrow(rect.xs)){
-        rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
-             col=rect.color, border=NA)
-      }
-    }
-  }
-  if(plot.axis){
-    axis(2, at = seq(y.min,y.max,round((y.max-y.min)/2, digits=2)),
-         ylim = c(y.min, y.max), pos=0,
-         las=1,tck = -0.01, xlab="", ylab="", cex.axis=0.75)}
-  points(bp, var, pch=19, cex=pt.cex,col=pt.col,
-         xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-}
 
-#***************************************************************************#
-##AUTOMATED FST PLOTTING
-#***************************************************************************#
-plotting.fsts.scaffs<-function(fst.dat, fst.name="Fst",chrom.name="Chr",
-                               bp.name="BP", pt.lty=0,pt.col="grey7",new=T,
-                               ci.dat=NULL, pt.cex=1,y.lab=NULL,axis.size=0.5,scaffold.order=NULL,
-                               groups=NULL,print.names=FALSE,pt.pch=19,
-                               sig.col="dark green", col.pt.pch=8, col.pt.cex=2){
-  if(!is.null(scaffold.order)){
-    scaff.ord<-scaffold.order$component_id
-    lgs<-scaffold.order$object
-  } else{
-    scaff.ord<-levels(factor(fst.dat[,chrom.name]))
-    lgs<-scaff.ord
-  }
-  if(!is.null(groups)){
-    lgs<-groups
-    scaff.ord<-groups
-  }
-  all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
-  last.max<-0
-  rect.xs<-NULL
-  addition.values<-0
-  xlist<-NULL
-  xs<-NULL
-  for(i in 1:length(scaff.ord)){
-    all.scaff[[scaff.ord[i]]]<-
-      all.scaff[[scaff.ord[i]]][order(all.scaff[[scaff.ord[i]]][,bp.name]),]
-    all.scaff[[scaff.ord[i]]][,bp.name]<-
-      seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1)
-    xs<-c(xs, seq(last.max+1,last.max+nrow(all.scaff[[scaff.ord[i]]]),1))
-    new.max<-max(xs)
-    #scaffold.order[i,"new_start"]<-last.max
-    #scaffold.order[i,"new_end"]<-new.max
-    rect.xs<-rbind(rect.xs,c(last.max, new.max))
-    rownames(rect.xs)[i]<-scaff.ord[i]
-    addition.values<-c(addition.values, new.max)
-    last.max<-new.max
-  }
-  #change BP to plot
-  x.max<-max(xs)
-  x.min<-min(xs)
-  y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
-  y.min<-min(fst.dat[,fst.name])-0.1*min(fst.dat[,fst.name])
-  if(min(fst.dat[,fst.name]) < 0) {
-    y.min<-min(fst.dat[,fst.name]) - 0.1*min(fst.dat[,fst.name])
-  } else {
-    y.min<-0
-  }
-  displacement<-y.min-((y.max-y.min)/30)
-  if(new==T){
-    plot(c(x.min,x.max),c(y.min,y.max),xlim=c(x.min,x.max),
-         ylim=c(y.min, y.max),
-         bty="n",type="n",	axes=F, xlab="", ylab="")
-    for(i in 1:nrow(rect.xs)){
-      if(i%%2 == 0) {
-        rect.color<-"white"
-      } else {
-        rect.color<-"gray75"
-      }
-      rect(rect.xs[i,1],y.min,rect.xs[i,2],y.max,
-           col=rect.color, border=NA)
-      if(print.names==T){
-        text(x=mean(all.scaff[[scaff.ord[i]]][
-          all.scaff[[scaff.ord[i]]]$Chrom==rownames(rect.xs)[i],
-          bp.name]),
-          y=displacement,labels=rownames(rect.xs)[i],
-          adj=1,xpd=T,srt=45)
-      }
-    }
-  }
-  for(i in 1:length(scaff.ord)){
-    if(pt.lty==0){
-      points(all.scaff[[scaff.ord[i]]][,bp.name],
-             all.scaff[[scaff.ord[i]]][,fst.name],
-             pch=pt.pch, cex=0.5,col=pt.col,
-             xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-    } else {
-      lines(all.scaff[[scaff.ord[i]]][,bp.name],
-            all.scaff[[scaff.ord[i]]][,fst.name],
-            lty=pt.lty, cex=0.5,col=pt.col,
-            xlim=c(x.min,x.max),ylim=c(y.min, y.max))
-
-    }
-    temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] >= ci.dat[1],]
-    points(temp.sig[,bp.name], temp.sig[,fst.name],
-           col=sig.col[1], pch=col.pt.pch, cex=col.pt.pch)
-    temp.sig<-all.scaff[[scaff.ord[i]]][all.scaff[[scaff.ord[i]]][,fst.name] <= ci.dat[2],]
-    points(temp.sig[,bp.name], temp.sig[,fst.name],
-           col=sig.col[2], pch=col.pt.pch, cex=col.pt.pch)
-  }
-  if(axis.size>0){
-    axis(2, at = seq(round(y.min,2),round(y.max,2),
-                     round((y.max-y.min)/2, digits=2)),
-         ylim = c(y.min, y.max), pos=0,
-         labels=seq(round(y.min,2),round(y.max,2),
-                    round((y.max-y.min)/2, digits=2)),
-         las=1,tck = -0.01, xlab="", ylab="", cex.axis=axis.size)
-  }
-  xes<-do.call("rbind",all.scaff)
-  return(xes)
-}
-
-#***************************************************************************#
-##REORDER A DATAFRAME
-#***************************************************************************#
+#' A function to reorder a data.frame
+#' @param dat A data.frame. Group ID should be in column 1
+#' @param order.list A list of factors for reordering
+#' @return dat.new The reordered dataframe
+#' @export
 reorder.df<-function(dat,order.list){
   #dat has to have the grouping IDs in row 1
   #those grouping ids must match the factors in order.list
@@ -881,13 +810,17 @@ reorder.df<-function(dat,order.list){
   return(dat.new)
 }
 
-
-
-
-#***************************************************************************#
-#PLOT A STRUCTURE BARPLOT
-#***************************************************************************#
-
+#' This plots the output of structure
+#' @param structure.out A data.frame containing the structure output.
+#' @param k The value of K used in Structure
+#' @param pop.order The order in which the populations are plotted.
+#' @param filename The name of the jpeg for the output file.
+#' @param make.file A boolean (TRUE/FALSE) indicating whether the jpeg should be created
+#' @param plot.new A boolean (TRUE/FALSE) indicating whether this is being added to an existing plot
+#' @param colors A list of colors for the structure colors (if not provided, defaults to rainbow palette)
+#' @param xlabel A boolean (TRUE/FALSE) indicating whether x labels should be plotted (default is TRUE)
+#' @param ylabel An optional label for the y-axis.
+#' @export
 plotting.structure<-function(structure.out, k, pop.order,
                              filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,
                              plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL){
