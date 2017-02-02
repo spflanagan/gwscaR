@@ -23,12 +23,8 @@
 #'  LG1     3945850
 #'  LG2     435215
 #' This parameter is used to make multiple plots from the same overall dataset have the same widths.
-#' @examples
-#' od<-fst.plot(plink.both.fst[!is.na(plink.both.fst$Fst),],
-#'  fst.name="Fst",chrom.name="Chrom",bp.name="Pos",axis.size=1,y.lim=c(-2,0.6),
-#'  groups=as.factor(scaffs[scaffs %in% levels(factor(plink.both.fst$Chrom[!is.na(plink.both.fst$Fst)]))]))
 #' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
-#' @notes Used in Flanagan & Jones 2017
+#' @seealso Flanagan & Jones 2017
 #' @export
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
                    fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
@@ -152,8 +148,8 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 #' @param filename The name of the vcf file
 #' @return a dataframe containing the contents of the vcf file, including headers.
 #' @examples
-#' vcf<-parse.vcf("sdRAD_data.vcf")
-#' @notes Used in Flanagan & Jones 2017
+#' vcf<-parse.vcf("example.vcf")
+#' @seealso Flanagan & Jones 2017
 #' @export
 parse.vcf<-function(filename){
   if(substr(filename,nchar(filename)-3,nchar(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
@@ -183,7 +179,7 @@ parse.vcf<-function(filename){
 #'    PropHet: The proportion of individuals genotyped as heterozygotes
 #'    TotalNumReads: The total number of reads at this locus
 #' @export
-vcf.cov.loc<-function(vcf.row,subset=NULL){
+vcf.cov.loc<-function(vcf,subset=NULL){
   if(is.null(subset)){
     subset<-colnames(vcf)[10:ncol(vcf)]
   }
@@ -341,7 +337,6 @@ vcf.alleles<-function(vcf.row){
 #' Calculate Fst using Nei's formulation (1-(Hw/2Hb))
 #' @param al1 A table of allele frequencies for pop 1
 #' @param al2 A table of allele frequencies for pop 2
-#' @notes Calculates Fst as described by Wright (1943) and re-formulated by Nei
 #' @return data.frame containing the columns:
 #'  Hs1 = expected heterozygosity in population 1 (vcf1)
 #'  Hs2 = expected heterozygosity in population 2 (vcf2)
@@ -380,10 +375,9 @@ calc.fst.nei<-function(al1,al2){
                     Num1=length(al1),Num2=length(al2)))
 }
 
-#' Calculate Fst using Wright's formulation ((ht-hs)/ht)
+#' Calculate Fst using Wright (1943)'s formulation ((ht-hs)/ht)
 #' @param al1 A table of allele frequencies for pop 1
 #' @param al2 A table of allele frequencies for pop 2
-#' @notes Calculates Fst as described by Wright (1943)
 #' @return data.frame containing the columns:
 #'  Hs1 = expected heterozygosity in population 1 (vcf1)
 #'  Hs2 = expected heterozygosity in population 2 (vcf2)
@@ -613,7 +607,7 @@ infer.mat.alleles<-function(dad.kid, vcf){
       mom_allele <- "."
       if (d1 == "." || k1 == ".")
         mom_allele <- "."
-      return(c(y[1:9],mom.allele))
+      return(c(y[1:9],mom_allele))
     })
 
   })
@@ -626,7 +620,7 @@ infer.mat.alleles<-function(dad.kid, vcf){
 #' @param vcf.name A name for a file with the new vcf file (default is merge.vcf)
 #' @return vcf A new data.frame in vcf format
 #' @export
-merge.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
+combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf1<-extract.gt.vcf(vcf1)
   vcf2<-extract.gt.vcf(vcf2)
   col.id<-c(colnames(vcf1)[1:3],colnames(vcf1)[!(colnames(vcf1) %in%
@@ -715,7 +709,7 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
 fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
   results.mantel<-data.frame()
   for(i in seq(7,ncol(ped.file),2)){
-    res<-mantel.rtest(
+    res<-ade4::mantel.rtest(
       as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
       as.dist(t(dist.mat)), nrepet=9999)
     results.mantel<-rbind(results.mantel,cbind(res$obs,res$pvalue))
@@ -732,7 +726,6 @@ fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
 #' @export
 pairwise.pst<-function(dat, pop.order){
   #first column must be pop id/grouping factor
-  library(nlme)
   dat.split<-split(dat, factor(dat[,1]))
   dat.var<-as.data.frame(setNames(
     replicate(length(pop.order),numeric(0), simplify = F), pop.order))
@@ -742,8 +735,8 @@ pairwise.pst<-function(dat, pop.order){
                        as.data.frame(dat.split[[pop.order[j]]]))
       colnames(temp.data)<-c("PopID","Var")
       temp.data$PopID<-factor(temp.data$PopID)
-      anv <- lme(fixed=Var ~ 1, random=~1|PopID,data=temp.data)
-      varcomp <- VarCorr(anv)
+      anv <- nlme::lme(fixed=Var ~ 1, random=~1|PopID,data=temp.data)
+      varcomp <- nlme::VarCorr(anv)
       v.btwn<- as.numeric(varcomp[1])
       v.wthn <- as.numeric(varcomp[2])
       pst <- v.btwn/(v.btwn+2*v.wthn)
@@ -765,12 +758,13 @@ pairwise.pst<-function(dat, pop.order){
 #' @param trait.df A data frame with trait values for all traits and all individuals
 #' @param comp.df A dataframe with the distance values
 #' @param id.index The index value for the trait being calculated
+#' @param pop.order A vector of population names in the order you want them.
 #' @return results.mantel A data.frame with the results of the mantel test
 #' @export
-all.traits.pst.mantel<-function(trait.df,comp.df,id.index){
+pst.mantel<-function(trait.df,comp.df,id.index,pop.order){
   results.mantel<-data.frame()
   for(i in 3:ncol(trait.df)){
-    res<-mantel.rtest(
+    res<-ade4::mantel.rtest(
       as.dist(t(pairwise.pst(trait.df[,c(id.index,i)],pop.order))),
       as.dist(t(comp.df)), nrepet=9999)
     results.mantel<-rbind(results.mantel,cbind(res$obs,res$pvalue))
@@ -794,7 +788,7 @@ fst.pst.byloc<-function(ped.file,trait.df,pop.order,trait.ind){
   for(j in 3:ncol(trait.df)){
     results.mantel<-data.frame()
     for(i in seq(7,ncol(ped.file),2)){
-      res<-mantel.rtest(
+      res<-ade4::mantel.rtest(
         as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
         as.dist(t(pairwise.pst(trait.df[,c(trait.ind,j)],pop.order))),
         nrepet=9999)
@@ -823,7 +817,7 @@ sem<-function(x){
 #' @param order.list A list of factors for reordering
 #' @return dat.new The reordered dataframe
 #' @export
-reorder.df<-function(dat,order.list){
+changeorder.df<-function(dat,order.list){
   #dat has to have the grouping IDs in row 1
   #those grouping ids must match the factors in order.list
   dat.sep<-split(dat, dat[,1])
