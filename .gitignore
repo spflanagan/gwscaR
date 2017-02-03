@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 inst/extdata/sdRAD_data.vcf
+inst/doc

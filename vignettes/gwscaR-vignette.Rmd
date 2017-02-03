@@ -1,0 +1,72 @@
+---
+title: "An Introduction to Using gwscaR"
+author: "Sarah P. Flanagan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{"An Introduction to Using gwscaR"}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+`gwscaR` is a collection of functions that are useful for population genomics analyses. They were primarily written while analyzing two datasets: one RAD-seq and morphological dataset from 12 populations of pipefish (Flanagan et al. 2016) and the other containing RAD-seq data from a single population of pipefish, which was analyzed using selection components analysis (Flanagan & Jones 2017).
+
+Selection components analysis compares allele frequencies among individuals in a population to identify genetic regions associated with different components of selection (e.g. comparing mated and nonmated males to estimate sexual selection). It is an approach originally outlined by Christiansen & Frydenberg in 1973 (for use with allozyme and chromosome inversion data) and has recently been applied to next-generation sequencing data in the Mimulus guttatus plant (Monnahan et al. 2015) and pipefish (Flanagan & Jones 2017). Monnahan et al. (2015) used a maximum likelihood appraoch to identify loci experiencing different forms of selection. In my study of pipefish, I compared the maximum likelihood approach to allele frequency comparisons using Fst values, an approach I had tested with a simulation model a couple years before (Flanagan & Jones 2015). The comparison demonstrated that the two approaches find similar patterns.
+
+`gwscaR` does not implement the maximum likelihood method. This package only performs the Fst analysis, as well as some other useful population genomics analyses. Using `gwscaR`, you can:
+
+- Run a Fst-based genome-wide selection components analysis
+- Plot genome-wide values (e.g., Fsts)
+- Manipulate vcf and plink files
+- Calculate pairwise Fst and Pst between two groups and test for significant isolation by distance
+
+
+## Genome-wide selection components analysis
+
+The genome-wide selection components analysis uses a vcf file, so make sure your data are in that format. Then read the file into R.
+
+```{r}
+library(gwscaR)
+vcf.file<-system.file("extdata", "example.vcf",package = 'gwscaR')
+vcf<-parse.vcf(vcf.file)
+```
+
+
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
