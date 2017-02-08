@@ -148,11 +148,11 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 #' @param filename The name of the vcf file
 #' @return a dataframe containing the contents of the vcf file, including headers.
 #' @examples
-#' vcf<-parse.vcf("example.vcf")
+#' vcf<-parse.vcf(system.file("extdata/example.vcf",package = "gwscaR"))
 #' @seealso Flanagan & Jones 2017
 #' @export
 parse.vcf<-function(filename){
-  if(substr(filename,nchar(filename)-3,nchar(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
+  #if(substr(filename,nchar(filename)-3,nchar(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
   vcf<-read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F)
   header.start<-grep("#CHROM",scan(filename,what="character"))
   header<-scan(filename,what="character")[header.start:(header.start+ncol(vcf)-1)]

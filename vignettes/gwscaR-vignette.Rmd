@@ -27,8 +27,10 @@ The genome-wide selection components analysis uses a vcf file, so make sure your
 
 ```{r}
 library(gwscaR)
-vcf.file<-system.file("extdata", "example.vcf",package = 'gwscaR')
-vcf<-parse.vcf(vcf.file)
+sessionInfo()
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+print(vcf.file)
+#vcf<-parse.vcf(vcf.file)
 ```
 
 
