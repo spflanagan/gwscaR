@@ -21,4 +21,3 @@ dat.var A matrix of pairwise fst values (calculated as (ht-hs)/ht)
 \description{
 Calculate pairwise Fst values
 }
-

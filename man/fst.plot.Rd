@@ -52,4 +52,3 @@ Plot genome-wide statistics from a data frame.
 \seealso{
 Flanagan & Jones 2017
 }
-

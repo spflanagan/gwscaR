@@ -21,4 +21,3 @@ results.list A dataframe containing the restuls of the mantel test (one column f
 \description{
 Compare Pst and Fst locus by locus from a ped file
 }
-

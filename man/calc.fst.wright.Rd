@@ -26,4 +26,3 @@ data.frame containing the columns:
 \description{
 Calculate Fst using Wright (1943)'s formulation ((ht-hs)/ht)
 }
-

@@ -26,4 +26,3 @@ sel A dataframe with the Fst values and Chi-squared values
 \description{
 Conduct selection components analysis
 }
-

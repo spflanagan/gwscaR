@@ -22,4 +22,3 @@ icov A data.frame with one row for each individual and columns:
 \description{
 Calculate per-individual coverage from a vcf file
 }
-

@@ -30,4 +30,3 @@ plotting.structure(structure.out, k, pop.order, filename = paste("str.k", k,
 \description{
 This plots the output of structure
 }
-

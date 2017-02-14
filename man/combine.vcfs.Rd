@@ -19,4 +19,3 @@ vcf A new data.frame in vcf format
 \description{
 A function to merge two vcf data frames
 }
-

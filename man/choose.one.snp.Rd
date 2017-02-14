@@ -15,4 +15,3 @@ new.vcf A data.frame with only one SNP per RAD locus
 \description{
 Choose one SNP per RAD locus from a vcf
 }
-

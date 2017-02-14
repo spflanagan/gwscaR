@@ -27,21 +27,50 @@ The genome-wide selection components analysis uses a vcf file, so make sure your
 
 ```{r}
 library(gwscaR)
-sessionInfo()
 vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
-print(vcf.file)
-#vcf<-parse.vcf(vcf.file)
+vcf<-parse.vcf(vcf.file)
 ```
 
+To run the program, you need to do a bit of file manipulation. First, it's good to create a unique index for each locus and then create a vector with all of the column names that specify the locus information. 
 
+```{r}
+vcf$SNP<-paste(vcf$`#CHROM`,vcf$POS,sep=".")
+locus.info<-c("#CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO","FORMAT","SNP")
+```
+Also, you need to create vectors for the groups that you want to compare. In this case, compare males and females. The females have names with "FEM" and males have names with PRM and NPM.
+```{r}
+grp1<-grep("FEM",colnames(vcf),value=T)
+grp2<-c(grep("PRM",colnames(vcf),value=T),grep("NPM",colnames(vcf),value=T))
+```
 
-## Styles
+Then you calculate Fsts between the two groups with fst.one.vcf and create a data frame. 
+```{r}
+sel<-fst.one.vcf(vcf,c(locus.info,grp1),c(locus.info,grp2),
+    cov.thresh=0.5,maf=0.05)
+sel<-sel[!is.na(sel$Fst),] #Remove the ones that weren't polymorphic
+```
+To identify the SNPs that are outliers, compare the value of 2NFst(k-1) to the chi-squared distribution with k-1 degrees of freedom, and then adjust for multiple tests using the Benjamini-Hochberg (1995) false discovery rate.
+```{r}
+sel$Chi<-2*((sel$Num1+sel$Num2)/2)*sel$Fst
+sel$Chi.p<-1-pchisq(sel$Chi,1)
+sel$Chi.p.adj<-p.adjust(sel$Chi.p,method="BH")
+```
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+### The wrapper function
+For ease of implementation, all of the above steps are contained in the wrapper function `gwsca`. 
+```{r, eval=FALSE}
+sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
+```
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+### Plot the results
+
+The `gwscaR` package includes a function to plot genome-wide statistics. 
+
+```{r}
+fst.plot(sel, ci.dat=c(mo.top1,0),fst.name="Fst", 
+             chrom.name="Chrom", axis.size=0,bp.name="Pos",
+             sig.col=c("black","black"),groups=as.factor(scaffs[scaffs %in% levels(factor(mo.plot$Chrom))]))
+```
 
 ## Figures
 

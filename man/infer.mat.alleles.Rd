@@ -17,4 +17,3 @@ mat A data.frame of inferred maternal alleles
 \description{
 A function to infer maternal alleles from a vcf file
 }
-

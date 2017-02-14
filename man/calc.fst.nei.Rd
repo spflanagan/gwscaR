@@ -26,4 +26,3 @@ data.frame containing the columns:
 \description{
 Calculate Fst using Nei's formulation (1-(Hw/2Hb))
 }
-

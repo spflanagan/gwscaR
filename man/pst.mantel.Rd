@@ -21,4 +21,3 @@ results.mantel A data.frame with the results of the mantel test
 \description{
 Calulate pairwise Psts and test for IBD
 }
-

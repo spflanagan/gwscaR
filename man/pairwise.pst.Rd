@@ -17,4 +17,3 @@ dat.var A data.frame with the pairwise Pst values
 \description{
 Calculate pairwise Pst between population pairs
 }
-

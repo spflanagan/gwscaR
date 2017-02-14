@@ -19,4 +19,3 @@ results.mantel A data.frame with two columns containing the mantel test results
 \description{
 Calculate isolation by distance per locus
 }
-

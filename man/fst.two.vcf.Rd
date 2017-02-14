@@ -32,4 +32,3 @@ A data.frame with the columns:
 \description{
 Calculate pairwise fst between two separate vcf files
 }
-

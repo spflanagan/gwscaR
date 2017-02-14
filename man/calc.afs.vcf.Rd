@@ -16,4 +16,3 @@ RefFreq (frequency of reference allele), Alt (alternative allele), and AltFreq (
 \description{
 A function that calculates the allele frequencies from a vcf
 }
-

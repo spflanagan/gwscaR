@@ -31,4 +31,3 @@ cov.dat A data.frame with one row for each locus and 14 columns:
 \description{
 Calculate per-locus coverage from a vcf file
 }
-

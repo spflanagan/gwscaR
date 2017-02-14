@@ -15,4 +15,3 @@ al1 A list of alleles
 \description{
 Extract alleles from a vcf row
 }
-

@@ -30,4 +30,3 @@ fst.dat A data.frame with columns:
 \description{
 Calculate pairwise fsts from a dataset in ped format
 }
-

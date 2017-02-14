@@ -15,4 +15,3 @@ vcf A new vcf with only the GT data
 \description{
 A function to pull out only the genotype fields from vcf-format data
 }
-

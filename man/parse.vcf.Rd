@@ -16,9 +16,8 @@ a dataframe containing the contents of the vcf file, including headers.
 Read in a vcf file
 }
 \examples{
-vcf<-parse.vcf("example.vcf")
+vcf<-parse.vcf(system.file("extdata/example.vcf",package = "gwscaR"))
 }
 \seealso{
 Flanagan & Jones 2017
 }
-

@@ -17,4 +17,3 @@ dat.new The reordered dataframe
 \description{
 A function to reorder a data.frame
 }
-

@@ -26,4 +26,3 @@ Fst, NumAlleles, Num1 (number of individuals in pop1), and Num2 (number of indiv
 \description{
 Calculate fsts from a single vcf
 }
-

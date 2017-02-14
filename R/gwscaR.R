@@ -278,42 +278,115 @@ vcf.cov.ind<-function(vcf){
 #'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
 #'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
 #'  @export
-fst.two.vcf<-function(vcf1,vcf2,match.index, cov.thresh=0.2){
+
+fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
   #e.g. apply(vcf,1,fst.two.vcf,vcf2=vcf.2,match.index="SNP")
-  out<-apply(vcf1,1,function(vcf1.row){
-    hs1<-hs2<-hs<-ht<-0
-    freqall<-gt1<-gt2<-NULL
-    vcf2.row<-vcf2[vcf2[,match.index]%in%vcf1.row[match.index],]
-    if(nrow(vcf2.row)>1)#first make sure we have one reading per locus
+  hs1<-hs2<-hs<-ht<-0
+  freqall<-gt1<-gt2<-NULL
+  vcf2.row<-vcf2[vcf2[,match.index]%in%vcf1.row[match.index],]
+  if(nrow(vcf2.row)>1)#first make sure we have one reading per locus
+  {
+    print("Multiple instances in vcf2.")
+    fst<-NA
+  }
+  else{
+    if(nrow(vcf2.row)==0)
     {
-      print("Multiple instances in vcf2.")
+      print("No instances in vcf2.")
       fst<-NA
-    }
-    else{
-      if(nrow(vcf2.row)==0)
-      {
-        print("No instances in vcf2.")
-        fst<-NA
-      }else #we're good to go
-      {
-        al1<-vcf.alleles(vcf1.row)
-        al2<-vcf.alleles(vcf2.row)
-        if((length(al1)/2)/(length(vcf1.row)-10)>=cov.thresh & (length(al2)/2)/(ncol(vcf2.row)-10)>=cov.thresh){
+    }else #we're good to go
+    {
+      gt1<-unlist(lapply(vcf1.row,function(x){
+        c<-strsplit(as.character(x),split=":")[[1]][1]
+        return(c)
+      }))
+      num.ind<-length(gt1)-10
+      gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
+      gt1[gt1=="1/0"]<-"0/1"
+      gt1<-gsub(pattern = "0",replacement = vcf1.row["REF"],gt1)
+      gt1<-gsub(pattern = "1",replacement = vcf1.row["ALT"],gt1)
+      if(length(gt1)/num.ind>=cov.thresh){
+        al1<-unlist(strsplit(as.character(gt1),split = "/"))
+        gt2<-unlist(lapply(vcf2.row,function(x){
+          c<-strsplit(as.character(x),split=":")[[1]][1]
+          return(c)
+        }))
+        num.ind<-length(gt2)
+        gt2<-gt2[gt2 %in% c("0/0","1/0","0/1","1/1")]
+        gt2[gt2=="1/0"]<-"0/1"
+        gt2<-gsub(pattern = "0",replacement = vcf2.row["REF"],gt2)
+        gt2<-gsub(pattern = "1",replacement = vcf2.row["ALT"],gt2)
+        if(length(gt2)/num.ind>=cov.thresh){
+          al2<-unlist(strsplit(as.character(gt2),split="/"))
           #calculate frequencies
-          fst<-calc.fst.wright(al1,al2)
-        }else {
-          # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
-          fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
-                          Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
+          freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+          freq2<-summary(factor(al2))/sum(summary(factor(al2)))
+          freqall<-summary(as.factor(c(al1,al2)))/
+            sum(summary(as.factor(c(al1,al2))))
+          hets<-c(names(freq1)[2],names(freq2)[2])
+          if(length(freq1)>1 & length(freq2)>1){ #both must be polymorphic
+            hs1<-2*freq1[1]*freq1[2]
+            hs2<-2*freq2[1]*freq2[2]
+            hs<-mean(c(hs1,hs2))
+            ht<-2*freqall[1]*freqall[2]
+            fst<-(ht-hs)/ht
+          } else {
+            hs1<-1-sum(freq1*freq1)
+            hs2<-1-sum(freq2*freq2)
+            if(length(freqall)<=1){ fst<-0 }
+            else{
+              ht<-2*freqall[1]*freqall[2]
+              fst<-NA
+            }
+          }
         }
-      }#good to go
-    }
+        else {
+          fst<-NA #gt2 doesn't pass coverage threshold
+        }
+      }else {
+        fst<-NA #it doesn't pass the coverage threshold
+      }
+    }#end else good to go
+  }#end else vcf2
 
-    return(fst)
-  })
-  return(out)
+  return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
+                    Num1=length(gt1),Num2=(length(gt2))))
+}#end function
+
+
+calc.afs.vcf<-function(vcf.row){
+  #use in conjunction with apply
+  #e.g. apply(vcf,1,afs.vcf)
+  gt1<-unlist(lapply(vcf.row,function(x){
+    c<-strsplit(as.character(x),split=":")[[1]][1]
+    return(c)
+  }))
+  gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
+  gt1[gt1=="1/0"]<-"0/1"
+  gt1<-gsub(pattern = "0",replacement = vcf.row["REF"],gt1)
+  gt1<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt1)
+  al1<-unlist(strsplit(as.character(gt1),split = "/"))
+  #calculate frequencies
+  freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+  if(length(freq1)==1)
+  {
+    if(names(freq1)==vcf.row["REF"])
+    {
+      freq1<-c(freq1,0)
+      names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
+    }
+    else
+    {
+      freq1<-c(freq1,0)
+      names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
+    }
+  }
+  return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
+                    RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
+                    Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
 }
 
 
@@ -427,24 +500,66 @@ calc.fst.wright<-function(al1,al2){
 #' Hs (expected heterozygosity within pops), Ht (expected heterozygosity between pops),
 #' Fst, NumAlleles, Num1 (number of individuals in pop1), and Num2 (number of individuals in pop2)
 #' @export
-fst.one.vcf<-function(vcf,group1,group2, cov.thresh=0.2, maf=0.05){
-  out<-do.call("rbind",apply(vcf,1,function(vcf.row){
-    al1<-vcf.alleles(vcf.row[group1])
-    al2<-vcf.alleles(vcf.row[group2])
-    f1<-table(al1)/sum(table(al1))
-    f2<-table(al2)/sum(table(al2))
-    if(((length(al2)/2)/(length(group2)-10))>=cov.thresh & ((length(al1)/2)/(length(group1)-10))>=cov.thresh & min(f1,f2)>=maf){
-          fst<-calc.fst.wright(al1,al2)
-    }else {
-      # print(paste(vcf.row["#CHROM"],vcf.row["POS"],"fails cov thresh"),sep=" ")
-      fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(summary(factor(c(al1,al2)))),
-                      Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
-    }
+fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
 
-    return(fst)
+  hs1<-hs2<-hs<-ht<-0
+  freqall<-gt1<-gt2<-NULL
+  gt1<-unlist(lapply(vcf.row[group1],function(x){
+    c<-strsplit(as.character(x),split=":")[[1]][1]
+    return(c)
   }))
-  return(out)
-}
+  num.ind<-length(gt1)
+  gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
+  gt1[gt1=="1/0"]<-"0/1"
+  gt1<-gsub(pattern = "0",replacement = vcf.row["REF"],gt1)
+  gt1<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt1)
+  if(length(gt1)/num.ind>=cov.thresh){
+    al1<-unlist(strsplit(as.character(gt1),split = "/"))
+    gt2<-unlist(lapply(vcf.row[group2],function(x){
+      c<-strsplit(as.character(x),split=":")[[1]][1]
+      return(c)
+    }))
+    num.ind<-length(gt2)
+    gt2<-gt2[gt2 %in% c("0/0","1/0","0/1","1/1")]
+    gt2[gt2=="1/0"]<-"0/1"
+    gt2<-gsub(pattern = "0",replacement = vcf.row["REF"],gt2)
+    gt2<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt2)
+    if(length(gt2)/num.ind>=cov.thresh){
+      al2<-unlist(strsplit(as.character(gt2),split="/"))
+      #calculate frequencies
+      freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+      freq2<-summary(factor(al2))/sum(summary(factor(al2)))
+      freqall<-summary(as.factor(c(al1,al2)))/
+        sum(summary(as.factor(c(al1,al2))))
+      hets<-c(names(freq1)[2],names(freq2)[2])
+      if(length(freq1)>1 & length(freq2)>1 #both must be polymorphic
+         & min(freq1,freq2) >= maf){ #and match the maf
+        hs1<-2*freq1[1]*freq1[2]
+        hs2<-2*freq2[1]*freq2[2]
+        hs<-mean(c(hs1,hs2))
+        ht<-2*freqall[1]*freqall[2]
+        fst<-(ht-hs)/ht
+      } else {
+        hs1<-1-sum(freq1*freq1)
+        hs2<-1-sum(freq2*freq2)
+        if(length(freqall)<=1){ fst<-0 }
+        else{
+          ht<-2*freqall[1]*freqall[2]
+          fst<-NA
+        }
+      }
+    }
+    else {
+      fst<-NA #gt2 doesn't pass coverage threshold
+    }
+  }else {
+    fst<-NA #it doesn't pass the coverage threshold
+  }
+
+  return(data.frame(Chrom=vcf.row["#CHROM"],Pos=vcf.row["POS"],
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
+                    Num1=length(gt1),Num2=length(gt2)))
+}#end function fst.one.vcf
 
 #' A function that calculates the allele frequencies from a vcf
 #' @param vcf A data.frame with genotype data in vcf format
@@ -649,8 +764,8 @@ combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
 #' @return sel A dataframe with the Fst values and Chi-squared values
 #' @export
 gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05){
-  sel<-do.call("rbind",apply(vcf,1,fst.one.vcf,c(locus.info,group1),c(locus.info,group2),
-    cov.thresh=prop.ind.thresh,maf=maf.cutoff))
+  sel<-fst.one.vcf(vcf,c(locus.info,group1),c(locus.info,group2),
+    cov.thresh=prop.ind.thresh,maf=maf.cutoff)
   sel<-sel[!is.na(sel$Fst),]
   sel$Chi<-2*((sel$Num1+sel$Num2)/2)*sel$Fst
   sel$Chi.p<-1-pchisq(sel$Chi,1)

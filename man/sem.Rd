@@ -15,4 +15,3 @@ sem A value of the standard error of the mean
 \description{
 Calculate the standard error of the mean
 }
-
