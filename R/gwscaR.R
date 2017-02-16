@@ -953,31 +953,40 @@ changeorder.df<-function(dat,order.list){
 #' @param colors A list of colors for the structure colors (if not provided, defaults to rainbow palette)
 #' @param xlabel A boolean (TRUE/FALSE) indicating whether x labels should be plotted (default is TRUE)
 #' @param ylabel An optional label for the y-axis.
+#' @param xlabcol An optional vector of colors for x-axis labels
+#' @param lab.cex Size of the labels
 #' @export
-plotting.structure<-function(structure.out, k, pop.order,
-                             filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,
-                             plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL){
+
+plotting.structure<-function(structure.out, k, pop.order, 
+                             filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,lab.cex=1,
+                             plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL,xlabcol=NULL){
   str.split<-split(structure.out,structure.out[,1])
   if(is.null(colors)){
     bar.colors<-rainbow(k,s=0.5)
   } else {
     bar.colors<-colors
   }
+  if(is.null(xlabcol)){
+    xlabcol<-rep("black",length(str.split))
+  }
   if(make.file==TRUE){
     jpeg(filename,width=7, height=1.25, units="in", res=300)
-    par(mfrow=c(1,length(str.split)))
+    par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
+  } else { 
+    if(plot.new==TRUE){
+      par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
+    }
   }
-  #par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
   for(i in 1:length(str.split)){
     pop.index<-pop.order[i]
     barplot(height=as.matrix(t(str.split[[pop.index]][,-1])),
             beside=FALSE, space=0,	border=NA, col=bar.colors,
             xlab="", ylab="", xaxt='n', yaxt='n')#, new=plot.new)
     if(xlabel==TRUE){
-      mtext(pop.index, 1, line=0.5, cex=1, outer=F)}
+      mtext(pop.index, 1, line=0.5, cex=lab.cex, outer=F,col=xlabcol[i])}
     if(!is.null(ylabel)){
-      if(i == 1) { mtext(ylabel,2,cex=1) }
-    }
+      if(i == 1) { mtext(ylabel,2,cex=lab.cex) }
+    }	
   }
   if(make.file==TRUE) {dev.off()}
 }
