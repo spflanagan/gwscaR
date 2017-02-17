@@ -29,7 +29,7 @@
 fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
                    fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
                    scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
-                   group.boundaries=NULL){
+                   group.boundaries=NULL,pt.cex=0.5,...){
 
   if(!is.null(scaffold.order)){
     scaff.ord<-scaffold.order$component_id
@@ -101,7 +101,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
   }
   displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
   plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
-       ylim=y.lim, col=pt.col,
+       ylim=y.lim, col=pt.col,...,
        bty="n",type="n",	axes=F, xlab="", ylab="")
   for(i in 1:nrow(rect.xs)){
     if(i%%2 == 0) {
@@ -120,7 +120,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
   for(i in 1:length(all.scaff)){
     points(all.scaff[[i]][,bp.name],
            all.scaff[[i]][,fst.name],
-           pch=19, cex=0.5,col=pt.col,
+           pch=19, cex=pt.cex,col=pt.col,
            xlim=c(x.min,x.max),ylim=y.lim)
     if(!is.null(ci.dat)){
       temp.sig<-all.scaff[[i]][all.scaff[[i]][,fst.name] >= ci.dat[1],]
