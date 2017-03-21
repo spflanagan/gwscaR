@@ -356,7 +356,16 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
                     Num1=length(gt1),Num2=(length(gt2))))
 }#end function
 
-
+#' Calculate allele frequencies from a vcf file
+#' @param vcf.row A single row of a vcf (used in conjunctioin with apply)
+#' @return A data.frame with the columns:
+#'  Chrom
+#'  Pos
+#'  Ref
+#'  RefFreq 
+#'  Alt 
+#'  AltFreq 
+#'  @export
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply
   #e.g. apply(vcf,1,afs.vcf)

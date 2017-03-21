@@ -7,7 +7,8 @@
 fst.plot(fst.dat, ci.dat = NULL, sig.col = c("red", "yellow"),
   pt.col = "grey7", fst.name = "Fst", chrom.name = "Chrom",
   bp.name = "BP", axis.size = 0.5, scaffold.order = NULL, groups = NULL,
-  print.names = FALSE, y.lim = NULL, group.boundaries = NULL)
+  print.names = FALSE, y.lim = NULL, group.boundaries = NULL,
+  pt.cex = 0.5, ...)
 }
 \arguments{
 \item{fst.dat}{The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.}

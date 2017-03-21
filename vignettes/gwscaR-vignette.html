@@ -12,7 +12,7 @@
 
 <meta name="author" content="Sarah P. Flanagan" />
 
-<meta name="date" content="2017-02-13" />
+<meta name="date" content="2017-03-20" />
 
 <title>An Introduction to Using gwscaR</title>
 
@@ -70,7 +70,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">An Introduction to Using gwscaR</h1>
 <h4 class="author"><em>Sarah P. Flanagan</em></h4>
-<h4 class="date"><em>2017-02-13</em></h4>
+<h4 class="date"><em>2017-03-20</em></h4>
 
 
 
@@ -87,43 +87,2133 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h2>Genome-wide selection components analysis</h2>
 <p>The genome-wide selection components analysis uses a vcf file, so make sure your data are in that format. Then read the file into R.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(gwscaR)
-<span class="kw">sessionInfo</span>()</code></pre></div>
-<pre><code>## R version 3.2.3 (2015-12-10)
-## Platform: i386-w64-mingw32/i386 (32-bit)
-## Running under: Windows 10 (build 14393)
-## 
-## locale:
-## [1] LC_COLLATE=C                          
-## [2] LC_CTYPE=English_United States.1252   
-## [3] LC_MONETARY=English_United States.1252
-## [4] LC_NUMERIC=C                          
-## [5] LC_TIME=English_United States.1252    
-## 
-## attached base packages:
-## [1] stats     graphics  grDevices utils     datasets  methods   base     
-## 
-## other attached packages:
-## [1] gwscaR_0.1.0
-## 
-## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.4     roxygen2_6.0.1  lattice_0.20-33 rprojroot_1.2  
-##  [5] crayon_1.3.2    assertthat_0.1  digest_0.6.9    withr_1.0.2    
-##  [9] commonmark_1.1  grid_3.2.3      R6_2.2.0        backports_1.0.5
-## [13] nlme_3.1-127    magrittr_1.5    evaluate_0.10   stringi_1.0-1  
-## [17] xml2_1.1.1      rmarkdown_1.3   desc_1.1.0      devtools_1.12.0
-## [21] tools_3.2.3     stringr_1.0.0   ade4_1.7-5      yaml_2.1.14    
-## [25] htmltools_0.3.5 memoise_1.0.0   knitr_1.15.1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vcf.file&lt;-<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;example.vcf.txt&quot;</span>,<span class="dt">package =</span> <span class="st">&quot;gwscaR&quot;</span>)
-<span class="kw">print</span>(vcf.file)</code></pre></div>
-<pre><code>## [1] &quot;C:/Users/Sarah/Documents/GitHub/gwscaR/inst/extdata/example.vcf.txt&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#vcf&lt;-parse.vcf(vcf.file)</span></code></pre></div>
+vcf.file&lt;-<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;example.vcf.txt&quot;</span>,<span class="dt">package =</span> <span class="st">&quot;gwscaR&quot;</span>)
+vcf&lt;-<span class="kw">parse.vcf</span>(vcf.file)</code></pre></div>
+<p>To run the program, you need to do a bit of file manipulation. First, it’s good to create a unique index for each locus and then create a vector with all of the column names that specify the locus information.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vcf$SNP&lt;-<span class="kw">paste</span>(vcf$<span class="st">`</span><span class="dt">#CHROM</span><span class="st">`</span>,vcf$POS,<span class="dt">sep=</span><span class="st">&quot;.&quot;</span>)
+<span class="kw">head</span>(vcf$SNP)</code></pre></div>
+<pre><code>## [1] &quot;LG1.11057388&quot; &quot;LG20.2142973&quot; &quot;LG2.8707930&quot;  &quot;LG5.8217463&quot; 
+## [5] &quot;LG20.7996734&quot; &quot;LG16.4978755&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">locus.info&lt;-<span class="kw">c</span>(<span class="st">&quot;#CHROM&quot;</span>,<span class="st">&quot;POS&quot;</span>,<span class="st">&quot;ID&quot;</span>,<span class="st">&quot;REF&quot;</span>,<span class="st">&quot;ALT&quot;</span>,<span class="st">&quot;QUAL&quot;</span>,<span class="st">&quot;FILTER&quot;</span>,<span class="st">&quot;INFO&quot;</span>,<span class="st">&quot;FORMAT&quot;</span>,<span class="st">&quot;SNP&quot;</span>)</code></pre></div>
+<p>Also, you need to create vectors for the groups that you want to compare. In this case, compare males and females. The females have names with “FEM” and males have names with PRM and NPM.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">grp1&lt;-<span class="kw">grep</span>(<span class="st">&quot;FEM&quot;</span>,<span class="kw">colnames</span>(vcf),<span class="dt">value=</span>T)
+grp2&lt;-<span class="kw">c</span>(<span class="kw">grep</span>(<span class="st">&quot;PRM&quot;</span>,<span class="kw">colnames</span>(vcf),<span class="dt">value=</span>T),<span class="kw">grep</span>(<span class="st">&quot;NPM&quot;</span>,<span class="kw">colnames</span>(vcf),<span class="dt">value=</span>T))</code></pre></div>
+<p>Then you calculate Fsts between the two groups with fst.one.vcf and create a data frame.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sel&lt;-<span class="kw">do.call</span>(rbind,<span class="kw">apply</span>(vcf,<span class="dv">1</span>,fst.one.vcf,<span class="dt">group1=</span><span class="kw">c</span>(locus.info,grp1),<span class="dt">group2=</span><span class="kw">c</span>(locus.info,grp2),
+    <span class="dt">cov.thresh=</span><span class="fl">0.5</span>,<span class="dt">maf=</span><span class="fl">0.05</span>))
+sel&lt;-sel[!<span class="kw">is.na</span>(sel$Fst),] <span class="co">#Remove the ones that weren't polymorphic</span>
+<span class="kw">head</span>(sel)</code></pre></div>
+<pre><code>##                 Chrom      Pos       Hs1       Hs2        Hs        Ht
+## #CHROM4          LG20  7996734 0.1672438 0.2187500 0.1929969 0.2064429
+## #CHROM6           LG7  8729758 0.2603550 0.2187500 0.2395525 0.2292631
+## #CHROM8          LG10  7108538 0.3918334 0.4452584 0.4185459 0.4340688
+## #CHROM9          LG13  7101065 0.1502479 0.1657569 0.1580024 0.1618045
+## #CHROM10 scaffold_406   148230 0.5000000 0.4999812 0.4999906 0.4999894
+## #CHROM11         LG19  5914829 0.2448980 0.1596875 0.2022927 0.1800000
+##                    Fst NumAlleles Num1 Num2
+## #CHROM4   6.513193e-02          2   38  116
+## #CHROM6  -4.488046e-02          2   52  160
+## #CHROM8   3.576142e-02          2   43  136
+## #CHROM9   2.349818e-02          2   55  159
+## #CHROM10 -2.417509e-06          2   54  163
+## #CHROM11 -1.238485e-01          2   35  120</code></pre>
+<p>To identify the SNPs that are outliers, compare the value of 2NFst(k-1) to the chi-squared distribution with k-1 degrees of freedom, and then adjust for multiple tests using the Benjamini-Hochberg (1995) false discovery rate.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sel$Chi&lt;-<span class="dv">2</span>*((sel$Num1+sel$Num2)/<span class="dv">2</span>)*sel$Fst
+sel$Chi.p&lt;-<span class="dv">1</span>-<span class="kw">pchisq</span>(sel$Chi,<span class="dv">1</span>)
+sel$Chi.p.adj&lt;-<span class="kw">p.adjust</span>(sel$Chi.p,<span class="dt">method=</span><span class="st">&quot;BH&quot;</span>)</code></pre></div>
+<div id="the-wrapper-function" class="section level3">
+<h3>The wrapper function</h3>
+<p>For ease of implementation, all of the above steps are contained in the wrapper function <code>gwsca</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sel&lt;-<span class="kw">gwsca</span>(vcf,locus.info,grp1,grp2,<span class="dt">prop.ind.thresh=</span><span class="fl">0.5</span>,<span class="dt">maf.cutoff=</span><span class="fl">0.05</span>)
+<span class="kw">head</span>(sel)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(sel)</code></pre></div>
+<pre><code>##                 Chrom      Pos       Hs1       Hs2        Hs        Ht
+## #CHROM4          LG20  7996734 0.1672438 0.2187500 0.1929969 0.2064429
+## #CHROM6           LG7  8729758 0.2603550 0.2187500 0.2395525 0.2292631
+## #CHROM8          LG10  7108538 0.3918334 0.4452584 0.4185459 0.4340688
+## #CHROM9          LG13  7101065 0.1502479 0.1657569 0.1580024 0.1618045
+## #CHROM10 scaffold_406   148230 0.5000000 0.4999812 0.4999906 0.4999894
+## #CHROM11         LG19  5914829 0.2448980 0.1596875 0.2022927 0.1800000
+##                    Fst NumAlleles Num1 Num2           Chi       Chi.p
+## #CHROM4   6.513193e-02          2   38  116  1.003032e+01 0.001539846
+## #CHROM6  -4.488046e-02          2   52  160 -9.514657e+00 1.000000000
+## #CHROM8   3.576142e-02          2   43  136  6.401295e+00 0.011403715
+## #CHROM9   2.349818e-02          2   55  159  5.028610e+00 0.024931905
+## #CHROM10 -2.417509e-06          2   54  163 -5.245995e-04 1.000000000
+## #CHROM11 -1.238485e-01          2   35  120 -1.919652e+01 1.000000000
+##           Chi.p.adj
+## #CHROM4  0.00795746
+## #CHROM6  1.00000000
+## #CHROM8  0.04329546
+## #CHROM9  0.08377120
+## #CHROM10 1.00000000
+## #CHROM11 1.00000000</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">colnames</span>(sel)</code></pre></div>
+<pre><code>##  [1] &quot;Chrom&quot;      &quot;Pos&quot;        &quot;Hs1&quot;        &quot;Hs2&quot;        &quot;Hs&quot;        
+##  [6] &quot;Ht&quot;         &quot;Fst&quot;        &quot;NumAlleles&quot; &quot;Num1&quot;       &quot;Num2&quot;      
+## [11] &quot;Chi&quot;        &quot;Chi.p&quot;      &quot;Chi.p.adj&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">vcf[<span class="dv">1</span>:<span class="dv">5</span>,<span class="dv">1</span>:<span class="dv">20</span>]</code></pre></div>
+<pre><code>##   #CHROM      POS    ID REF ALT QUAL FILTER                  INFO
+## 1    LG1 11057388 71978   T   A    .   PASS NS=200;AF=0.938,0.062
+## 2   LG20  2142973 21898   A   T    .   PASS NS=377;AF=0.950,0.050
+## 3    LG2  8707930 28796   G   A    .   PASS NS=352;AF=0.942,0.058
+## 4    LG5  8217463 35831   A   G    .   PASS NS=280;AF=0.775,0.225
+## 5   LG20  7996734 23025   G   A    .   PASS NS=273;AF=0.872,0.128
+##        FORMAT   sample_FEM001_align sample_FEM002_align
+## 1 GT:DP:AD:GL       ./.:0:.,.:.,.,.     ./.:0:.,.:.,.,.
+## 2 GT:DP:AD:GL 0/0:10:10,0:.,13.86,.  0/0:4:4,0:.,5.55,.
+## 3 GT:DP:AD:GL    0/0:6:6,0:.,8.32,.  0/0:4:4,0:.,5.55,.
+## 4 GT:DP:AD:GL       ./.:6:.,.:.,.,.     ./.:3:.,.:.,.,.
+## 5 GT:DP:AD:GL    0/0:3:3,0:.,4.16,.     ./.:0:.,.:.,.,.
+##     sample_FEM004_align   sample_FEM005_align   sample_FEM006_align
+## 1       ./.:0:.,.:.,.,.       ./.:0:.,.:.,.,.       ./.:0:.,.:.,.,.
+## 2 0/0:19:19,0:.,26.34,. 0/0:11:11,0:.,15.25,. 0/0:16:16,0:.,22.18,.
+## 3    0/0:6:6,0:.,8.32,.  0/0:20:8,0:.,27.73,.  0/0:14:5,0:.,19.41,.
+## 4       ./.:0:.,.:.,.,.       ./.:3:.,.:.,.,.       ./.:0:.,.:.,.,.
+## 5   0/0:8:8,0:.,11.09,.       ./.:0:.,.:.,.,.    0/0:6:6,0:.,8.32,.
+##     sample_FEM008_align   sample_FEM009_align   sample_FEM010_align
+## 1       ./.:0:.,.:.,.,.       ./.:0:.,.:.,.,.       ./.:0:.,.:.,.,.
+## 2 0/0:11:11,0:.,15.25,. 0/0:17:17,0:.,23.57,.  0/1:13:8,5:.,18.02,.
+## 3 0/0:14:14,0:.,19.41,.  0/0:12:7,0:.,16.64,. 1/1:13:0,13:.,18.02,.
+## 4       ./.:0:.,.:.,.,.    0/0:4:4,0:.,5.55,.    0/0:6:6,0:.,8.32,.
+## 5       ./.:4:.,.:.,.,.    0/0:4:4,0:.,5.55,.    1/1:4:0,4:.,5.55,.
+##     sample_FEM011_align   sample_FEM013_align    sample_FEM014_align
+## 1       ./.:0:.,.:.,.,.       ./.:0:.,.:.,.,.        ./.:0:.,.:.,.,.
+## 2 0/0:10:10,0:.,13.86,.       ./.:0:.,.:.,.,. 0/1:26:14,12:.,36.04,.
+## 3 0/0:16:16,0:.,22.18,. 0/0:18:18,0:.,24.95,.  0/0:12:12,0:.,16.64,.
+## 4    1/1:3:0,3:.,4.16,.   0/0:8:8,0:.,11.09,.  0/0:14:14,0:.,19.41,.
+## 5    0/0:3:3,0:.,4.16,.       ./.:0:.,.:.,.,.        ./.:0:.,.:.,.,.</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">locus.info</code></pre></div>
+<pre><code>##  [1] &quot;#CHROM&quot; &quot;POS&quot;    &quot;ID&quot;     &quot;REF&quot;    &quot;ALT&quot;    &quot;QUAL&quot;   &quot;FILTER&quot;
+##  [8] &quot;INFO&quot;   &quot;FORMAT&quot; &quot;SNP&quot;</code></pre>
 </div>
-<div id="styles" class="section level2">
-<h2>Styles</h2>
-<p>The <code>html_vignette</code> template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:</p>
-<pre><code>output: 
-  rmarkdown::html_vignette:
-    css: mystyles.css</code></pre>
+<div id="plot-the-results" class="section level3">
+<h3>Plot the results</h3>
+<p>The <code>gwscaR</code> package includes a function to plot genome-wide statistics.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fst.plot</span>(sel, <span class="dt">fst.name=</span><span class="st">&quot;Fst&quot;</span>, 
+             <span class="dt">chrom.name=</span><span class="st">&quot;Chrom&quot;</span>, <span class="dt">axis.size=</span><span class="dv">0</span>,<span class="dt">bp.name=</span><span class="st">&quot;Pos&quot;</span>,
+             <span class="dt">sig.col=</span><span class="kw">c</span>(<span class="st">&quot;black&quot;</span>,<span class="st">&quot;black&quot;</span>))</code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAACVBMVEUSEhK/v7/////zLn49AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAJbklEQVR4nO2a24LjKAxEgf//6J22jVQSJGWnkw7J1nmYaV+wzTESF6c0cZfy7gdYHQkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQYSXCKqdsLFvNvzbNnPBvG+8dj4y3iQdaT97wqVOIUEECSL8naBSJCg9UhBU/oEH47m5oARJUBakEAOmgvDZJUiC7rKqoH9RLkF3BP30ExIkQY8LUogxQUrSEiRBEiRB7aKgrfPNBf/3gordtxSb5/9K0NaFf40gkPIkQfsg8LsE7bcuTwmx8mWCoAmF4e2vBOWbpBKfJciz0CjjEUGegr5GUDw3F+SC/gmumOzHm6Qj3yHIGwIRtMfULL/bViyxT+Q/XRCkkicLOrqC/4+gqyG2oqDtiTBmnhlil0fS64XY1vy9Sdhi3l1BCO5L1z4lCPvJn5e1tiAfDr5QkA+pavxSuf29mqAYYtcEDYPHfO2pIFhzDkPRVQVVTNL92eOA17ZjwbC6/gtBXmK1EPN5EUZYHeaUtt0LXhUUe7EUYr2KxztYSFDIPDZgOSloP/1ciIVxEDbG0EaPWywoqBQwVM+F2FE2RkjFa98Q5DdtoQXtD7BYDooNaJxox9zhtdlqUvq/5WdHEmRXa8lCNIvuxrd0hdcm6eDnzu+DjtqAmxJHCf1pC+7pRc1BHQRtf/ejIbWd5dW9mA+N+ytlgqpVpqEO92Dl+8mxoe4n+pE9O/nVLtblL39AdVNQDyiv2HZGr5/9jR7G9obmgjtozauF2LYBCQkOHreHZH5sWbVCQN0SBIY8hIYjdn8YF5zk9YLwad2IHYLEcWxZbEBq6duhFwtn98Z0XLjGa6Dja3V5dZJu+O5xo4WUMuqAM8LCD6a3rcFY7gdBlpjhLosJ8vfuMVODLczB4UhPF81rB/WKgux7iLk84hheSQ89OHyBV42D/L1jVomGvAIVTbje/QmtS2sQoVlQcLvf1Dq+6iG2SJIOBiBNbFkkCgr/NxtIx6Qezz5WBg4j4ZY+8jpK990/YvbR9GKCWhcEy0NQXcgLKCgkolqxQ4pqITmBGBfUt3ZBS001UFCvcI2CegU8xI5zjzoV2DcXBKm4hXbWQwz8rCUIn9wf8ahVLRALux9vLTaUDukkO00jxO3C5nZ/gtgE+9BiEUH7k/qotgQlaXqA1az9zFA/NNNb56RV9cz18wQQl75iV1YRZC0gdFsTQQ1HAcEZJmn0Yw0qJe4u9pCKIRYFLdHNh6cN9S5p9OuRkfv/ozH0LfMzzFCP9J6aIh7HEOvW3ysoVzbWZ+yVah5ClqgRsnHY2tWl/mtC9TXpctnQWwRBZY8aDIXmXdd4bFQ7K7Ddb+vF1hB0Jw17F5dGjKmig8QbgiAMz3laQhBW+/4L/s1RftaNI28XdKpa7+NiZSTo7wW92BBNNiRuFxA0G+2GvvnG/OocZ4viENLmLYsIsinD9LFtYDup/Gzi5eOCyZeME4LS+1hC0M1K9EX8URDMO+JIyacQ6UonRdksdilBoVIecg1mam186Lt+Yq1bHG7hRh5zxr8v1uVPWlBfJvWnTxP98EODsGZos/l8PT+72JyOs8ZsPizh2Hea8EK9MeGX04bBsE8ifPp0JKFqJZqdZdPjFEwDiyx3hCSNv/kpUBEMN4gpW8zIc/ZDIfzYYS+818Iu5KvSwyxtqRXF6n3HKAhWw8JmOCXuaLZSEVKu1Rdu1PqSQS/Tta8lCKwkQzUYmq/Jx8+rHo8tTYQxe/V72hPsu3E0tJ6g0PZrX0/3Q21I6N2pC5otudpwIP/OqH9N8yN22d6yLtbl1d/mrb7h5Xpatt+gusoYYv5bqALX8rPTPc1qENSPrCModTUeDp4q7FxvIW4Wl8Qq+oF2Fn97FpMbHMGgXkVQaP/9hVuDmgrqv0AY/KSPpLcEQftLgiCmVwmxmCAgbNI319YP244gqMH0Y78sXNpW4/GeQcQgaJ0kHROEh01ceT5Odh8tC+onlPwbjuNaKcQgd32AII+jKKhNBdVZiOEJcOWZoL2hQWyuLShm4iSoRT8tqKtW0lvNKKjvCdLB7PqCKvbrXmlPD/HxS/gEG3X2JNUfF8eDM0EfEWL+Mx+fMnngJEHWnpIgDLGxxU1CLHjFKyws6OiL7gmCgEshBvWLguZJehBkheyKCwmyBuTZ80aIHa2mFzSCIFzmgkHnJUH75mKCKggJrb/aVLKFhNrnESnEsFanBaUQW0tQdT+QdbMgiLheEBORXSwKyiF2JLDxJl6ia19IkL20sV96RBCGmJf3loF3sbO8xB7FSyXpU4IgJVlBn/qDoHu9mAvCYp8h6EaIzYZxqeAFQRZioeGlO2yrZQsKqtGPj6SZIDyjm06n9D9t/01BaRJ7sS5/sKJ4XdB+Cu4br52P1Fsh5j3qOutB3ggmgk6E2ExQGhef6OZ7DdcU1Os4hhj+3fqbD990xhCzFewHBC0aYt4ImKCjB7JPHPHsJwjq+xdL0tYIniPo8RBbVZA9LBM0C7GJoHxtOBLd2lmpxOcKyjKuCrJZlh34hAWzdwqaDiS+QVDo8X4RYt8qKI6Zrg8U/cCXhtjzBH1rkn40xPb94ZPtdwp6tJvfK1JuzMUk6KiIBMVT8hGFWDolHxlvko5I0AcJ+iY+QlB541N+giBcs58ff+XNX3jtZ0EEMX+/vPnrLv08WAMajz9P2UcIIsz8PM3QNwh6KRJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCBJEkCCCBBEkiCBBBAkiSBBBgggSRJAgggQRJIggQQQJIkgQQYIIEkSQIIIEESSIIEEECSJIEEGCCP8BU3FJ6wTIs5QAAAAASUVORK5CYII=" /><!-- --></p>
+<pre><code>##                                Chrom Pos        Hs1        Hs2         Hs
+## LG1.#CHROM68                     LG1   1 0.23298817 0.17087932 0.20193374
+## LG1.#CHROM153                    LG1   2 0.47337278 0.49839801 0.48588539
+## LG1.#CHROM156                    LG1   3 0.49959184 0.49988522 0.49973853
+## LG1.#CHROM175                    LG1   4 0.14059546 0.10807741 0.12433643
+## LG1.#CHROM177                    LG1   5 0.43213296 0.42240588 0.42726942
+## LG1.#CHROM191                    LG1   6 0.29336735 0.37761773 0.33549254
+## LG1.#CHROM208                    LG1   7 0.29454306 0.32102418 0.30778362
+## LG1.#CHROM215                    LG1   8 0.10226443 0.15691134 0.12958788
+## LG1.#CHROM243                    LG1   9 0.16380000 0.10938606 0.13659303
+## LG1.#CHROM252                    LG1  10 0.45013850 0.46096453 0.45555152
+## LG1.#CHROM308                    LG1  11 0.12924383 0.10278828 0.11601605
+## LG1.#CHROM339                    LG1  12 0.31257809 0.20375260 0.25816534
+## LG1.#CHROM344                    LG1  13 0.48389218 0.40047337 0.44218277
+## LG1.#CHROM351                    LG1  14 0.12444444 0.11864444 0.12154444
+## LG1.#CHROM413                    LG1  15 0.38408779 0.47107835 0.42758307
+## LG1.#CHROM417                    LG1  16 0.19132653 0.12895558 0.16014106
+## LG1.#CHROM455                    LG1  17 0.42968750 0.49144970 0.46056860
+## LG1.#CHROM529                    LG1  18 0.21875000 0.23263672 0.22569336
+## LG1.#CHROM643                    LG1  19 0.27777778 0.16089965 0.21933872
+## LG1.#CHROM652                    LG1  20 0.17087932 0.20340650 0.18714291
+## LG1.#CHROM656                    LG1  21 0.20414201 0.19753086 0.20083644
+## LG1.#CHROM668                    LG1  22 0.29144965 0.28733459 0.28939212
+## LG1.#CHROM669                    LG1  23 0.48000000 0.41344771 0.44672385
+## LG1.#CHROM686                    LG1  24 0.49524093 0.49434133 0.49479113
+## LG1.#CHROM710                    LG1  25 0.49967127 0.49997086 0.49982107
+## LG1.#CHROM721                    LG1  26 0.26489796 0.42850081 0.34669939
+## LG1.#CHROM748                    LG1  27 0.13784518 0.16765386 0.15274952
+## LG1.#CHROM752                    LG1  28 0.12122771 0.13508179 0.12815475
+## LG1.#CHROM782                    LG1  29 0.49982200 0.49445983 0.49714092
+## LG1.#CHROM784                    LG1  30 0.47305485 0.46835568 0.47070526
+## LG1.#CHROM791                    LG1  31 0.20551650 0.21594453 0.21073051
+## LG1.#CHROM820                    LG1  32 0.49637845 0.49878496 0.49758171
+## LG1.#CHROM837                    LG1  33 0.27777778 0.33573766 0.30675772
+## LG1.#CHROM871                    LG1  34 0.49956747 0.50000000 0.49978374
+## LG1.#CHROM938                    LG1  35 0.19541939 0.13020000 0.16280970
+## LG1.#CHROM939                    LG1  36 0.11951109 0.11647230 0.11799169
+## LG1.#CHROM952                    LG1  37 0.47590720 0.41105558 0.44348139
+## LG1.#CHROM978                    LG1  38 0.49519416 0.42099070 0.45809243
+## LG20.#CHROM4                    LG20  39 0.16724377 0.21875000 0.19299688
+## LG20.#CHROM98                   LG20  40 0.13519965 0.14455978 0.13987972
+## LG20.#CHROM350                  LG20  41 0.27777778 0.41238507 0.34508143
+## LG20.#CHROM368                  LG20  42 0.46141975 0.39051200 0.42596588
+## LG20.#CHROM381                  LG20  43 0.44148199 0.28451139 0.36299669
+## LG20.#CHROM391                  LG20  44 0.39496528 0.32470568 0.35983548
+## LG20.#CHROM398                  LG20  45 0.33098972 0.31823097 0.32461035
+## LG20.#CHROM472                  LG20  46 0.27257977 0.26959348 0.27108663
+## LG20.#CHROM553                  LG20  47 0.27777778 0.30006488 0.28892133
+## LG20.#CHROM566                  LG20  48 0.18000000 0.26568623 0.22284312
+## LG20.#CHROM621                  LG20  49 0.18325698 0.10493827 0.14409762
+## LG20.#CHROM623                  LG20  50 0.12335351 0.20097778 0.16216564
+## LG20.#CHROM649                  LG20  51 0.10951866 0.18752283 0.14852074
+## LG20.#CHROM673                  LG20  52 0.46875000 0.49647905 0.48261452
+## LG20.#CHROM869                  LG20  53 0.15879017 0.10005455 0.12942236
+## LG20.#CHROM958                  LG20  54 0.24012980 0.19640749 0.21826864
+## LG2.#CHROM15                     LG2  55 0.40650110 0.37881657 0.39265883
+## LG2.#CHROM38                     LG2  56 0.49971655 0.47433472 0.48702564
+## LG2.#CHROM58                     LG2  57 0.32000000 0.32000000 0.32000000
+## LG2.#CHROM79                     LG2  58 0.38718750 0.29098543 0.33908647
+## LG2.#CHROM101                    LG2  59 0.23415799 0.21043471 0.22229635
+## LG2.#CHROM106                    LG2  60 0.25887346 0.29561946 0.27724646
+## LG2.#CHROM116                    LG2  61 0.18000000 0.12586097 0.15293048
+## LG2.#CHROM157                    LG2  62 0.17381657 0.23781213 0.20581435
+## LG2.#CHROM216                    LG2  63 0.46740607 0.43569560 0.45155083
+## LG2.#CHROM226                    LG2  64 0.26592798 0.38610537 0.32601667
+## LG2.#CHROM242                    LG2  65 0.38443047 0.43115383 0.40779215
+## LG2.#CHROM272                    LG2  66 0.45368620 0.42938862 0.44153741
+## LG2.#CHROM297                    LG2  67 0.28358726 0.31829385 0.30094055
+## LG2.#CHROM322                    LG2  68 0.42165799 0.42769292 0.42467545
+## LG2.#CHROM323                    LG2  69 0.30127599 0.36506999 0.33317299
+## LG2.#CHROM331                    LG2  70 0.45209751 0.48358182 0.46783966
+## LG2.#CHROM333                    LG2  71 0.29752066 0.33614262 0.31683164
+## LG2.#CHROM349                    LG2  72 0.15277778 0.19753086 0.17515432
+## LG2.#CHROM359                    LG2  73 0.48166591 0.46751250 0.47458920
+## LG2.#CHROM425                    LG2  74 0.28624260 0.27356513 0.27990387
+## LG2.#CHROM429                    LG2  75 0.24757618 0.25872618 0.25315118
+## LG2.#CHROM440                    LG2  76 0.22684310 0.21206177 0.21945243
+## LG2.#CHROM459                    LG2  77 0.49457465 0.49920000 0.49688733
+## LG2.#CHROM465                    LG2  78 0.11718750 0.13419169 0.12568959
+## LG2.#CHROM526                    LG2  79 0.14345679 0.11350840 0.12848260
+## LG2.#CHROM571                    LG2  80 0.17554012 0.21875000 0.19714506
+## LG2.#CHROM611                    LG2  81 0.37500000 0.41180000 0.39340000
+## LG2.#CHROM644                    LG2  82 0.42536157 0.46228427 0.44382292
+## LG2.#CHROM645                    LG2  83 0.41256198 0.44033058 0.42644628
+## LG2.#CHROM671                    LG2  84 0.15968750 0.26592798 0.21280774
+## LG2.#CHROM681                    LG2  85 0.18295610 0.24357960 0.21326785
+## LG2.#CHROM696                    LG2  86 0.48380000 0.49018216 0.48699108
+## LG2.#CHROM708                    LG2  87 0.41135734 0.37671819 0.39403777
+## LG2.#CHROM711                    LG2  88 0.48086011 0.48029304 0.48057657
+## LG2.#CHROM718                    LG2  89 0.15673469 0.26035503 0.20854486
+## LG2.#CHROM755                    LG2  90 0.19242599 0.19132653 0.19187626
+## LG2.#CHROM769                    LG2  91 0.15277778 0.13007971 0.14142874
+## LG2.#CHROM787                    LG2  92 0.49586777 0.49991343 0.49789060
+## LG2.#CHROM825                    LG2  93 0.16724377 0.46768170 0.31746273
+## LG2.#CHROM849                    LG2  94 0.20761246 0.25280762 0.23021004
+## LG2.#CHROM912                    LG2  95 0.30679328 0.41172940 0.35926134
+## LG2.#CHROM919                    LG2  96 0.25500000 0.35529162 0.30514581
+## LG2.#CHROM934                    LG2  97 0.46511214 0.44718750 0.45614982
+## LG2.#CHROM968                    LG2  98 0.36984590 0.37998288 0.37491439
+## LG2.#CHROM982                    LG2  99 0.49111111 0.49366256 0.49238683
+## LG5.#CHROM13                     LG5 100 0.37500000 0.30993838 0.34246919
+## LG5.#CHROM42                     LG5 101 0.17087932 0.19646957 0.18367444
+## LG5.#CHROM203                    LG5 102 0.22684310 0.23745012 0.23214661
+## LG5.#CHROM274                    LG5 103 0.19753086 0.21201371 0.20477229
+## LG5.#CHROM276                    LG5 104 0.49913194 0.49715201 0.49814198
+## LG5.#CHROM278                    LG5 105 0.21875000 0.20375260 0.21125130
+## LG5.#CHROM302                    LG5 106 0.22272522 0.24201547 0.23237034
+## LG5.#CHROM315                    LG5 107 0.14720000 0.12783545 0.13751772
+## LG5.#CHROM388                    LG5 108 0.49524093 0.48556111 0.49040102
+## LG5.#CHROM433                    LG5 109 0.48000000 0.44841139 0.46420569
+## LG5.#CHROM435                    LG5 110 0.16724377 0.11951109 0.14337743
+## LG5.#CHROM537                    LG5 111 0.49974174 0.48808612 0.49391393
+## LG5.#CHROM549                    LG5 112 0.36911844 0.30297299 0.33604571
+## LG5.#CHROM558                    LG5 113 0.49861496 0.49709135 0.49785316
+## LG5.#CHROM618                    LG5 114 0.49861496 0.46973419 0.48417457
+## LG5.#CHROM620                    LG5 115 0.18295610 0.22476587 0.20386099
+## LG5.#CHROM624                    LG5 116 0.21365961 0.18612426 0.19989193
+## LG5.#CHROM626                    LG5 117 0.27777778 0.31692969 0.29735374
+## LG5.#CHROM655                    LG5 118 0.11451517 0.14981641 0.13216579
+## LG5.#CHROM685                    LG5 119 0.30055402 0.23765204 0.26910303
+## LG5.#CHROM693                    LG5 120 0.10226443 0.16127219 0.13176831
+## LG5.#CHROM698                    LG5 121 0.46400952 0.45192597 0.45796774
+## LG5.#CHROM823                    LG5 122 0.45918367 0.45048658 0.45483512
+## LG5.#CHROM838                    LG5 123 0.49845679 0.49950400 0.49898039
+## LG5.#CHROM995                    LG5 124 0.25803403 0.25139711 0.25471557
+## LG16.#CHROM18                   LG16 125 0.48979592 0.48269335 0.48624463
+## LG16.#CHROM67                   LG16 126 0.49787335 0.46744352 0.48265843
+## LG16.#CHROM125                  LG16 127 0.24859504 0.17900544 0.21380024
+## LG16.#CHROM163                  LG16 128 0.46400952 0.45013850 0.45707401
+## LG16.#CHROM180                  LG16 129 0.35390796 0.35473568 0.35432182
+## LG16.#CHROM225                  LG16 130 0.10872781 0.13717421 0.12295101
+## LG16.#CHROM237                  LG16 131 0.20975057 0.12924383 0.16949720
+## LG16.#CHROM260                  LG16 132 0.10872781 0.14036212 0.12454497
+## LG16.#CHROM389                  LG16 133 0.45610425 0.39971395 0.42790910
+## LG16.#CHROM500                  LG16 134 0.34026465 0.40816327 0.37421396
+## LG16.#CHROM501                  LG16 135 0.18000000 0.22423767 0.20211884
+## LG16.#CHROM506                  LG16 136 0.13717421 0.12122771 0.12920096
+## LG16.#CHROM521                  LG16 137 0.13020000 0.09613844 0.11316922
+## LG16.#CHROM552                  LG16 138 0.48380000 0.49681960 0.49030980
+## LG16.#CHROM560                  LG16 139 0.20551650 0.20652315 0.20601982
+## LG16.#CHROM579                  LG16 140 0.26756198 0.18999938 0.22878068
+## LG16.#CHROM613                  LG16 141 0.11072664 0.12541487 0.11807076
+## LG16.#CHROM630                  LG16 142 0.09874132 0.13353346 0.11613739
+## LG16.#CHROM729                  LG16 143 0.30615878 0.34223061 0.32419469
+## LG16.#CHROM760                  LG16 144 0.39262344 0.46920454 0.43091399
+## LG16.#CHROM770                  LG16 145 0.44220000 0.44513672 0.44366836
+## LG16.#CHROM835                  LG16 146 0.49359203 0.49342773 0.49350988
+## LG16.#CHROM858                  LG16 147 0.42482299 0.44740687 0.43611493
+## LG16.#CHROM898                  LG16 148 0.12335351 0.27920916 0.20128133
+## LG16.#CHROM954                  LG16 149 0.43981674 0.30369732 0.37175703
+## LG16.#CHROM972                  LG16 150 0.49916701 0.49981509 0.49949105
+## LG16.#CHROM986                  LG16 151 0.16380000 0.20301026 0.18340513
+## LG7.#CHROM6                      LG7 152 0.26035503 0.21875000 0.23955251
+## LG7.#CHROM39                     LG7 153 0.49500000 0.49506601 0.49503300
+## LG7.#CHROM115                    LG7 154 0.26592798 0.29752066 0.28172432
+## LG7.#CHROM127                    LG7 155 0.14059546 0.29398740 0.21729143
+## LG7.#CHROM158                    LG7 156 0.28578512 0.26367188 0.27472850
+## LG7.#CHROM179                    LG7 157 0.49567334 0.47692730 0.48630032
+## LG7.#CHROM251                    LG7 158 0.31719849 0.40123457 0.35921653
+## LG7.#CHROM281                    LG7 159 0.49965374 0.49104840 0.49535107
+## LG7.#CHROM287                    LG7 160 0.49671293 0.49417732 0.49544512
+## LG7.#CHROM345                    LG7 161 0.49979175 0.48509394 0.49244285
+## LG7.#CHROM404                    LG7 162 0.48000000 0.47740095 0.47870048
+## LG7.#CHROM416                    LG7 163 0.41319444 0.47120000 0.44219722
+## LG7.#CHROM477                    LG7 164 0.43875000 0.47277778 0.45576389
+## LG7.#CHROM495                    LG7 165 0.15277778 0.12221893 0.13749836
+## LG7.#CHROM509                    LG7 166 0.49111111 0.49831426 0.49471268
+## LG7.#CHROM533                    LG7 167 0.35853327 0.35390796 0.35622062
+## LG7.#CHROM614                    LG7 168 0.49905482 0.49946602 0.49926042
+## LG7.#CHROM629                    LG7 169 0.49445983 0.49558578 0.49502281
+## LG7.#CHROM678                    LG7 170 0.41522491 0.44164963 0.42843727
+## LG7.#CHROM701                    LG7 171 0.37041322 0.45481576 0.41261449
+## LG7.#CHROM709                    LG7 172 0.23230220 0.30941399 0.27085809
+## LG7.#CHROM754                    LG7 173 0.26880000 0.24115110 0.25497555
+## LG7.#CHROM777                    LG7 174 0.41384834 0.40342407 0.40863621
+## LG7.#CHROM779                    LG7 175 0.49976371 0.49346939 0.49661655
+## LG7.#CHROM790                    LG7 176 0.30468750 0.18663194 0.24565972
+## LG7.#CHROM814                    LG7 177 0.42780000 0.38255109 0.40517555
+## LG7.#CHROM863                    LG7 178 0.18295610 0.21404297 0.19849954
+## LG7.#CHROM864                    LG7 179 0.18325698 0.17381657 0.17853677
+## LG7.#CHROM865                    LG7 180 0.49967127 0.46670135 0.48318631
+## LG7.#CHROM887                    LG7 181 0.32000000 0.27335555 0.29667778
+## LG7.#CHROM889                    LG7 182 0.20665459 0.27621008 0.24143234
+## LG7.#CHROM897                    LG7 183 0.32230030 0.34804405 0.33517217
+## LG7.#CHROM907                    LG7 184 0.38026256 0.44444444 0.41235350
+## LG7.#CHROM933                    LG7 185 0.18408941 0.18486685 0.18447813
+## LG11.#CHROM73                   LG11 186 0.32284580 0.29065744 0.30675162
+## LG11.#CHROM84                   LG11 187 0.26592798 0.26367188 0.26479993
+## LG11.#CHROM99                   LG11 188 0.48220007 0.48263956 0.48241981
+## LG11.#CHROM120                  LG11 189 0.10278828 0.16337936 0.13308382
+## LG11.#CHROM186                  LG11 190 0.13487603 0.13412687 0.13450145
+## LG11.#CHROM198                  LG11 191 0.49070248 0.45103892 0.47087070
+## LG11.#CHROM212                  LG11 192 0.22620000 0.15363991 0.18991995
+## LG11.#CHROM235                  LG11 193 0.29144965 0.35344233 0.32244599
+## LG11.#CHROM303                  LG11 194 0.40816327 0.36556927 0.38686627
+## LG11.#CHROM309                  LG11 195 0.09683465 0.26623566 0.18153516
+## LG11.#CHROM348                  LG11 196 0.41469754 0.43863848 0.42666801
+## LG11.#CHROM371                  LG11 197 0.13020000 0.29914699 0.21467350
+## LG11.#CHROM409                  LG11 198 0.42000000 0.38826446 0.40413223
+## LG11.#CHROM454                  LG11 199 0.22272522 0.25827026 0.24049774
+## LG11.#CHROM578                  LG11 200 0.49524093 0.49795200 0.49659646
+## LG11.#CHROM582                  LG11 201 0.20551650 0.12013787 0.16282718
+## LG11.#CHROM604                  LG11 202 0.38004998 0.36202131 0.37103564
+## LG11.#CHROM605                  LG11 203 0.32254414 0.39470351 0.35862382
+## LG11.#CHROM639                  LG11 204 0.44033058 0.41149242 0.42591150
+## LG11.#CHROM660                  LG11 205 0.22684310 0.15831111 0.19257711
+## LG11.#CHROM717                  LG11 206 0.10072431 0.24337269 0.17204850
+## LG11.#CHROM881                  LG11 207 0.22684310 0.21139737 0.21912023
+## LG11.#CHROM923                  LG11 208 0.42344045 0.43473465 0.42908755
+## LG11.#CHROM945                  LG11 209 0.13020000 0.10209099 0.11614549
+## LG11.#CHROM951                  LG11 210 0.20761246 0.15968750 0.18364998
+## LG11.#CHROM966                  LG11 211 0.14201183 0.13563355 0.13882269
+## LG11.#CHROM980                  LG11 212 0.49555002 0.49882461 0.49718731
+## LG11.#CHROM983                  LG11 213 0.10679957 0.15363991 0.13021974
+## LG10.#CHROM8                    LG10 214 0.39183342 0.44525843 0.41854593
+## LG10.#CHROM93                   LG10 215 0.20144628 0.28986920 0.24565774
+## LG10.#CHROM154                  LG10 216 0.31065089 0.30816997 0.30941043
+## LG10.#CHROM181                  LG10 217 0.39920866 0.29161993 0.34541430
+## LG10.#CHROM190                  LG10 218 0.24685651 0.33776638 0.29231145
+## LG10.#CHROM220                  LG10 219 0.14201183 0.11857074 0.13029129
+## LG10.#CHROM221                  LG10 220 0.48842155 0.48369985 0.48606070
+## LG10.#CHROM231                  LG10 221 0.12444444 0.19185082 0.15814763
+## LG10.#CHROM269                  LG10 222 0.16089965 0.09500000 0.12794983
+## LG10.#CHROM286                  LG10 223 0.25086505 0.24012980 0.24549743
+## LG10.#CHROM340                  LG10 224 0.09683465 0.11437788 0.10560626
+## LG10.#CHROM364                  LG10 225 0.43574226 0.35733575 0.39653900
+## LG10.#CHROM383                  LG10 226 0.42438272 0.49663065 0.46050668
+## LG10.#CHROM428                  LG10 227 0.22565158 0.22461532 0.22513345
+## LG10.#CHROM464                  LG10 228 0.32610125 0.36570941 0.34590533
+## LG10.#CHROM517                  LG10 229 0.19242599 0.23141468 0.21192034
+## LG10.#CHROM565                  LG10 230 0.49961420 0.49931413 0.49946416
+## LG10.#CHROM572                  LG10 231 0.30055402 0.32645274 0.31350338
+## LG10.#CHROM616                  LG10 232 0.13265306 0.10562864 0.11914085
+## LG10.#CHROM682                  LG10 233 0.26880000 0.18620341 0.22750170
+## LG10.#CHROM725                  LG10 234 0.12335351 0.09789802 0.11062576
+## LG10.#CHROM728                  LG10 235 0.17233560 0.16262755 0.16748158
+## LG10.#CHROM785                  LG10 236 0.10072431 0.13020000 0.11546215
+## LG10.#CHROM834                  LG10 237 0.14779974 0.10255480 0.12517727
+## LG10.#CHROM854                  LG10 238 0.48685172 0.49886621 0.49285896
+## LG10.#CHROM860                  LG10 239 0.20665459 0.10807741 0.15736600
+## LG10.#CHROM911                  LG10 240 0.17233560 0.22853186 0.20043373
+## LG10.#CHROM963                  LG10 241 0.29423282 0.24169922 0.26796602
+## LG13.#CHROM9                    LG13 242 0.15024793 0.16575689 0.15800241
+## LG13.#CHROM46                   LG13 243 0.12706612 0.17623901 0.15165256
+## LG13.#CHROM87                   LG13 244 0.24757618 0.24080000 0.24418809
+## LG13.#CHROM192                  LG13 245 0.41584484 0.34233728 0.37909106
+## LG13.#CHROM199                  LG13 246 0.46875000 0.47041636 0.46958318
+## LG13.#CHROM273                  LG13 247 0.43875000 0.45227708 0.44551354
+## LG13.#CHROM285                  LG13 248 0.47295836 0.49445983 0.48370909
+## LG13.#CHROM377                  LG13 249 0.28358726 0.41219955 0.34789340
+## LG13.#CHROM393                  LG13 250 0.16724377 0.14779974 0.15752176
+## LG13.#CHROM422                  LG13 251 0.49845679 0.48326889 0.49086284
+## LG13.#CHROM449                  LG13 252 0.11196145 0.21875000 0.16535573
+## LG13.#CHROM473                  LG13 253 0.39875000 0.26901245 0.33388123
+## LG13.#CHROM482                  LG13 254 0.38563327 0.47548469 0.43055898
+## LG13.#CHROM493                  LG13 255 0.44668888 0.49445983 0.47057436
+## LG13.#CHROM505                  LG13 256 0.14201183 0.09683465 0.11942324
+## LG13.#CHROM523                  LG13 257 0.41086420 0.40060449 0.40573434
+## LG13.#CHROM647                  LG13 258 0.25180785 0.21139737 0.23160261
+## LG13.#CHROM690                  LG13 259 0.39579395 0.44205523 0.41892459
+## LG13.#CHROM723                  LG13 260 0.38718750 0.46141975 0.42430363
+## LG13.#CHROM753                  LG13 261 0.33521948 0.37017729 0.35269838
+## LG13.#CHROM758                  LG13 262 0.48542534 0.49954774 0.49248654
+## LG13.#CHROM812                  LG13 263 0.24489796 0.36072531 0.30281163
+## LG13.#CHROM845                  LG13 264 0.45266272 0.41822556 0.43544414
+## LG13.#CHROM884                  LG13 265 0.41808390 0.35473568 0.38640979
+## LG13.#CHROM891                  LG13 266 0.46875000 0.49564444 0.48219722
+## LG13.#CHROM910                  LG13 267 0.49963477 0.49774027 0.49868752
+## LG13.#CHROM946                  LG13 268 0.30468750 0.24893645 0.27681198
+## LG13.#CHROM961                  LG13 269 0.22241446 0.19203653 0.20722549
+## LG13.#CHROM991                  LG13 270 0.23834314 0.32830946 0.28332630
+## LG13.#CHROM998                  LG13 271 0.26035503 0.38443047 0.32239275
+## scaffold_406.#CHROM10   scaffold_406 272 0.50000000 0.49998118 0.49999059
+## scaffold_406.#CHROM365  scaffold_406 273 0.50000000 0.49998118 0.49999059
+## LG19.#CHROM11                   LG19 274 0.24489796 0.15968750 0.20229273
+## LG19.#CHROM78                   LG19 275 0.28172832 0.27229102 0.27700967
+## LG19.#CHROM91                   LG19 276 0.21456790 0.22879383 0.22168086
+## LG19.#CHROM105                  LG19 277 0.44444444 0.49938008 0.47191226
+## LG19.#CHROM132                  LG19 278 0.44683365 0.48422351 0.46552858
+## LG19.#CHROM167                  LG19 279 0.21176269 0.28973370 0.25074819
+## LG19.#CHROM313                  LG19 280 0.23011245 0.36824444 0.29917845
+## LG19.#CHROM367                  LG19 281 0.48442907 0.48197404 0.48320155
+## LG19.#CHROM445                  LG19 282 0.16089965 0.20797806 0.18443885
+## LG19.#CHROM474                  LG19 283 0.17129291 0.09751943 0.13440617
+## LG19.#CHROM486                  LG19 284 0.25180785 0.22600776 0.23890780
+## LG19.#CHROM581                  LG19 285 0.37500000 0.35231569 0.36365784
+## LG19.#CHROM583                  LG19 286 0.49963477 0.49970256 0.49966866
+## LG19.#CHROM617                  LG19 287 0.46875000 0.40765658 0.43820329
+## LG19.#CHROM662                  LG19 288 0.14201183 0.19267200 0.16734192
+## LG19.#CHROM672                  LG19 289 0.43252811 0.39586055 0.41419433
+## LG19.#CHROM694                  LG19 290 0.12192817 0.18000000 0.15096408
+## LG19.#CHROM724                  LG19 291 0.36072531 0.26880000 0.31476265
+## LG19.#CHROM730                  LG19 292 0.16262755 0.12263672 0.14263213
+## LG19.#CHROM783                  LG19 293 0.15879017 0.10826790 0.13352903
+## LG19.#CHROM810                  LG19 294 0.29863166 0.27777778 0.28820472
+## LG19.#CHROM824                  LG19 295 0.23415799 0.19203653 0.21309726
+## LG19.#CHROM937                  LG19 296 0.41050296 0.32541322 0.36795809
+## LG19.#CHROM950                  LG19 297 0.46597353 0.44957542 0.45777448
+## LG19.#CHROM964                  LG19 298 0.20244898 0.16528926 0.18386912
+## LG19.#CHROM994                  LG19 299 0.19242599 0.28917187 0.24079893
+## LG4.#CHROM14                     LG4 300 0.42165799 0.43931322 0.43048560
+## LG4.#CHROM137                    LG4 301 0.14993753 0.18408941 0.16701347
+## LG4.#CHROM140                    LG4 302 0.34875000 0.34656591 0.34765796
+## LG4.#CHROM238                    LG4 303 0.30892562 0.25500000 0.28196281
+## LG4.#CHROM279                    LG4 304 0.37500000 0.42406466 0.39953233
+## LG4.#CHROM293                    LG4 305 0.49185152 0.48463063 0.48824107
+## LG4.#CHROM312                    LG4 306 0.40123457 0.46343104 0.43233280
+## LG4.#CHROM324                    LG4 307 0.21520114 0.16711205 0.19115659
+## LG4.#CHROM356                    LG4 308 0.46875000 0.46130364 0.46502682
+## LG4.#CHROM358                    LG4 309 0.09874132 0.10617187 0.10245660
+## LG4.#CHROM394                    LG4 310 0.15277778 0.21749020 0.18513399
+## LG4.#CHROM401                    LG4 311 0.28624260 0.23472032 0.26048146
+## LG4.#CHROM436                    LG4 312 0.27218750 0.32373047 0.29795898
+## LG4.#CHROM559                    LG4 313 0.30839002 0.27614079 0.29226540
+## LG4.#CHROM570                    LG4 314 0.49896694 0.49780711 0.49838703
+## LG4.#CHROM598                    LG4 315 0.29752066 0.24803765 0.27277915
+## LG4.#CHROM625                    LG4 316 0.39420000 0.46072863 0.42746431
+## LG4.#CHROM627                    LG4 317 0.47001249 0.45772345 0.46386797
+## LG4.#CHROM632                    LG4 318 0.18600926 0.20123076 0.19362001
+## LG4.#CHROM664                    LG4 319 0.21176269 0.31181076 0.26178672
+## LG4.#CHROM697                    LG4 320 0.32698962 0.41815745 0.37257353
+## LG4.#CHROM720                    LG4 321 0.45995016 0.42291769 0.44143392
+## LG4.#CHROM745                    LG4 322 0.20290799 0.15642313 0.17966556
+## LG4.#CHROM759                    LG4 323 0.30679328 0.28823381 0.29751355
+## LG4.#CHROM792                    LG4 324 0.48077662 0.45204995 0.46641329
+## LG4.#CHROM873                    LG4 325 0.12555473 0.16992188 0.14773830
+## LG4.#CHROM899                    LG4 326 0.41670137 0.43324704 0.42497421
+## LG4.#CHROM957                    LG4 327 0.22353715 0.23949912 0.23151814
+## LG4.#CHROM976                    LG4 328 0.50000000 0.49997945 0.49998973
+## LG15.#CHROM16                   LG15 329 0.14201183 0.13341797 0.13771490
+## LG15.#CHROM44                   LG15 330 0.42690311 0.43923070 0.43306691
+## LG15.#CHROM71                   LG15 331 0.49983471 0.49904297 0.49943884
+## LG15.#CHROM80                   LG15 332 0.32867341 0.42556885 0.37712113
+## LG15.#CHROM81                   LG15 333 0.26489796 0.28268861 0.27379329
+## LG15.#CHROM103                  LG15 334 0.33980064 0.28593202 0.31286633
+## LG15.#CHROM185                  LG15 335 0.49928800 0.49881023 0.49904912
+## LG15.#CHROM219                  LG15 336 0.49767562 0.48396079 0.49081821
+## LG15.#CHROM223                  LG15 337 0.10717975 0.11235711 0.10976843
+## LG15.#CHROM246                  LG15 338 0.46991812 0.45867188 0.46429500
+## LG15.#CHROM268                  LG15 339 0.48468750 0.48708546 0.48588648
+## LG15.#CHROM277                  LG15 340 0.11718750 0.10180660 0.10949705
+## LG15.#CHROM280                  LG15 341 0.45827160 0.46507653 0.46167407
+## LG15.#CHROM290                  LG15 342 0.21520114 0.21875000 0.21697557
+## LG15.#CHROM321                  LG15 343 0.25631897 0.19271071 0.22451484
+## LG15.#CHROM329                  LG15 344 0.28279959 0.13030955 0.20655457
+## LG15.#CHROM470                  LG15 345 0.24757618 0.22162722 0.23460170
+## LG15.#CHROM530                  LG15 346 0.33521948 0.26680547 0.30101248
+## LG15.#CHROM555                  LG15 347 0.37500000 0.42825987 0.40162994
+## LG15.#CHROM569                  LG15 348 0.49982200 0.48663028 0.49322614
+## LG15.#CHROM936                  LG15 349 0.39669421 0.38109663 0.38889542
+## LG15.#CHROM956                  LG15 350 0.15024793 0.10120248 0.12572521
+## LG3.#CHROM31                     LG3 351 0.19753086 0.12404030 0.16078558
+## LG3.#CHROM61                     LG3 352 0.10872781 0.13933196 0.12402988
+## LG3.#CHROM94                     LG3 353 0.49980000 0.49989940 0.49984970
+## LG3.#CHROM110                    LG3 354 0.11280000 0.11985054 0.11632527
+## LG3.#CHROM128                    LG3 355 0.43102041 0.40641819 0.41871930
+## LG3.#CHROM160                    LG3 356 0.32486464 0.30322904 0.31404684
+## LG3.#CHROM166                    LG3 357 0.11951109 0.12481237 0.12216173
+## LG3.#CHROM193                    LG3 358 0.16528926 0.22261593 0.19395259
+## LG3.#CHROM218                    LG3 359 0.40268166 0.47220570 0.43744368
+## LG3.#CHROM229                    LG3 360 0.43520000 0.43875000 0.43697500
+## LG3.#CHROM241                    LG3 361 0.14059546 0.19580000 0.16819773
+## LG3.#CHROM266                    LG3 362 0.21875000 0.12393296 0.17134148
+## LG3.#CHROM314                    LG3 363 0.49875000 0.49026501 0.49450750
+## LG3.#CHROM325                    LG3 364 0.46875000 0.49982853 0.48428927
+## LG3.#CHROM335                    LG3 365 0.19242599 0.18396281 0.18819440
+## LG3.#CHROM408                    LG3 366 0.17315527 0.16992188 0.17153857
+## LG3.#CHROM432                    LG3 367 0.16528926 0.19753086 0.18141006
+## LG3.#CHROM438                    LG3 368 0.19284149 0.24106909 0.21695529
+## LG3.#CHROM469                    LG3 369 0.31065089 0.27636010 0.29350549
+## LG3.#CHROM475                    LG3 370 0.20244898 0.15879017 0.18061957
+## LG3.#CHROM492                    LG3 371 0.22760771 0.23042692 0.22901731
+## LG3.#CHROM525                    LG3 372 0.25500000 0.21176269 0.23338134
+## LG3.#CHROM527                    LG3 373 0.12292244 0.10055603 0.11173924
+## LG3.#CHROM594                    LG3 374 0.15024793 0.18000000 0.16512397
+## LG3.#CHROM661                    LG3 375 0.45995016 0.48377763 0.47186390
+## LG3.#CHROM674                    LG3 376 0.28195087 0.29017839 0.28606463
+## LG3.#CHROM699                    LG3 377 0.37500000 0.42385485 0.39942742
+## LG3.#CHROM700                    LG3 378 0.48769704 0.47025580 0.47897642
+## LG3.#CHROM703                    LG3 379 0.10493827 0.11985054 0.11239440
+## LG3.#CHROM704                    LG3 380 0.30055402 0.40916420 0.35485911
+## LG3.#CHROM773                    LG3 381 0.23553719 0.24059856 0.23806788
+## LG3.#CHROM776                    LG3 382 0.32774102 0.29279297 0.31026699
+## LG3.#CHROM803                    LG3 383 0.14720000 0.21242286 0.17981143
+## LG3.#CHROM809                    LG3 384 0.32698962 0.32953471 0.32826216
+## LG3.#CHROM813                    LG3 385 0.16528926 0.13040973 0.14784949
+## LG3.#CHROM821                    LG3 386 0.22853186 0.23441540 0.23147363
+## LG3.#CHROM878                    LG3 387 0.36337810 0.38204082 0.37270946
+## LG3.#CHROM901                    LG3 388 0.31682825 0.22760771 0.27221798
+## LG3.#CHROM904                    LG3 389 0.39551020 0.38850309 0.39200665
+## LG3.#CHROM917                    LG3 390 0.24859504 0.30948026 0.27903765
+## LG3.#CHROM932                    LG3 391 0.12555473 0.13030955 0.12793214
+## LG14.#CHROM19                   LG14 392 0.42184965 0.38314109 0.40249537
+## LG14.#CHROM48                   LG14 393 0.33240997 0.25280762 0.29260879
+## LG14.#CHROM49                   LG14 394 0.49833580 0.47172442 0.48503011
+## LG14.#CHROM66                   LG14 395 0.44973230 0.46829874 0.45901552
+## LG14.#CHROM104                  LG14 396 0.14720000 0.23111111 0.18915556
+## LG14.#CHROM136                  LG14 397 0.14059546 0.19753086 0.16906316
+## LG14.#CHROM170                  LG14 398 0.35030260 0.41802477 0.38416368
+## LG14.#CHROM196                  LG14 399 0.45044582 0.47949047 0.46496814
+## LG14.#CHROM211                  LG14 400 0.39920866 0.35285574 0.37603220
+## LG14.#CHROM236                  LG14 401 0.14901388 0.11405612 0.13153500
+## LG14.#CHROM248                  LG14 402 0.49688366 0.49055999 0.49372182
+## LG14.#CHROM259                  LG14 403 0.21120000 0.21637158 0.21378579
+## LG14.#CHROM264                  LG14 404 0.19753086 0.13040973 0.16397030
+## LG14.#CHROM373                  LG14 405 0.36281179 0.28220000 0.32250590
+## LG14.#CHROM376                  LG14 406 0.13487603 0.10914262 0.12200933
+## LG14.#CHROM434                  LG14 407 0.23011245 0.26592798 0.24802022
+## LG14.#CHROM481                  LG14 408 0.29423282 0.34908932 0.32166107
+## LG14.#CHROM599                  LG14 409 0.39830834 0.40060449 0.39945641
+## LG14.#CHROM642                  LG14 410 0.23553719 0.28316478 0.25935099
+## LG14.#CHROM646                  LG14 411 0.49980000 0.49967954 0.49973977
+## LG14.#CHROM663                  LG14 412 0.47580000 0.47498269 0.47539134
+## LG14.#CHROM683                  LG14 413 0.35502959 0.32541322 0.34022140
+## LG14.#CHROM734                  LG14 414 0.24489796 0.30118869 0.27304332
+## LG14.#CHROM736                  LG14 415 0.34448964 0.33165676 0.33807320
+## LG14.#CHROM789                  LG14 416 0.12335351 0.14082020 0.13208685
+## LG14.#CHROM793                  LG14 417 0.10679957 0.11791150 0.11235553
+## LG14.#CHROM801                  LG14 418 0.49715201 0.49906645 0.49810923
+## LG14.#CHROM804                  LG14 419 0.10493827 0.12879237 0.11686532
+## LG14.#CHROM805                  LG14 420 0.49718750 0.43739645 0.46729197
+## LG14.#CHROM816                  LG14 421 0.49979175 0.49318024 0.49648600
+## LG14.#CHROM819                  LG14 422 0.16680550 0.13695199 0.15187875
+## LG14.#CHROM900                  LG14 423 0.48313203 0.49789172 0.49051187
+## LG14.#CHROM902                  LG14 424 0.37004998 0.38814828 0.37909913
+## LG14.#CHROM916                  LG14 425 0.49861496 0.49767562 0.49814529
+## LG14.#CHROM988                  LG14 426 0.41469754 0.31231402 0.36350578
+## LG22.#CHROM20                   LG22 427 0.43307555 0.41101074 0.42204315
+## LG22.#CHROM54                   LG22 428 0.42438272 0.45610425 0.44024348
+## LG22.#CHROM57                   LG22 429 0.19753086 0.15181926 0.17467506
+## LG22.#CHROM118                  LG22 430 0.40123457 0.39277510 0.39700483
+## LG22.#CHROM130                  LG22 431 0.33833141 0.36532607 0.35182874
+## LG22.#CHROM288                  LG22 432 0.19376181 0.36051875 0.27714028
+## LG22.#CHROM346                  LG22 433 0.37500000 0.38143667 0.37821834
+## LG22.#CHROM567                  LG22 434 0.13020000 0.10743471 0.11881735
+## LG22.#CHROM648                  LG22 435 0.47195291 0.47530864 0.47363078
+## LG22.#CHROM659                  LG22 436 0.31474480 0.35091326 0.33282903
+## LG22.#CHROM676                  LG22 437 0.43771626 0.49208892 0.46490259
+## LG22.#CHROM750                  LG22 438 0.31772873 0.30658834 0.31215853
+## LG22.#CHROM797                  LG22 439 0.30244898 0.36337810 0.33291354
+## LG22.#CHROM851                  LG22 440 0.48086011 0.49978597 0.49032304
+## LG22.#CHROM906                  LG22 441 0.49982853 0.49734661 0.49858757
+## LG12.#CHROM22                   LG12 442 0.33468750 0.27392985 0.30430867
+## LG12.#CHROM63                   LG12 443 0.37500000 0.39277510 0.38388755
+## LG12.#CHROM64                   LG12 444 0.49434133 0.48401386 0.48917759
+## LG12.#CHROM88                   LG12 445 0.12335351 0.16482422 0.14408886
+## LG12.#CHROM135                  LG12 446 0.25887346 0.35650510 0.30768928
+## LG12.#CHROM171                  LG12 447 0.39551020 0.35203200 0.37377110
+## LG12.#CHROM411                  LG12 448 0.22853186 0.28694059 0.25773622
+## LG12.#CHROM444                  LG12 449 0.15277778 0.14790454 0.15034116
+## LG12.#CHROM451                  LG12 450 0.19753086 0.18978701 0.19365894
+## LG12.#CHROM453                  LG12 451 0.35005669 0.32185566 0.33595617
+## LG12.#CHROM467                  LG12 452 0.24227482 0.28329861 0.26278672
+## LG12.#CHROM510                  LG12 453 0.49982853 0.49661513 0.49822183
+## LG12.#CHROM600                  LG12 454 0.40499671 0.42192378 0.41346025
+## LG12.#CHROM635                  LG12 455 0.23011245 0.25542926 0.24277086
+## LG12.#CHROM667                  LG12 456 0.11072664 0.17893952 0.14483308
+## LG12.#CHROM670                  LG12 457 0.15615705 0.15572657 0.15594181
+## LG12.#CHROM722                  LG12 458 0.48685172 0.44083200 0.46384186
+## LG12.#CHROM741                  LG12 459 0.14643595 0.27040772 0.20842184
+## LG12.#CHROM744                  LG12 460 0.27777778 0.32955904 0.30366841
+## LG12.#CHROM749                  LG12 461 0.47673972 0.43638687 0.45656329
+## LG12.#CHROM866                  LG12 462 0.45610425 0.46477290 0.46043858
+## LG12.#CHROM875                  LG12 463 0.48487713 0.48699272 0.48593492
+## LG12.#CHROM926                  LG12 464 0.18600926 0.17304908 0.17952917
+## LG17.#CHROM23                   LG17 465 0.41238507 0.41539661 0.41389084
+## LG17.#CHROM56                   LG17 466 0.18600926 0.26526063 0.22563494
+## LG17.#CHROM86                   LG17 467 0.50000000 0.50000000 0.50000000
+## LG17.#CHROM102                  LG17 468 0.31526336 0.28640694 0.30083515
+## LG17.#CHROM119                  LG17 469 0.33673469 0.44965791 0.39319630
+## LG17.#CHROM159                  LG17 470 0.20665459 0.30596614 0.25631037
+## LG17.#CHROM301                  LG17 471 0.16004925 0.19438017 0.17721471
+## LG17.#CHROM307                  LG17 472 0.35265306 0.21533058 0.28399182
+## LG17.#CHROM337                  LG17 473 0.41469754 0.37500000 0.39484877
+## LG17.#CHROM370                  LG17 474 0.39669421 0.37145408 0.38407415
+## LG17.#CHROM405                  LG17 475 0.46597353 0.40695886 0.43646620
+## LG17.#CHROM410                  LG17 476 0.33673469 0.38550566 0.36112018
+## LG17.#CHROM450                  LG17 477 0.13487603 0.19482422 0.16485013
+## LG17.#CHROM476                  LG17 478 0.21456790 0.09730440 0.15593615
+## LG17.#CHROM498                  LG17 479 0.15879017 0.17361081 0.16620049
+## LG17.#CHROM534                  LG17 480 0.22353715 0.12650510 0.17502112
+## LG17.#CHROM633                  LG17 481 0.26132231 0.27913073 0.27022652
+## LG17.#CHROM706                  LG17 482 0.48487713 0.46747894 0.47617803
+## LG17.#CHROM775                  LG17 483 0.49978299 0.49349128 0.49663714
+## LG17.#CHROM788                  LG17 484 0.45078816 0.49700312 0.47389564
+## LG17.#CHROM827                  LG17 485 0.49715201 0.49042759 0.49378980
+## LG17.#CHROM861                  LG17 486 0.13265306 0.13412687 0.13338997
+## LG17.#CHROM867                  LG17 487 0.12192817 0.17757117 0.14974967
+## LG17.#CHROM892                  LG17 488 0.19968750 0.18568878 0.19268814
+## LG17.#CHROM960                  LG17 489 0.14059546 0.10097778 0.12078662
+## LG17.#CHROM973                  LG17 490 0.47041636 0.48964857 0.48003247
+## LG17.#CHROM992                  LG17 491 0.33074380 0.27915590 0.30494985
+## LG17.#CHROM997                  LG17 492 0.18000000 0.26393541 0.22196771
+## scaffold_511            scaffold_511 493 0.47917534 0.46343104 0.47130319
+## scaffold_461.#CHROM26   scaffold_461 494 0.21053875 0.13795764 0.17424820
+## scaffold_461.#CHROM832  scaffold_461 495 0.43915630 0.35862308 0.39888969
+## LG8.#CHROM27                     LG8 496 0.17608566 0.25154528 0.21381547
+## LG8.#CHROM83                     LG8 497 0.38443047 0.43743348 0.41093198
+## LG8.#CHROM97                     LG8 498 0.18836565 0.37500000 0.28168283
+## LG8.#CHROM146                    LG8 499 0.49972958 0.49865569 0.49919264
+## LG8.#CHROM149                    LG8 500 0.19013128 0.24411243 0.21712185
+## LG8.#CHROM155                    LG8 501 0.13519965 0.29790360 0.21655163
+## LG8.#CHROM176                    LG8 502 0.24489796 0.18620341 0.21555068
+## LG8.#CHROM214                    LG8 503 0.23919753 0.17608566 0.20764160
+## LG8.#CHROM217                    LG8 504 0.29234568 0.41092511 0.35163540
+## LG8.#CHROM227                    LG8 505 0.20842975 0.09828599 0.15335787
+## LG8.#CHROM256                    LG8 506 0.41319444 0.38819782 0.40069613
+## LG8.#CHROM299                    LG8 507 0.46106003 0.49297668 0.47701836
+## LG8.#CHROM306                    LG8 508 0.18000000 0.26809602 0.22404801
+## LG8.#CHROM375                    LG8 509 0.20665459 0.26692033 0.23678746
+## LG8.#CHROM407                    LG8 510 0.20761246 0.12481237 0.16621241
+## LG8.#CHROM430                    LG8 511 0.49159808 0.48712087 0.48935947
+## LG8.#CHROM466                    LG8 512 0.25086505 0.22684310 0.23885408
+## LG8.#CHROM484                    LG8 513 0.11495210 0.14110725 0.12802968
+## LG8.#CHROM490                    LG8 514 0.10951866 0.14696663 0.12824264
+## LG8.#CHROM497                    LG8 515 0.27292060 0.28336805 0.27814433
+## LG8.#CHROM515                    LG8 516 0.49500000 0.46050664 0.47775332
+## LG8.#CHROM516                    LG8 517 0.49982200 0.49903089 0.49942645
+## LG8.#CHROM535                    LG8 518 0.11072664 0.18704935 0.14888800
+## LG8.#CHROM551                    LG8 519 0.27119377 0.29806097 0.28462737
+## LG8.#CHROM576                    LG8 520 0.46280992 0.42998959 0.44639976
+## LG8.#CHROM586                    LG8 521 0.12924383 0.16873986 0.14899184
+## LG8.#CHROM601                    LG8 522 0.49704142 0.49760690 0.49732416
+## LG8.#CHROM637                    LG8 523 0.18739859 0.24357960 0.21548910
+## LG8.#CHROM677                    LG8 524 0.12783545 0.13639956 0.13211751
+## LG8.#CHROM726                    LG8 525 0.26035503 0.28751402 0.27393452
+## LG8.#CHROM781                    LG8 526 0.42000000 0.39426714 0.40713357
+## LG8.#CHROM795                    LG8 527 0.49604938 0.49021957 0.49313448
+## LG8.#CHROM798                    LG8 528 0.11718750 0.10691111 0.11204931
+## LG8.#CHROM826                    LG8 529 0.48000000 0.49982200 0.48991100
+## LG8.#CHROM846                    LG8 530 0.10872781 0.11169922 0.11021351
+## LG8.#CHROM852                    LG8 531 0.16089965 0.18712408 0.17401187
+## LG8.#CHROM857                    LG8 532 0.27777778 0.30468750 0.29123264
+## LG8.#CHROM862                    LG8 533 0.35986159 0.29203424 0.32594791
+## LG8.#CHROM883                    LG8 534 0.14993753 0.10977079 0.12985416
+## LG8.#CHROM908                    LG8 535 0.21875000 0.24406768 0.23140884
+## LG8.#CHROM925                    LG8 536 0.21176269 0.26947112 0.24061690
+## LG8.#CHROM965                    LG8 537 0.31065089 0.28454214 0.29759651
+## scaffold_587            scaffold_587 538 0.11718750 0.18362603 0.15040677
+## scaffold_909            scaffold_909 539 0.49980000 0.49997717 0.49988859
+## LG21.#CHROM89                   LG21 540 0.12706612 0.13178412 0.12942512
+## LG21.#CHROM134                  LG21 541 0.34179688 0.32541322 0.33360505
+## LG21.#CHROM195                  LG21 542 0.19284149 0.13502686 0.16393418
+## LG21.#CHROM228                  LG21 543 0.43950851 0.36962426 0.40456639
+## LG21.#CHROM234                  LG21 544 0.29423282 0.22341797 0.25882540
+## LG21.#CHROM257                  LG21 545 0.19753086 0.21520114 0.20636600
+## LG21.#CHROM414                  LG21 546 0.32284580 0.39579395 0.35931988
+## LG21.#CHROM443                  LG21 547 0.12192817 0.13186264 0.12689540
+## LG21.#CHROM531                  LG21 548 0.25180785 0.18119292 0.21650038
+## LG21.#CHROM554                  LG21 549 0.42690311 0.45153969 0.43922140
+## LG21.#CHROM608                  LG21 550 0.42150231 0.38689768 0.40420000
+## LG21.#CHROM695                  LG21 551 0.26977041 0.13189681 0.20083361
+## LG21.#CHROM714                  LG21 552 0.17381657 0.18498047 0.17939852
+## LG21.#CHROM715                  LG21 553 0.15968750 0.16197531 0.16083140
+## LG21.#CHROM806                  LG21 554 0.11998685 0.10572800 0.11285743
+## LG21.#CHROM841                  LG21 555 0.48109568 0.48922650 0.48516109
+## LG18.#CHROM121                  LG18 556 0.12192817 0.17426020 0.14809419
+## LG18.#CHROM168                  LG18 557 0.46022354 0.44444444 0.45233399
+## LG18.#CHROM230                  LG18 558 0.50000000 0.49988862 0.49994431
+## LG18.#CHROM261                  LG18 559 0.46400952 0.47265219 0.46833085
+## LG18.#CHROM271                  LG18 560 0.17087932 0.18295610 0.17691771
+## LG18.#CHROM316                  LG18 561 0.30641975 0.12521958 0.21581967
+## LG18.#CHROM347                  LG18 562 0.28875000 0.25448878 0.27161939
+## LG18.#CHROM357                  LG18 563 0.48720000 0.45555727 0.47137864
+## LG18.#CHROM361                  LG18 564 0.45610425 0.46017916 0.45814170
+## LG18.#CHROM369                  LG18 565 0.49058055 0.46875000 0.47966527
+## LG18.#CHROM382                  LG18 566 0.42000000 0.44776043 0.43388022
+## LG18.#CHROM387                  LG18 567 0.43213296 0.40668800 0.41941048
+## LG18.#CHROM390                  LG18 568 0.16803841 0.18384381 0.17594111
+## LG18.#CHROM397                  LG18 569 0.11718750 0.14630937 0.13174844
+## LG18.#CHROM461                  LG18 570 0.16528926 0.21761249 0.19145087
+## LG18.#CHROM487                  LG18 571 0.47530864 0.48836541 0.48183703
+## LG18.#CHROM519                  LG18 572 0.09874132 0.14901388 0.12387760
+## LG18.#CHROM541                  LG18 573 0.49718750 0.49365205 0.49541978
+## LG18.#CHROM591                  LG18 574 0.09683465 0.16680550 0.13182007
+## LG18.#CHROM929                  LG18 575 0.17087932 0.15277778 0.16182855
+## LG9.#CHROM45                     LG9 576 0.21491045 0.28830456 0.25160751
+## LG9.#CHROM69                     LG9 577 0.15809911 0.27229102 0.21519506
+## LG9.#CHROM108                    LG9 578 0.31065089 0.20595431 0.25830260
+## LG9.#CHROM143                    LG9 579 0.49652778 0.49812578 0.49732678
+## LG9.#CHROM172                    LG9 580 0.37500000 0.40499671 0.38999836
+## LG9.#CHROM182                    LG9 581 0.29591049 0.39928080 0.34759565
+## LG9.#CHROM210                    LG9 582 0.26880000 0.35186669 0.31033334
+## LG9.#CHROM330                    LG9 583 0.31772873 0.36867187 0.34320030
+## LG9.#CHROM336                    LG9 584 0.49845679 0.47949047 0.48897363
+## LG9.#CHROM341                    LG9 585 0.38004998 0.33260156 0.35632577
+## LG9.#CHROM343                    LG9 586 0.35502959 0.47158019 0.41330489
+## LG9.#CHROM380                    LG9 587 0.38204082 0.35959530 0.37081806
+## LG9.#CHROM448                    LG9 588 0.20842975 0.18888160 0.19865568
+## LG9.#CHROM460                    LG9 589 0.48220007 0.45177655 0.46698831
+## LG9.#CHROM491                    LG9 590 0.26822091 0.28875000 0.27848546
+## LG9.#CHROM504                    LG9 591 0.42000000 0.44605466 0.43302733
+## LG9.#CHROM507                    LG9 592 0.34026465 0.28986920 0.31506693
+## LG9.#CHROM543                    LG9 593 0.32698962 0.37086805 0.34892883
+## LG9.#CHROM564                    LG9 594 0.24489796 0.30274571 0.27382184
+## LG9.#CHROM622                    LG9 595 0.49185152 0.49762188 0.49473670
+## LG9.#CHROM653                    LG9 596 0.12292244 0.17591928 0.14942086
+## LG9.#CHROM689                    LG9 597 0.34677934 0.28835825 0.31756879
+## LG9.#CHROM738                    LG9 598 0.49861496 0.49961420 0.49911458
+## LG9.#CHROM774                    LG9 599 0.48468750 0.44091797 0.46280273
+## LG9.#CHROM802                    LG9 600 0.30178326 0.26813203 0.28495765
+## LG9.#CHROM818                    LG9 601 0.49567334 0.49813531 0.49690432
+## LG9.#CHROM830                    LG9 602 0.49982200 0.50000000 0.49991100
+## LG9.#CHROM833                    LG9 603 0.27173119 0.28587262 0.27880191
+## LG9.#CHROM853                    LG9 604 0.10493827 0.10373290 0.10433558
+## LG9.#CHROM877                    LG9 605 0.22408163 0.28390775 0.25399469
+## LG9.#CHROM924                    LG9 606 0.14345679 0.15277778 0.14811728
+## LG9.#CHROM959                    LG9 607 0.48551381 0.46693878 0.47622629
+## LG6.#CHROM77                     LG6 608 0.45918367 0.34616089 0.40267228
+## LG6.#CHROM205                    LG6 609 0.17608566 0.23601263 0.20604915
+## LG6.#CHROM247                    LG6 610 0.10140306 0.12730990 0.11435648
+## LG6.#CHROM265                    LG6 611 0.13487603 0.11583600 0.12535602
+## LG6.#CHROM275                    LG6 612 0.38875044 0.33425161 0.36150103
+## LG6.#CHROM291                    LG6 613 0.21875000 0.32698962 0.27286981
+## LG6.#CHROM352                    LG6 614 0.16680550 0.09910718 0.13295634
+## LG6.#CHROM395                    LG6 615 0.48389218 0.49450442 0.48919830
+## LG6.#CHROM412                    LG6 616 0.32894268 0.26502116 0.29698192
+## LG6.#CHROM471                    LG6 617 0.31568878 0.31779819 0.31674348
+## LG6.#CHROM540                    LG6 618 0.13020000 0.21053875 0.17036938
+## LG6.#CHROM584                    LG6 619 0.16528926 0.14993753 0.15761339
+## LG6.#CHROM631                    LG6 620 0.11495210 0.17361081 0.14428145
+## LG6.#CHROM651                    LG6 621 0.22926308 0.30322904 0.26624606
+## LG6.#CHROM680                    LG6 622 0.12783545 0.17026260 0.14904902
+## LG6.#CHROM687                    LG6 623 0.49981509 0.49413769 0.49697639
+## LG6.#CHROM743                    LG6 624 0.27292060 0.24139144 0.25715602
+## LG6.#CHROM800                    LG6 625 0.50000000 0.49997449 0.49998724
+## LG6.#CHROM829                    LG6 626 0.42603550 0.43429687 0.43016619
+## LG6.#CHROM847                    LG6 627 0.18325698 0.11576573 0.14951135
+## LG6.#CHROM879                    LG6 628 0.36775510 0.38839978 0.37807744
+## LG6.#CHROM940                    LG6 629 0.45392219 0.45223140 0.45307680
+## LG6.#CHROM944                    LG6 630 0.43771626 0.37340257 0.40555942
+## LG6.#CHROM967                    LG6 631 0.14643595 0.24351717 0.19497656
+## LG6.#CHROM974                    LG6 632 0.49671293 0.48798149 0.49234721
+## LG6.#CHROM989                    LG6 633 0.13050169 0.11517182 0.12283675
+## scaffold_439.#CHROM138  scaffold_439 634 0.12192817 0.18686921 0.15439869
+## scaffold_439.#CHROM141  scaffold_439 635 0.12979989 0.10652966 0.11816477
+## scaffold_1130          scaffold_1130 636 0.13487603 0.13426247 0.13456925
+## scaffold_391            scaffold_391 637 0.12335351 0.12658131 0.12496741
+## scaffold_427            scaffold_427 638 0.15809911 0.14596966 0.15203439
+## scaffold_970            scaffold_970 639 0.09500000 0.18801638 0.14150819
+## scaffold_396            scaffold_396 640 0.47387755 0.40968750 0.44178253
+## scaffold_174.#CHROM253  scaffold_174 641 0.48611111 0.49092098 0.48851605
+## scaffold_174.#CHROM483  scaffold_174 642 0.27119377 0.30665207 0.28892292
+## scaffold_174.#CHROM768  scaffold_174 643 0.50000000 0.50000000 0.50000000
+## scaffold_891.#CHROM258  scaffold_891 644 0.23834314 0.15277778 0.19556046
+## scaffold_891.#CHROM262  scaffold_891 645 0.10278828 0.14512573 0.12395700
+## scaffold_516            scaffold_516 646 0.13265306 0.10617187 0.11941247
+## scaffold_646            scaffold_646 647 0.23298817 0.13345295 0.18322056
+## scaffold_712            scaffold_712 648 0.29065744 0.27915590 0.28490667
+## scaffold_1108          scaffold_1108 649 0.12706612 0.11881822 0.12294217
+## scaffold_1844          scaffold_1844 650 0.49704142 0.49931413 0.49817777
+## scaffold_418            scaffold_418 651 0.14643595 0.20317119 0.17480357
+## scaffold_1185          scaffold_1185 652 0.17554012 0.23211818 0.20382915
+## scaffold_1017          scaffold_1017 653 0.24859504 0.21875000 0.23367252
+## scaffold_1116          scaffold_1116 654 0.25500000 0.36998377 0.31249189
+## scaffold_620            scaffold_620 655 0.50000000 0.50000000 0.50000000
+## scaffold_520            scaffold_520 656 0.09730440 0.29374050 0.19552245
+## scaffold_584            scaffold_584 657 0.09500000 0.09613844 0.09556922
+## scaffold_1005          scaffold_1005 658 0.50000000 0.50000000 0.50000000
+## scaffold_684            scaffold_684 659 0.49980777 0.50000000 0.49990388
+## scaffold_536            scaffold_536 660 0.09874132 0.09849890 0.09862011
+## scaffold_715.#CHROM702  scaffold_715 661 0.49359203 0.48846339 0.49102771
+## scaffold_715.#CHROM796  scaffold_715 662 0.45810249 0.46259771 0.46035010
+## scaffold_489            scaffold_489 663 0.49981509 0.49949288 0.49965398
+## scaffold_286            scaffold_286 664 0.49571331 0.49198846 0.49385088
+## scaffold_393            scaffold_393 665 0.49500000 0.49522302 0.49511151
+## scaffold_569            scaffold_569 666 0.23919753 0.26262269 0.25091011
+## scaffold_407            scaffold_407 667 0.49856505 0.49968750 0.49912628
+## scaffold_829.#CHROM941  scaffold_829 668 0.13717421 0.18888160 0.16302791
+## scaffold_829.#CHROM981  scaffold_829 669 0.13717421 0.18888160 0.16302791
+## scaffold_1258          scaffold_1258 670 0.23011245 0.21528849 0.22270047
+## scaffold_573            scaffold_573 671 0.11718750 0.12269156 0.11993953
+## scaffold_408            scaffold_408 672 0.36815194 0.39747241 0.38281217
+##                                Ht           Fst NumAlleles Num1 Num2
+## LG1.#CHROM68           0.18678826 -8.108370e-02          2   52  159
+## LG1.#CHROM153          0.49989892  2.803273e-02          2   52  159
+## LG1.#CHROM156          0.49998207  4.871085e-04          2   35  132
+## LG1.#CHROM175          0.11556941 -7.585935e-02          2   46  157
+## LG1.#CHROM177          0.42496551 -5.421415e-03          2   57  165
+## LG1.#CHROM191          0.35412116  5.260521e-02          2   42   95
+## LG1.#CHROM208          0.31457512  2.158942e-02          2   39  117
+## LG1.#CHROM215          0.14542936  1.089290e-01          2   37  134
+## LG1.#CHROM243          0.12303391 -1.102064e-01          2   50  155
+## LG1.#CHROM252          0.45871317  6.892441e-03          2   38  136
+## LG1.#CHROM308          0.10833664 -7.088477e-02          2   36  138
+## LG1.#CHROM339          0.23256850 -1.100615e-01          2   49  152
+## LG1.#CHROM344          0.42603550 -3.790123e-02          2   39  130
+## LG1.#CHROM351          0.11998685 -1.298137e-02          2   45  150
+## LG1.#CHROM413          0.45443218  5.908277e-02          2   54  158
+## LG1.#CHROM417          0.14522969 -1.026744e-01          2   56  166
+## LG1.#CHROM455          0.48228374  4.502564e-02          2   40  130
+## LG1.#CHROM529          0.22926308  1.557042e-02          2   52  160
+## LG1.#CHROM643          0.18962351 -1.567064e-01          2   45  153
+## LG1.#CHROM652          0.19550834  4.278810e-02          2   53  161
+## LG1.#CHROM656          0.19894592 -9.502660e-03          2   39  144
+## LG1.#CHROM668          0.28828324 -3.846522e-03          2   48  161
+## LG1.#CHROM669          0.43424707 -2.873199e-02          2   45  137
+## LG1.#CHROM686          0.49455078 -4.859978e-04          2   41  141
+## LG1.#CHROM710          0.50000000  3.578669e-04          2   39  131
+## LG1.#CHROM721          0.39962473  1.324376e-01          2   35  119
+## LG1.#CHROM748          0.16089965  5.065352e-02          2   47  157
+## LG1.#CHROM752          0.13145747  2.512382e-02          2   54  151
+## LG1.#CHROM782          0.49656157 -1.166717e-03          2   53  152
+## LG1.#CHROM784          0.46961601 -2.319461e-03          2   56  159
+## LG1.#CHROM791          0.21342845  1.264096e-02          2   43  134
+## LG1.#CHROM820          0.49830632  1.454147e-03          2   47  142
+## LG1.#CHROM837          0.32219510  4.791316e-02          2   54  164
+## LG1.#CHROM871          0.49997945  3.914506e-04          2   34  122
+## LG1.#CHROM938          0.14473287 -1.248978e-01          2   41  150
+## LG1.#CHROM939          0.11718750 -6.862455e-03          2   47  153
+## LG1.#CHROM952          0.42868662 -3.451184e-02          2   41  147
+## LG1.#CHROM978          0.44703409 -2.473713e-02          2   51  161
+## LG20.#CHROM4           0.20644291  6.513193e-02          2   38  116
+## LG20.#CHROM98          0.14233559  1.725406e-02          2   48  153
+## LG20.#CHROM350         0.38347206  1.001132e-01          2   45  129
+## LG20.#CHROM368         0.41219955 -3.339725e-02          2   54  156
+## LG20.#CHROM381         0.32841987 -1.052824e-01          2   38  131
+## LG20.#CHROM391         0.34320000 -4.847167e-02          2   48  152
+## LG20.#CHROM398         0.32133829 -1.018261e-02          2   43  136
+## LG20.#CHROM472         0.27030864 -2.878131e-03          2   43  137
+## LG20.#CHROM553         0.29520000  2.126921e-02          2   39  136
+## LG20.#CHROM566         0.24699756  9.779222e-02          2   45  149
+## LG20.#CHROM621         0.12564096 -1.469001e-01          2   49  144
+## LG20.#CHROM623         0.18157441  1.068916e-01          2   53  150
+## LG20.#CHROM649         0.17071900  1.300281e-01          2   43  148
+## LG20.#CHROM673         0.49210548  1.928643e-02          2   48  143
+## LG20.#CHROM869         0.11485684 -1.268146e-01          2   46  142
+## LG20.#CHROM958         0.20624082 -5.831932e-02          2   43  154
+## LG2.#CHROM15           0.38525942 -1.920631e-02          2   37  130
+## LG2.#CHROM38           0.48442907 -5.360061e-03          2   42  128
+## LG2.#CHROM58           0.32000000  0.000000e+00          2   40  120
+## LG2.#CHROM79           0.31845825 -6.477526e-02          2   40  116
+## LG2.#CHROM101          0.21602604 -2.902569e-02          2   48  159
+## LG2.#CHROM106          0.28751402  3.571152e-02          2   36  122
+## LG2.#CHROM116          0.13894950 -1.006191e-01          2   50  163
+## LG2.#CHROM157          0.22159808  7.122686e-02          2   52  145
+## LG2.#CHROM216          0.44444444 -1.598937e-02          2   47  145
+## LG2.#CHROM226          0.36295848  1.017797e-01          2   38  132
+## LG2.#CHROM242          0.42075650  3.081199e-02          2   52  159
+## LG2.#CHROM272          0.43534179 -1.423161e-02          2   46  157
+## LG2.#CHROM297          0.31117943  3.290344e-02          2   38  141
+## LG2.#CHROM322          0.42619114  3.556347e-03          2   48  142
+## LG2.#CHROM323          0.35148750  5.210571e-02          2   46  154
+## LG2.#CHROM331          0.47807078  2.140083e-02          2   42  149
+## LG2.#CHROM333          0.32717969  3.162803e-02          2   44  138
+## LG2.#CHROM349          0.18663194  6.149871e-02          2   54  162
+## LG2.#CHROM359          0.47120000 -7.192707e-03          2   47  153
+## LG2.#CHROM425          0.27672334 -1.149351e-02          2   52  159
+## LG2.#CHROM429          0.25624103  1.205837e-02          2   38  131
+## LG2.#CHROM440          0.21573394 -1.723650e-02          2   46  141
+## LG2.#CHROM459          0.49845679  3.148646e-03          2   48  150
+## LG2.#CHROM465          0.12979989  3.166643e-02          2   56  159
+## LG2.#CHROM526          0.12056276 -6.569057e-02          2   45  149
+## LG2.#CHROM571          0.20996147  6.104170e-02          2   36  136
+## LG2.#CHROM611          0.40429688  2.695266e-02          2   42  150
+## LG2.#CHROM644          0.45467684  2.387173e-02          2   44  142
+## LG2.#CHROM645          0.43388430  1.714286e-02          2   55  165
+## LG2.#CHROM671          0.24023866  1.141820e-01          2   40  114
+## LG2.#CHROM681          0.22853186  6.679157e-02          2   54  155
+## LG2.#CHROM696          0.48878620  3.672616e-03          2   50  157
+## LG2.#CHROM708          0.38437995 -2.512572e-02          2   38  145
+## LG2.#CHROM711          0.48043715 -2.902140e-04          2   46  136
+## LG2.#CHROM718          0.23814058  1.242784e-01          2   35  117
+## LG2.#CHROM755          0.19160024 -1.440616e-03          2   51  154
+## LG2.#CHROM769          0.13529584 -4.532961e-02          2   42  143
+## LG2.#CHROM787          0.49994794  4.115102e-03          2   44  152
+## LG2.#CHROM825          0.42354947  2.504707e-01          2   38  118
+## LG2.#CHROM849          0.24363664  5.510913e-02          2   34  128
+## LG2.#CHROM912          0.39051200  8.002484e-02          2   37  119
+## LG2.#CHROM919          0.33357988  8.523917e-02          2   50  158
+## LG2.#CHROM934          0.45199365 -9.195190e-03          2   53  160
+## LG2.#CHROM968          0.37751250  6.882178e-03          2   49  149
+## LG2.#CHROM982          0.49311485  1.476356e-03          2   45  151
+## LG5.#CHROM13           0.32679184 -4.797352e-02          2   42  133
+## LG5.#CHROM42           0.19028635  3.474715e-02          2   53  163
+## LG5.#CHROM203          0.23481805  1.137666e-02          2   46  138
+## LG5.#CHROM274          0.20852356  1.798967e-02          2   36  112
+## LG5.#CHROM276          0.49771290 -8.621017e-04          2   48  159
+## LG5.#CHROM278          0.20738750 -1.863082e-02          2   48  152
+## LG5.#CHROM302          0.23728339  2.070540e-02          2   47  142
+## LG5.#CHROM315          0.13265306 -3.667207e-02          2   50  153
+## LG5.#CHROM388          0.48804336 -4.830833e-03          2   41  153
+## LG5.#CHROM433          0.45768595 -1.424501e-02          2   55  165
+## LG5.#CHROM435          0.12991168 -1.036531e-01          2   38  141
+## LG5.#CHROM537          0.49226825 -3.343056e-03          2   44  149
+## LG5.#CHROM549          0.32000000 -5.014286e-02          2   43  137
+## LG5.#CHROM558          0.49899326  2.284811e-03          2   38  118
+## LG5.#CHROM618          0.47975535 -9.211404e-03          2   38  126
+## LG5.#CHROM620          0.21424647  4.847446e-02          2   54  155
+## LG5.#CHROM624          0.19233390 -3.929644e-02          2   37  130
+## LG5.#CHROM626          0.30727073  3.227444e-02          2   54  157
+## LG5.#CHROM655          0.14201183  6.933257e-02          2   41  141
+## LG5.#CHROM685          0.25065097 -7.361653e-02          2   38  156
+## LG5.#CHROM693          0.14860698  1.133101e-01          2   37  130
+## LG5.#CHROM698          0.45500000 -6.522510e-03          2   41  129
+## LG5.#CHROM823          0.45253470 -5.083429e-03          2   42  143
+## LG5.#CHROM838          0.49992472  1.888944e-03          2   36  127
+## LG5.#CHROM995          0.25291638 -7.113759e-03          2   46  156
+## LG16.#CHROM18          0.48461065 -3.371745e-03          2   42  129
+## LG16.#CHROM67          0.47807078 -9.596186e-03          2   46  145
+## LG16.#CHROM125         0.19753086 -8.236372e-02          2   55  161
+## LG16.#CHROM163         0.45361012 -7.636273e-03          2   41  133
+## LG16.#CHROM180         0.35456382  6.825233e-04          2   37  141
+## LG16.#CHROM225         0.13036073  5.684012e-02          2   52  162
+## LG16.#CHROM237         0.14828304 -1.430653e-01          2   42  144
+## LG16.#CHROM260         0.13265306  6.112256e-02          2   52  158
+## LG16.#CHROM389         0.41589331 -2.889153e-02          2   54  163
+## LG16.#CHROM500         0.39249711  4.658163e-02          2   46  133
+## LG16.#CHROM501         0.21447249  5.760020e-02          2   40  136
+## LG16.#CHROM506         0.12524648 -3.157354e-02          2   54  162
+## LG16.#CHROM521         0.10446330 -8.333956e-02          2   50  158
+## LG16.#CHROM552         0.49466596  8.806267e-03          2   50  163
+## LG16.#CHROM560         0.20626412  1.184376e-03          2   43  124
+## LG16.#CHROM579         0.21102219 -8.415459e-02          2   44  127
+## LG16.#CHROM613         0.12217523  3.359498e-02          2   34  119
+## LG16.#CHROM630         0.12475335  6.906398e-02          2   48  139
+## LG16.#CHROM729         0.33368307  2.843531e-02          2   53  162
+## LG16.#CHROM760         0.45567163  5.433220e-02          2   41  137
+## LG16.#CHROM770         0.44444444  1.746191e-03          2   50  160
+## LG16.#CHROM835         0.49346939 -8.204702e-05          2   53  157
+## LG16.#CHROM858         0.44216548  1.368390e-02          2   49  148
+## LG16.#CHROM898         0.24342409  1.731249e-01          2   53  155
+## LG16.#CHROM954         0.34298350 -8.389189e-02          2   49  158
+## LG16.#CHROM972         0.49970256  4.232653e-04          2   49  156
+## LG16.#CHROM986         0.19376181  5.345059e-02          2   50  157
+## LG7.#CHROM6            0.22926308 -4.488046e-02          2   52  160
+## LG7.#CHROM39           0.49505222  3.881616e-05          2   40  151
+## LG7.#CHROM115          0.28962747  2.728728e-02          2   57  165
+## LG7.#CHROM127          0.26145180  1.689044e-01          2   46  148
+## LG7.#CHROM158          0.26943213 -1.965754e-02          2   55  160
+## LG7.#CHROM179          0.48281467 -7.219432e-03          2   43  135
+## LG7.#CHROM251          0.38228703  6.034865e-02          2   43  126
+## LG7.#CHROM281          0.49382716 -3.085919e-03          2   38  142
+## LG7.#CHROM287          0.49477014 -1.364229e-03          2   37  139
+## LG7.#CHROM345          0.49115833 -2.615280e-03          2   49  139
+## LG7.#CHROM404          0.47797592 -1.515890e-03          2   35  127
+## LG7.#CHROM416          0.46000408  3.871022e-02          2   48  150
+## LG7.#CHROM477          0.46674515  2.352732e-02          2   40  150
+## LG7.#CHROM495          0.13058642 -5.293001e-02          2   48  130
+## LG7.#CHROM509          0.49718750  4.977632e-03          2   45  155
+## LG7.#CHROM533          0.35502959 -3.354739e-03          2   47  148
+## LG7.#CHROM614          0.49938133  2.421193e-04          2   46  153
+## LG7.#CHROM629          0.49536733  6.954763e-04          2   38  149
+## LG7.#CHROM678          0.43574226  1.676447e-02          2   51  161
+## LG7.#CHROM701          0.43762099  5.714191e-02          2   55  163
+## LG7.#CHROM709          0.29041338  6.733603e-02          2   41  115
+## LG7.#CHROM754          0.24775090 -2.916096e-02          2   50  164
+## LG7.#CHROM777          0.40611111 -6.217752e-03          2   53  157
+## LG7.#CHROM779          0.49674818  2.649885e-04          2   46  140
+## LG7.#CHROM790          0.21875000 -1.230159e-01          2   48  144
+## LG7.#CHROM814          0.39415680 -2.795523e-02          2   50  163
+## LG7.#CHROM863          0.20634990  3.804394e-02          2   54  160
+## LG7.#CHROM864          0.17608566 -1.391998e-02          2   49  156
+## LG7.#CHROM865          0.48191501 -2.638011e-03          2   39  124
+## LG7.#CHROM887          0.28587262 -3.779710e-02          2   35  101
+## LG7.#CHROM889          0.25979116  7.066762e-02          2   47  142
+## LG7.#CHROM897          0.34179688  1.938199e-02          2   52  156
+## LG7.#CHROM907          0.43155000  4.448267e-02          2   47  153
+## LG7.#CHROM933          0.18468858  1.139482e-03          2   39  131
+## LG11.#CHROM73          0.29849451 -2.766253e-02          2   42  136
+## LG11.#CHROM84          0.26426554 -2.022158e-03          2   57  160
+## LG11.#CHROM99          0.48253123  2.308877e-04          2   53  161
+## LG11.#CHROM120         0.15002206  1.129050e-01          2   46  156
+## LG11.#CHROM186         0.13431338 -1.400209e-03          2   55  166
+## LG11.#CHROM198         0.46293961 -1.713201e-02          2   44  147
+## LG11.#CHROM212         0.17160441 -1.067312e-01          2   50  161
+## LG11.#CHROM235         0.33990482  5.136387e-02          2   48  157
+## LG11.#CHROM303         0.37728306 -2.540059e-02          2   56  162
+## LG11.#CHROM309         0.22100450  1.785907e-01          2   49  117
+## LG11.#CHROM348         0.43355820  1.589219e-02          2   46  157
+## LG11.#CHROM371         0.26007758  1.745790e-01          2   50  142
+## LG11.#CHROM409         0.39640904 -1.948289e-02          2   35  110
+## LG11.#CHROM454         0.24896327  3.400311e-02          2   47  128
+## LG11.#CHROM578         0.49738714  1.589657e-03          2   41  125
+## LG11.#CHROM582         0.14030591 -1.605155e-01          2   43  148
+## LG11.#CHROM604         0.36640295 -1.264372e-02          2   49  158
+## LG11.#CHROM605         0.37885581  5.340286e-02          2   47  146
+## LG11.#CHROM639         0.41926774 -1.584610e-02          2   55  164
+## LG11.#CHROM660         0.17508330 -9.991705e-02          2   46  150
+## LG11.#CHROM717         0.20934953  1.781759e-01          2   47  134
+## LG11.#CHROM881         0.21498750 -1.922314e-02          2   46  154
+## LG11.#CHROM923         0.43222940  7.268936e-03          2   46  155
+## LG11.#CHROM945         0.10962739 -5.945690e-02          2   50  139
+## LG11.#CHROM951         0.17160441 -7.019381e-02          2   51  160
+## LG11.#CHROM966         0.13717421 -1.201743e-02          2   52  164
+## LG11.#CHROM980         0.49990531  5.437024e-03          2   53  165
+## LG11.#CHROM983         0.14231592  8.499529e-02          2   53  161
+## LG10.#CHROM8           0.43406885  3.576142e-02          2   43  136
+## LG10.#CHROM93          0.27066711  9.239901e-02          2   44  145
+## LG10.#CHROM154         0.30873066 -2.201812e-03          2   39  134
+## LG10.#CHROM181         0.32057924 -7.746932e-02          2   49  158
+## LG10.#CHROM190         0.31713152  7.826429e-02          2   52  158
+## LG10.#CHROM220         0.12444444 -4.698357e-02          2   52  158
+## LG10.#CHROM221         0.48491690 -2.358755e-03          2   46  144
+## LG10.#CHROM231         0.17258916  8.367577e-02          2   45  107
+## LG10.#CHROM269         0.11005229 -1.626276e-01          2   34  120
+## LG10.#CHROM286         0.24238775 -1.282936e-02          2   34  129
+## LG10.#CHROM340         0.11022011  4.186026e-02          2   49  156
+## LG10.#CHROM364         0.37962923 -4.454288e-02          2   53  161
+## LG10.#CHROM383         0.48918685  5.862825e-02          2   36  134
+## LG10.#CHROM428         0.22487822 -1.134969e-03          2   54  159
+## LG10.#CHROM464         0.35737345  3.209001e-02          2   39  137
+## LG10.#CHROM517         0.22227661  4.659183e-02          2   51  161
+## LG10.#CHROM565         0.49972641  5.247838e-04          2   36  135
+## LG10.#CHROM572         0.32071785  2.249475e-02          2   38  129
+## LG10.#CHROM616         0.11261664 -5.793286e-02          2   49  143
+## LG10.#CHROM682         0.20761246 -9.579987e-02          2   50  154
+## LG10.#CHROM725         0.10446330 -5.899172e-02          2   53  155
+## LG10.#CHROM728         0.16488045 -1.577583e-02          2   42  140
+## LG10.#CHROM785         0.12327038  6.334223e-02          2   47  150
+## LG10.#CHROM834         0.11422571 -9.587648e-02          2   56  166
+## LG10.#CHROM854         0.50000000  1.428207e-02          2   37  126
+## LG10.#CHROM860         0.13205258 -1.916920e-01          2   47  157
+## LG10.#CHROM911         0.21552653  7.002758e-02          2   42  133
+## LG10.#CHROM963         0.25532853 -4.949503e-02          2   53  160
+## LG13.#CHROM9           0.16180452  2.349818e-02          2   55  159
+## LG13.#CHROM46          0.16399067  7.523663e-02          2   44  128
+## LG13.#CHROM87          0.24238775 -7.427535e-03          2   38  125
+## LG13.#CHROM192         0.36133189 -4.914920e-02          2   39  130
+## LG13.#CHROM199         0.47006564  1.026366e-03          2   40  148
+## LG13.#CHROM273         0.44911363  8.015982e-03          2   40  123
+## LG13.#CHROM285         0.49111111  1.507198e-02          2   43  152
+## LG13.#CHROM377         0.38358844  9.305556e-02          2   38  105
+## LG13.#CHROM393         0.15277778 -3.105149e-02          2   38  112
+## LG13.#CHROM422         0.48854263 -4.749243e-03          2   54  164
+## LG13.#CHROM449         0.19396194  1.474836e-01          2   42  128
+## LG13.#CHROM473         0.30468750 -9.581530e-02          2   40  128
+## LG13.#CHROM482         0.45940282  6.278551e-02          2   46  140
+## LG13.#CHROM493         0.48732705  3.437669e-02          2   49  152
+## LG13.#CHROM505         0.10652966 -1.210328e-01          2   39  147
+## LG13.#CHROM523         0.40293844 -6.938789e-03          2   45  157
+## LG13.#CHROM647         0.22064075 -4.968193e-02          2   44  154
+## LG13.#CHROM690         0.43192542  3.009971e-02          2   46  141
+## LG13.#CHROM723         0.44859109  5.414166e-02          2   40  144
+## LG13.#CHROM753         0.36162710  2.469039e-02          2   54  157
+## LG13.#CHROM758         0.49985137  1.473403e-02          2   41  133
+## LG13.#CHROM812         0.33761128  1.030761e-01          2   42  144
+## LG13.#CHROM845         0.42671020 -2.046808e-02          2   39  136
+## LG13.#CHROM884         0.37086805 -4.190639e-02          2   42  141
+## LG13.#CHROM891         0.49169678  1.931995e-02          2   44  150
+## LG13.#CHROM910         0.49899326  6.127132e-04          2   37  119
+## LG13.#CHROM946         0.26302366 -5.242233e-02          2   48  151
+## LG13.#CHROM961         0.19959479 -3.823098e-02          2   51  158
+## LG13.#CHROM991         0.30925606  8.384558e-02          2   47  157
+## LG13.#CHROM998         0.35502959  9.192708e-02          2   39  104
+## scaffold_406.#CHROM10  0.49998938 -2.417509e-06          2   54  163
+## scaffold_406.#CHROM365 0.49998938 -2.417509e-06          2   54  163
+## LG19.#CHROM11          0.18000000 -1.238485e-01          2   35  120
+## LG19.#CHROM78          0.27472321 -8.322753e-03          2   56  163
+## LG19.#CHROM91          0.22550941  1.697732e-02          2   45  148
+## LG19.#CHROM105         0.49428065  4.525442e-02          2   45  142
+## LG19.#CHROM132         0.47750230  2.507572e-02          2   46  152
+## LG19.#CHROM167         0.27164780  7.693640e-02          2   54  165
+## LG19.#CHROM313         0.33877932  1.168928e-01          2   49  150
+## LG19.#CHROM367         0.48258968 -1.267888e-03          2   51  158
+## LG19.#CHROM445         0.19808106  6.887182e-02          2   34  123
+## LG19.#CHROM474         0.11718750 -1.469327e-01          2   37  107
+## LG19.#CHROM486         0.23185134 -3.043529e-02          2   44  154
+## LG19.#CHROM581         0.35871191 -1.378804e-02          2   52  138
+## LG19.#CHROM583         0.49992188  5.065012e-04          2   37  123
+## LG19.#CHROM617         0.42452026 -3.223174e-02          2   36  121
+## LG19.#CHROM662         0.18097487  7.533062e-02          2   39  125
+## LG19.#CHROM672         0.40567289 -2.100569e-02          2   49  149
+## LG19.#CHROM694         0.16713695  9.676417e-02          2   46  155
+## LG19.#CHROM724         0.29136607 -8.029960e-02          2   36  125
+## LG19.#CHROM730         0.13321974 -7.065319e-02          2   56  160
+## LG19.#CHROM783         0.12056276 -1.075479e-01          2   46  148
+## LG19.#CHROM810         0.28308756 -1.807625e-02          2   52  156
+## LG19.#CHROM824         0.20212791 -5.426934e-02          2   48  158
+## LG19.#CHROM937         0.34954991 -5.266252e-02          2   52  154
+## LG19.#CHROM950         0.45375438 -8.859624e-03          2   46  148
+## LG19.#CHROM964         0.17381657 -5.783424e-02          2   35  121
+## LG19.#CHROM994         0.26680547  9.747380e-02          2   51  154
+## LG4.#CHROM14           0.43534179  1.115490e-02          2   48  155
+## LG4.#CHROM137          0.17608566  5.152147e-02          2   49  156
+## LG4.#CHROM140          0.34705534 -1.736383e-03          2   40  139
+## LG4.#CHROM238          0.26943213 -4.650776e-02          2   55  160
+## LG4.#CHROM279          0.41319444  3.306461e-02          2   44  136
+## LG4.#CHROM293          0.48652261 -3.532132e-03          2   47  154
+## LG4.#CHROM312          0.45052789  4.038616e-02          2   54  159
+## LG4.#CHROM324          0.17925883 -6.637198e-02          2   53  163
+## LG4.#CHROM356          0.46322896 -3.881148e-03          2   44  133
+## LG4.#CHROM358          0.10446330  1.920960e-02          2   48  160
+## LG4.#CHROM394          0.20233709  8.502196e-02          2   48  149
+## LG4.#CHROM401          0.24775090 -5.138454e-02          2   52  162
+## LG4.#CHROM436          0.31205711  4.517804e-02          2   40  128
+## LG4.#CHROM559          0.28397614 -2.919001e-02          2   42  136
+## LG4.#CHROM570          0.49915845  1.545442e-03          2   44  151
+## LG4.#CHROM598          0.26109070 -4.476779e-02          2   55  162
+## LG4.#CHROM625          0.44761838  4.502511e-02          2   50  157
+## LG4.#CHROM627          0.46109418 -6.015673e-03          2   49  141
+## LG4.#CHROM632          0.19753086  1.979872e-02          2   53  163
+## LG4.#CHROM664          0.28889974  9.384924e-02          2   54  163
+## LG4.#CHROM697          0.40213039  7.350069e-02          2   34  131
+## LG4.#CHROM720          0.43311686 -1.920283e-02          2   53  163
+## LG4.#CHROM745          0.16788750 -7.015447e-02          2   48  152
+## LG4.#CHROM759          0.29252136 -1.706606e-02          2   37  126
+## LG4.#CHROM792          0.46036384 -1.314057e-02          2   51  155
+## LG4.#CHROM873          0.15929824  7.256787e-02          2   52  160
+## LG4.#CHROM899          0.42945866  1.044209e-02          2   49  156
+## LG4.#CHROM957          0.23592144  1.866430e-02          2   39  133
+## LG4.#CHROM976          0.49998787 -3.720940e-06          2   47  156
+## LG15.#CHROM16          0.13553533 -1.608118e-02          2   52  160
+## LG15.#CHROM44          0.43640276  7.643968e-03          2   34  109
+## LG15.#CHROM71          0.49930773 -2.625752e-04          2   55  160
+## LG15.#CHROM80          0.40559453  7.020164e-02          2   41  127
+## LG15.#CHROM81          0.27908304  1.895406e-02          2   35  135
+## LG15.#CHROM103         0.29993510 -4.311343e-02          2   53  162
+## LG15.#CHROM185         0.49961775  1.138125e-03          2   53  164
+## LG15.#CHROM219         0.48849577 -4.754260e-03          2   44  134
+## LG15.#CHROM223         0.11123784  1.320960e-02          2   44  159
+## LG15.#CHROM246         0.46163680 -5.758200e-03          2   53  160
+## LG15.#CHROM268         0.49738141  2.311089e-02          2   40  112
+## LG15.#CHROM277         0.10541757 -3.869830e-02          2   48  158
+## LG15.#CHROM280         0.46347699  3.889994e-03          2   45  140
+## LG15.#CHROM290         0.21785216  4.023765e-03          2   53  156
+## LG15.#CHROM321         0.20907518 -7.384745e-02          2   53  162
+## LG15.#CHROM329         0.16713695 -2.358402e-01          2   44  157
+## LG15.#CHROM470         0.22760771 -3.072826e-02          2   38  130
+## LG15.#CHROM530         0.28485607 -5.671778e-02          2   54  164
+## LG15.#CHROM555         0.41762976  3.831102e-02          2   38  132
+## LG15.#CHROM569         0.49304690 -3.635261e-04          2   53  159
+## LG15.#CHROM936         0.38515365 -9.715027e-03          2   55  162
+## LG15.#CHROM956         0.11411477 -1.017435e-01          2   55  159
+## LG3.#CHROM31           0.14235797 -1.294456e-01          2   45  143
+## LG3.#CHROM61           0.13141516  5.619806e-02          2   52  146
+## LG3.#CHROM94           0.49987665  5.390810e-05          2   50  141
+## LG3.#CHROM110          0.11820901  1.593572e-02          2   50  164
+## LG3.#CHROM128          0.41160899 -1.727443e-02          2   35  141
+## LG3.#CHROM160          0.30839002 -1.834307e-02          2   49  161
+## LG3.#CHROM166          0.12359429  1.159085e-02          2   47  157
+## LG3.#CHROM193          0.20975057  7.531790e-02          2   44  145
+## LG3.#CHROM218          0.46072863  5.053940e-02          2   34  123
+## LG3.#CHROM229          0.43791383  2.143874e-03          2   50  160
+## LG3.#CHROM241          0.18325698  8.217556e-02          2   46  150
+## LG3.#CHROM266          0.14810144 -1.569198e-01          2   36  113
+## LG3.#CHROM314          0.49299744 -3.063018e-03          2   40  129
+## LG3.#CHROM325          0.49744898  2.645440e-02          2   48  162
+## LG3.#CHROM335          0.18600926 -1.174750e-02          2   51  161
+## LG3.#CHROM408          0.17065742 -5.163265e-03          2   47  160
+## LG3.#CHROM432          0.19013128  4.586947e-02          2   44  144
+## LG3.#CHROM438          0.22907022  5.288739e-02          2   37  107
+## LG3.#CHROM469          0.28515831 -2.927211e-02          2   52  157
+## LG3.#CHROM475          0.16924444 -6.721125e-02          2   35  115
+## LG3.#CHROM492          0.22978817  3.354628e-03          2   42  143
+## LG3.#CHROM525          0.22227661 -4.995907e-02          2   50  162
+## LG3.#CHROM527          0.10624534 -5.170952e-02          2   38  113
+## LG3.#CHROM594          0.17268595  4.379038e-02          2   55  165
+## LG3.#CHROM661          0.47886278  1.461564e-02          2   53  161
+## LG3.#CHROM674          0.28813635  7.190047e-03          2   53  159
+## LG3.#CHROM699          0.41287560  3.257198e-02          2   54  164
+## LG3.#CHROM700          0.47507842 -8.204959e-03          2   51  164
+## LG3.#CHROM703          0.11618340  3.261222e-02          2   54  164
+## LG3.#CHROM704          0.38718750  8.349544e-02          2   38  122
+## LG3.#CHROM773          0.23941205  5.614481e-03          2   44  143
+## LG3.#CHROM776          0.30087661 -3.121007e-02          2   46  160
+## LG3.#CHROM803          0.19666170  8.568150e-02          2   50  149
+## LG3.#CHROM809          0.32888750  1.901372e-03          2   51  149
+## LG3.#CHROM813          0.13933196 -6.113123e-02          2   55  164
+## LG3.#CHROM821          0.23298817  6.500497e-03          2   38  118
+## LG3.#CHROM878          0.37770262  1.321983e-02          2   44  140
+## LG3.#CHROM901          0.24985128 -8.952007e-02          2   38  126
+## LG3.#CHROM904          0.38989108 -5.426049e-03          2   35  144
+## LG3.#CHROM917          0.29484593  5.361539e-02          2   55  162
+## LG3.#CHROM932          0.12912937  9.271554e-03          2   52  157
+## LG14.#CHROM19          0.39239026 -2.575269e-02          2   43  151
+## LG14.#CHROM48          0.27239077 -7.422435e-02          2   38  128
+## LG14.#CHROM49          0.48109568 -8.178062e-03          2   52  164
+## LG14.#CHROM66          0.46444444  1.168907e-02          2   41  139
+## LG14.#CHROM104         0.20955442  9.734399e-02          2   50  135
+## LG14.#CHROM136         0.18419668  8.215953e-02          2   46  144
+## LG14.#CHROM170         0.40328146  4.740556e-02          2   53  163
+## LG14.#CHROM196         0.47328898  1.758089e-02          2   54  158
+## LG14.#CHROM211         0.36490295 -3.049921e-02          2   49  153
+## LG14.#CHROM236         0.12150085 -8.258506e-02          2   37  140
+## LG14.#CHROM248         0.49606106  4.715627e-03          2   38  131
+## LG14.#CHROM259         0.21513267  6.260724e-03          2   50  158
+## LG14.#CHROM264         0.14766223 -1.104417e-01          2   54  164
+## LG14.#CHROM373         0.30141873 -6.995971e-02          2   42  150
+## LG14.#CHROM376         0.11568775 -5.464349e-02          2   55  164
+## LG14.#CHROM434         0.25743175  3.655933e-02          2   49  152
+## LG14.#CHROM481         0.33635479  4.368517e-02          2   53  162
+## LG14.#CHROM599         0.40004392  1.468592e-03          2   51  157
+## LG14.#CHROM642         0.27164780  4.526748e-02          2   55  164
+## LG14.#CHROM646         0.49989599  3.125013e-04          2   50  158
+## LG14.#CHROM663         0.47518626 -4.315934e-04          2   50  152
+## LG14.#CHROM683         0.33314874 -2.122975e-02          2   52  154
+## LG14.#CHROM734         0.28843435  5.336058e-02          2   49  157
+## LG14.#CHROM736         0.33482182 -9.710788e-03          2   52  162
+## LG14.#CHROM789         0.13659241  3.298542e-02          2   53  164
+## LG14.#CHROM793         0.11503989  2.333412e-02          2   53  151
+## LG14.#CHROM801         0.49869118  1.166959e-03          2   53  162
+## LG14.#CHROM804         0.12281514  4.844529e-02          2   54  159
+## LG14.#CHROM805         0.45846021 -1.926398e-02          2   40  130
+## LG14.#CHROM816         0.49674818  5.277931e-04          2   49  137
+## LG14.#CHROM819         0.14473287 -4.937283e-02          2   49  142
+## LG14.#CHROM900         0.49561989  1.030632e-02          2   49  154
+## LG14.#CHROM902         0.38363930  1.183448e-02          2   51  148
+## LG14.#CHROM916         0.49790657 -4.794368e-04          2   38  132
+## LG14.#CHROM988         0.34104799 -6.584938e-02          2   46  142
+## LG22.#CHROM20          0.41665208 -1.293902e-02          2   41  128
+## LG22.#CHROM54          0.44897762  1.945340e-02          2   54  162
+## LG22.#CHROM57          0.16454130 -6.158797e-02          2   54  145
+## LG22.#CHROM118         0.39476831 -5.665417e-03          2   45  149
+## LG22.#CHROM130         0.35896614  1.988321e-02          2   51  158
+## LG22.#CHROM288         0.32569885  1.490904e-01          2   46  142
+## LG22.#CHROM346         0.37967248  3.829998e-03          2   44  115
+## LG22.#CHROM567         0.11296921 -5.176756e-02          2   50  158
+## LG22.#CHROM648         0.47455012  1.937295e-03          2   38  126
+## LG22.#CHROM659         0.34286042  2.925794e-02          2   46  152
+## LG22.#CHROM676         0.48362812  3.871885e-02          2   51  159
+## LG22.#CHROM750         0.30933976 -9.112226e-03          2   53  164
+## LG22.#CHROM797         0.35153645  5.297575e-02          2   35  132
+## LG22.#CHROM851         0.49950659  1.838525e-02          2   46  145
+## LG22.#CHROM906         0.49828673 -6.037404e-04          2   54  151
+## LG12.#CHROM22          0.29041338 -4.784660e-02          2   40  116
+## LG12.#CHROM63          0.38856966  1.204961e-02          2   48  149
+## LG12.#CHROM64          0.48694011 -4.594994e-03          2   47  151
+## LG12.#CHROM88          0.15473120  6.877954e-02          2   53  160
+## LG12.#CHROM135         0.33507579  8.173227e-02          2   36  112
+## LG12.#CHROM171         0.36218750 -3.198234e-02          2   35  125
+## LG12.#CHROM411         0.27532907  6.389752e-02          2   38  144
+## LG12.#CHROM444         0.14901388 -8.907101e-03          2   42  143
+## LG12.#CHROM451         0.19162030 -1.063898e-02          2   45  146
+## LG12.#CHROM453         0.32900722 -2.112099e-02          2   42  129
+## LG12.#CHROM467         0.27356513  3.939981e-02          2   39  120
+## LG12.#CHROM510         0.49839801  3.534874e-04          2   54  158
+## LG12.#CHROM600         0.41802477  1.091926e-02          2   39  124
+## LG12.#CHROM635         0.24968850  2.770510e-02          2   49  163
+## LG12.#CHROM667         0.16233703  1.078247e-01          2   51  151
+## LG12.#CHROM670         0.15582357 -7.588018e-04          2   41  141
+## LG12.#CHROM722         0.45425621 -2.110185e-02          2   37  125
+## LG12.#CHROM741         0.24489796  1.489442e-01          2   44  152
+## LG12.#CHROM744         0.31719849  4.265491e-02          2   54  161
+## LG12.#CHROM749         0.44812084 -1.883968e-02          2   51  157
+## LG12.#CHROM866         0.46269504  4.876793e-03          2   54  162
+## LG12.#CHROM875         0.48652261  1.207939e-03          2   46  155
+## LG12.#CHROM926         0.17626825 -1.849972e-02          2   53  162
+## LG17.#CHROM23          0.41469754  1.945276e-03          2   43  141
+## LG17.#CHROM56          0.24679286  8.573148e-02          2   53  162
+## LG17.#CHROM86          0.50000000  0.000000e+00          2   52  158
+## LG17.#CHROM102         0.29381728 -2.388514e-02          2   51  153
+## LG17.#CHROM119         0.42730708  7.982730e-02          2   35  104
+## LG17.#CHROM159         0.28039985  8.591117e-02          2   47  122
+## LG17.#CHROM301         0.18573979  4.589802e-02          2   57  165
+## LG17.#CHROM307         0.25258026 -1.243627e-01          2   35  110
+## LG17.#CHROM337         0.38434240 -2.733596e-02          2   46  164
+## LG17.#CHROM370         0.37767372 -1.694697e-02          2   44  142
+## LG17.#CHROM405         0.42318376 -3.138693e-02          2   46  153
+## LG17.#CHROM410         0.37385584  3.406570e-02          2   56  163
+## LG17.#CHROM450         0.18000000  8.416597e-02          2   55  160
+## LG17.#CHROM476         0.12530630 -2.444398e-01          2   45  156
+## LG17.#CHROM498         0.17017960  2.338182e-02          2   46  151
+## LG17.#CHROM534         0.14888736 -1.755271e-01          2   39  140
+## LG17.#CHROM633         0.27472321  1.636808e-02          2   55  164
+## LG17.#CHROM706         0.47217620 -8.475299e-03          2   46  149
+## LG17.#CHROM775         0.49670180  1.301804e-04          2   48  149
+## LG17.#CHROM788         0.49076256  3.436880e-02          2   51  155
+## LG17.#CHROM827         0.49639551  5.249265e-03          2   53  159
+## LG17.#CHROM861         0.13375538  2.731942e-03          2   56  166
+## LG17.#CHROM867         0.16361571  8.474760e-02          2   46  132
+## LG17.#CHROM892         0.18882716 -2.044715e-02          2   40  140
+## LG17.#CHROM960         0.11046179 -9.346973e-02          2   46  150
+## LG17.#CHROM973         0.48642497  1.314182e-02          2   37  139
+## LG17.#CHROM992         0.29294196 -4.099068e-02          2   55  161
+## LG17.#CHROM997         0.24396095  9.015066e-02          2   55  163
+## scaffold_511           0.46753652 -8.056418e-03          2   49  159
+## scaffold_461.#CHROM26  0.15478774 -1.257235e-01          2   46  161
+## scaffold_461.#CHROM832 0.38228703 -4.342981e-02          2   43  126
+## LG8.#CHROM27           0.23350521  8.432248e-02          2   41  122
+## LG8.#CHROM83           0.42514078  3.342141e-02          2   52  147
+## LG8.#CHROM97           0.33967194  1.707209e-01          2   38  128
+## LG8.#CHROM146          0.49899003 -4.060435e-04          2   43  135
+## LG8.#CHROM149          0.23028185  5.714734e-02          2   47  130
+## LG8.#CHROM155          0.26302366  1.766839e-01          2   48  151
+## LG8.#CHROM176          0.20092698 -7.278117e-02          2   49  154
+## LG8.#CHROM214          0.19235544 -7.946828e-02          2   54  164
+## LG8.#CHROM217          0.38843716  9.474316e-02          2   45  154
+## LG8.#CHROM227          0.12760368 -2.018296e-01          2   55  164
+## LG8.#CHROM256          0.39392103 -1.719915e-02          2   36  129
+## LG8.#CHROM299          0.48762782  2.175731e-02          2   43  135
+## LG8.#CHROM306          0.24893645  9.997910e-02          2   35  116
+## LG8.#CHROM375          0.25280762  6.336895e-02          2   47  145
+## LG8.#CHROM407          0.14606832 -1.379087e-01          2   51  157
+## LG8.#CHROM430          0.48832948 -2.109226e-03          2   54  162
+## LG8.#CHROM466          0.23167929 -3.096863e-02          2   34  138
+## LG8.#CHROM484          0.13455395  4.848813e-02          2   49  144
+## LG8.#CHROM490          0.13852269  7.421202e-02          2   43  144
+## LG8.#CHROM497          0.28103374  1.028136e-02          2   46  158
+## LG8.#CHROM515          0.47204494 -1.209287e-02          2   50  153
+## LG8.#CHROM516          0.49959950  3.463872e-04          2   53  159
+## LG8.#CHROM535          0.16919256  1.200086e-01          2   51  158
+## LG8.#CHROM551          0.29173583  2.436608e-02          2   34  107
+## LG8.#CHROM576          0.43813288 -1.886843e-02          2   44  155
+## LG8.#CHROM586          0.16031221  7.061452e-02          2   36  129
+## LG8.#CHROM601          0.49747310  2.993997e-04          2   52  159
+## LG8.#CHROM637          0.23185134  7.057213e-02          2   43  155
+## LG8.#CHROM677          0.13436763  1.674603e-02          2   51  163
+## LG8.#CHROM726          0.28094104  2.493946e-02          2   52  158
+## LG8.#CHROM781          0.40039580 -1.682778e-02          2   40  137
+## LG8.#CHROM795          0.49185152 -2.608430e-03          2   45  143
+## LG8.#CHROM798          0.10908587 -2.716606e-02          2   40  150
+## LG8.#CHROM826          0.49796288  1.616964e-02          2   35  106
+## LG8.#CHROM846          0.11097143  6.829834e-03          2   52  160
+## LG8.#CHROM852          0.18190193  4.337535e-02          2   34  134
+## LG8.#CHROM857          0.29712423  1.982870e-02          2   42  104
+## LG8.#CHROM862          0.30650014 -6.345113e-02          2   34  138
+## LG8.#CHROM883          0.11924840 -8.893837e-02          2   49  163
+## LG8.#CHROM908          0.23796530  2.755215e-02          2   40  123
+## LG8.#CHROM925          0.25564772  5.879503e-02          2   54  162
+## LG8.#CHROM965          0.29101136 -2.262851e-02          2   52  163
+## scaffold_587           0.16652778  9.680674e-02          2   48  132
+## scaffold_909           0.49994898  1.208088e-04          2   50  148
+## LG21.#CHROM89          0.13066472  9.486900e-03          2   44  141
+## LG21.#CHROM134         0.32937947 -1.282890e-02          2   48  154
+## LG21.#CHROM195         0.15079082 -8.716287e-02          2   37  103
+## LG21.#CHROM228         0.38927336 -3.928609e-02          2   46  141
+## LG21.#CHROM234         0.24201547 -6.945805e-02          2   53  160
+## LG21.#CHROM257         0.21077167  2.090257e-02          2   54  159
+## LG21.#CHROM414         0.38049383  5.564860e-02          2   42  138
+## LG21.#CHROM443         0.12960075  2.087448e-02          2   46  155
+## LG21.#CHROM531         0.19946976 -8.537945e-02          2   44  134
+## LG21.#CHROM554         0.44602041  1.524371e-02          2   34  106
+## LG21.#CHROM608         0.39593111 -2.088466e-02          2   53  164
+## LG21.#CHROM695         0.17038759 -1.786868e-01          2   56  162
+## LG21.#CHROM714         0.18226015  1.570079e-02          2   52  160
+## LG21.#CHROM715         0.16145306  3.850388e-03          2   40  135
+## LG21.#CHROM806         0.10914262 -3.403622e-02          2   39  125
+## LG21.#CHROM841         0.48741974  4.633893e-03          2   36  109
+## LG18.#CHROM121         0.16168054  8.403210e-02          2   46  140
+## LG18.#CHROM168         0.44820980 -9.201467e-03          2   39  135
+## LG18.#CHROM230         0.49992914 -3.034427e-05          2   34  134
+## LG18.#CHROM261         0.47061524  4.854054e-03          2   41  124
+## LG18.#CHROM271         0.18000000  1.712383e-02          2   53  162
+## LG18.#CHROM316         0.17253428 -2.508800e-01          2   45  149
+## LG18.#CHROM347         0.26245651 -3.491200e-02          2   40  137
+## LG18.#CHROM357         0.46478067 -1.419588e-02          2   50  161
+## LG18.#CHROM361         0.45918367  2.269177e-03          2   54  163
+## LG18.#CHROM369         0.47555617 -8.640620e-03          2   51  148
+## LG18.#CHROM382         0.44107819  1.631904e-02          2   35   99
+## LG18.#CHROM387         0.41298129 -1.556775e-02          2   38  125
+## LG18.#CHROM390         0.18000000  2.254940e-02          2   54  166
+## LG18.#CHROM397         0.13939042  5.482431e-02          2   48  151
+## LG18.#CHROM461         0.20494835  6.585793e-02          2   55  165
+## LG18.#CHROM487         0.48574802  8.051481e-03          2   36  118
+## LG18.#CHROM519         0.13701322  9.587122e-02          2   48  148
+## LG18.#CHROM541         0.49455078 -1.757146e-03          2   40  142
+## LG18.#CHROM591         0.14993753  1.208333e-01          2   49  147
+## LG18.#CHROM929         0.15755054 -2.715327e-02          2   53  150
+## LG9.#CHROM45           0.27088757  7.117369e-02          2   49  146
+## LG9.#CHROM69           0.24679286  1.280337e-01          2   52  163
+## LG9.#CHROM108          0.23338021 -1.067888e-01          2   52  163
+## LG9.#CHROM143          0.49777778  9.060236e-04          2   48  147
+## LG9.#CHROM172          0.39788277  1.981591e-02          2   52  156
+## LG9.#CHROM182          0.37955888  8.421154e-02          2   36  127
+## LG9.#CHROM210          0.33357988  6.968807e-02          2   50  158
+## LG9.#CHROM330          0.35677445  3.804686e-02          2   53  160
+## LG9.#CHROM336          0.48637193 -5.349196e-03          2   54  158
+## LG9.#CHROM341          0.34448964 -3.435843e-02          2   49  159
+## LG9.#CHROM343          0.45030212  8.216090e-02          2   52  151
+## LG9.#CHROM380          0.36493681 -1.611580e-02          2   35  117
+## LG9.#CHROM448          0.19391932 -2.442435e-02          2   55  161
+## LG9.#CHROM460          0.46069526 -1.365991e-02          2   53  161
+## LG9.#CHROM491          0.28367983  1.831069e-02          2   47  140
+## LG9.#CHROM504          0.44008876  1.604546e-02          2   45  137
+## LG9.#CHROM507          0.30263699 -4.107210e-02          2   46  145
+## LG9.#CHROM543          0.36185076  3.571064e-02          2   34  122
+## LG9.#CHROM564          0.28855057  5.104384e-02          2   42  121
+## LG9.#CHROM622          0.49652778  3.607210e-03          2   47  145
+## LG9.#CHROM653          0.16337936  8.543612e-02          2   38  118
+## LG9.#CHROM689          0.30398304 -4.469249e-02          2   56  166
+## LG9.#CHROM738          0.49945659  6.847630e-04          2   38  144
+## LG9.#CHROM774          0.45392219 -1.956401e-02          2   40  128
+## LG9.#CHROM802          0.27675253 -2.964785e-02          2   54  163
+## LG9.#CHROM818          0.49973576  5.665879e-03          2   43  131
+## LG9.#CHROM830          0.49998918  1.563694e-04          2   53  162
+## LG9.#CHROM833          0.28288616  1.443781e-02          2   37  136
+## LG9.#CHROM853          0.10403165 -2.921584e-03          2   54  164
+## LG9.#CHROM877          0.26993985  5.906930e-02          2   35  108
+## LG9.#CHROM924          0.15063774  1.673189e-02          2   45  150
+## LG9.#CHROM959          0.47231834 -8.273979e-03          2   47  140
+## LG6.#CHROM77           0.38081315 -5.740120e-02          2   42  128
+## LG6.#CHROM205          0.22290123  7.560339e-02          2   41  139
+## LG6.#CHROM247          0.12070760  5.261569e-02          2   56  161
+## LG6.#CHROM265          0.12070760 -3.850976e-02          2   55  162
+## LG6.#CHROM275          0.34849760 -3.731281e-02          2   53  165
+## LG6.#CHROM291          0.30508387  1.055908e-01          2   44  153
+## LG6.#CHROM352          0.11610381 -1.451505e-01          2   49  153
+## LG6.#CHROM395          0.49247243  6.648354e-03          2   39  124
+## LG6.#CHROM412          0.28195087 -5.331089e-02          2   53  159
+## LG6.#CHROM471          0.31726240  1.635606e-03          2   56  164
+## LG6.#CHROM540          0.19013128  1.039382e-01          2   50  138
+## LG6.#CHROM584          0.15350456 -2.676681e-02          2   44  147
+## LG6.#CHROM631          0.15968750  9.647621e-02          2   49  151
+## LG6.#CHROM651          0.28600751  6.909416e-02          2   53  161
+## LG6.#CHROM680          0.15968750  6.662059e-02          2   51  149
+## LG6.#CHROM687          0.49629129 -1.380434e-03          2   52  157
+## LG6.#CHROM743          0.24913194 -3.220815e-02          2   46  146
+## LG6.#CHROM800          0.49998523 -4.026777e-06          2   44  140
+## LG6.#CHROM829          0.43231577  4.972249e-03          2   52  160
+## LG6.#CHROM847          0.13265306 -1.270856e-01          2   49  154
+## LG6.#CHROM879          0.38408779  1.564838e-02          2   35  127
+## LG6.#CHROM940          0.45266272 -9.147595e-04          2   56  165
+## LG6.#CHROM944          0.39126063 -3.654542e-02          2   51  157
+## LG6.#CHROM967          0.22264269  1.242625e-01          2   44  148
+## LG6.#CHROM974          0.49040136 -3.967864e-03          2   37  129
+## LG6.#CHROM989          0.11917355 -3.073837e-02          2   57  163
+## scaffold_439.#CHROM138 0.17129291  9.862770e-02          2   46  139
+## scaffold_439.#CHROM141 0.11258919 -4.952146e-02          2   43  124
+## scaffold_1130          0.13442554 -1.069055e-03          2   55  152
+## scaffold_391           0.12578691  6.514999e-03          2   53  162
+## scaffold_427           0.14890904 -2.098832e-02          2   52  164
+## scaffold_970           0.16575689  1.462908e-01          2   40  119
+## scaffold_396           0.42755463 -3.327737e-02          2   35  120
+## scaffold_174.#CHROM253 0.48979592  2.613074e-03          2   48  141
+## scaffold_174.#CHROM483 0.29903029  3.380047e-02          2   34  119
+## scaffold_174.#CHROM768 0.50000000  0.000000e+00          2   57  167
+## scaffold_891.#CHROM258 0.17566107 -1.132829e-01          2   47  138
+## scaffold_891.#CHROM262 0.13519965  8.315590e-02          2   46  146
+## scaffold_516           0.11246308 -6.179257e-02          2   49  160
+## scaffold_646           0.16019036 -1.437677e-01          2   52  153
+## scaffold_712           0.28195087 -1.048337e-02          2   51  161
+## scaffold_1108          0.12086542 -1.718232e-02          2   44  134
+## scaffold_1844          0.49894306  1.533808e-03          2   39  135
+## scaffold_418           0.18861591  7.322998e-02          2   44  122
+## scaffold_1185          0.21733846  6.215791e-02          2   36   97
+## scaffold_1017          0.22654408 -3.146603e-02          2   55  160
+## scaffold_1116          0.34475632  9.358619e-02          2   50  151
+## scaffold_620           0.50000000  0.000000e+00          2   53  159
+## scaffold_520           0.25240055  2.253485e-01          2   39  123
+## scaffold_584           0.09586492  3.084576e-03          2   50  158
+## scaffold_1005          0.50000000  0.000000e+00          2   56  166
+## scaffold_684           0.49998898  1.701960e-04          2   51  162
+## scaffold_536           0.09855651 -6.452897e-04          2   48  154
+## scaffold_715.#CHROM702 0.48989241 -2.317440e-03          2   53  158
+## scaffold_715.#CHROM796 0.46151925  2.533266e-03          2   38  117
+## scaffold_489           0.49958792 -1.322347e-04          2   52  157
+## scaffold_286           0.49304690 -1.630640e-03          2   54  158
+## scaffold_393           0.49517191  1.219715e-04          2   40  133
+## scaffold_569           0.25692282  2.340277e-02          2   54  164
+## scaffold_407           0.49947488  6.979419e-04          2   56  160
+## scaffold_829.#CHROM941 0.17626825  7.511475e-02          2   54  161
+## scaffold_829.#CHROM981 0.17626825  7.511475e-02          2   54  161
+## scaffold_1258          0.21875000 -1.805931e-02          2   49  163
+## scaffold_573           0.12111174  9.678770e-03          2   40   99
+## scaffold_408           0.39023913  1.903181e-02          2   37  106
+##                                  Chi        Chi.p    Chi.p.adj
+## LG1.#CHROM68           -1.710866e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM153           5.914906e+00 1.501331e-02 5.513084e-02
+## LG1.#CHROM156           8.134712e-02 7.754801e-01 1.000000e+00
+## LG1.#CHROM175          -1.539945e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM177          -1.203554e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM191           7.206914e+00 7.262324e-03 2.939929e-02
+## LG1.#CHROM208           3.367949e+00 6.647647e-02 1.900944e-01
+## LG1.#CHROM215           1.862687e+01 1.589646e-05 2.811163e-04
+## LG1.#CHROM243          -2.259230e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM252           1.199285e+00 2.734647e-01 6.470713e-01
+## LG1.#CHROM308          -1.233395e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM339          -2.212237e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM344          -6.405309e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM351          -2.531367e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM413           1.252555e+01 4.014255e-04 2.932152e-03
+## LG1.#CHROM417          -2.279371e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM455           7.654359e+00 5.663531e-03 2.393643e-02
+## LG1.#CHROM529           3.300930e+00 6.924067e-02 1.963280e-01
+## LG1.#CHROM643          -3.102786e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM652           9.156654e+00 2.478153e-03 1.172760e-02
+## LG1.#CHROM656          -1.738987e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM668          -8.039232e-01 1.000000e+00 1.000000e+00
+## LG1.#CHROM669          -5.229222e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM686          -8.845159e-02 1.000000e+00 1.000000e+00
+## LG1.#CHROM710           6.083738e-02 8.051773e-01 1.000000e+00
+## LG1.#CHROM721           2.039539e+01 6.298131e-06 1.719783e-04
+## LG1.#CHROM748           1.033332e+01 1.306501e-03 7.241446e-03
+## LG1.#CHROM752           5.150383e+00 2.324124e-02 7.927977e-02
+## LG1.#CHROM782          -2.391770e-01 1.000000e+00 1.000000e+00
+## LG1.#CHROM784          -4.986841e-01 1.000000e+00 1.000000e+00
+## LG1.#CHROM791           2.237449e+00 1.347030e-01 3.454979e-01
+## LG1.#CHROM820           2.748339e-01 6.001074e-01 1.000000e+00
+## LG1.#CHROM837           1.044507e+01 1.229774e-03 6.944604e-03
+## LG1.#CHROM871           6.106630e-02 8.048185e-01 1.000000e+00
+## LG1.#CHROM938          -2.385549e+01 1.000000e+00 1.000000e+00
+## LG1.#CHROM939          -1.372491e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM952          -6.488227e+00 1.000000e+00 1.000000e+00
+## LG1.#CHROM978          -5.244273e+00 1.000000e+00 1.000000e+00
+## LG20.#CHROM4            1.003032e+01 1.539846e-03 7.957460e-03
+## LG20.#CHROM98           3.468066e+00 6.256440e-02 1.820055e-01
+## LG20.#CHROM350          1.741970e+01 2.997029e-05 4.195841e-04
+## LG20.#CHROM368         -7.013422e+00 1.000000e+00 1.000000e+00
+## LG20.#CHROM381         -1.779272e+01 1.000000e+00 1.000000e+00
+## LG20.#CHROM391         -9.694335e+00 1.000000e+00 1.000000e+00
+## LG20.#CHROM398         -1.822686e+00 1.000000e+00 1.000000e+00
+## LG20.#CHROM472         -5.180636e-01 1.000000e+00 1.000000e+00
+## LG20.#CHROM553          3.722112e+00 5.369640e-02 1.618116e-01
+## LG20.#CHROM566          1.897169e+01 1.326723e-05 2.649355e-04
+## LG20.#CHROM621         -2.835172e+01 1.000000e+00 1.000000e+00
+## LG20.#CHROM623          2.169899e+01 3.189599e-06 9.742776e-05
+## LG20.#CHROM649          2.483536e+01 6.244146e-07 2.797378e-05
+## LG20.#CHROM673          3.683708e+00 5.494653e-02 1.643122e-01
+## LG20.#CHROM869         -2.384115e+01 1.000000e+00 1.000000e+00
+## LG20.#CHROM958         -1.148891e+01 1.000000e+00 1.000000e+00
+## LG2.#CHROM15           -3.207453e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM38           -9.112104e-01 1.000000e+00 1.000000e+00
+## LG2.#CHROM58            0.000000e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM79           -1.010494e+01 1.000000e+00 1.000000e+00
+## LG2.#CHROM101          -6.008318e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM106           5.642420e+00 1.753099e-02 6.233240e-02
+## LG2.#CHROM116          -2.143188e+01 1.000000e+00 1.000000e+00
+## LG2.#CHROM157           1.403169e+01 1.797555e-04 1.701348e-03
+## LG2.#CHROM216          -3.069960e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM226           1.730255e+01 3.187592e-05 4.371554e-04
+## LG2.#CHROM242           6.501330e+00 1.077938e-02 4.115765e-02
+## LG2.#CHROM272          -2.889017e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM297           5.889716e+00 1.522956e-02 5.562100e-02
+## LG2.#CHROM322           6.757060e-01 4.110693e-01 9.115877e-01
+## LG2.#CHROM323           1.042114e+01 1.245808e-03 6.976525e-03
+## LG2.#CHROM331           4.087559e+00 4.319998e-02 1.356560e-01
+## LG2.#CHROM333           5.756302e+00 1.642962e-02 5.904120e-02
+## LG2.#CHROM349           1.328372e+01 2.677206e-04 2.141765e-03
+## LG2.#CHROM359          -1.438541e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM425          -2.425130e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM429           2.037864e+00 1.534249e-01 3.818576e-01
+## LG2.#CHROM440          -3.223226e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM459           6.234318e-01 4.297749e-01 9.430373e-01
+## LG2.#CHROM465           6.808282e+00 9.073601e-03 3.524543e-02
+## LG2.#CHROM526          -1.274397e+01 1.000000e+00 1.000000e+00
+## LG2.#CHROM571           1.049917e+01 1.194281e-03 6.801327e-03
+## LG2.#CHROM611           5.174910e+00 2.291536e-02 7.872256e-02
+## LG2.#CHROM644           4.440141e+00 3.510334e-02 1.134108e-01
+## LG2.#CHROM645           3.771429e+00 5.213509e-02 1.599762e-01
+## LG2.#CHROM671           1.758402e+01 2.748885e-05 4.105002e-04
+## LG2.#CHROM681           1.395944e+01 1.867975e-04 1.719560e-03
+## LG2.#CHROM696           7.602315e-01 3.832561e-01 8.613649e-01
+## LG2.#CHROM708          -4.598006e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM711          -5.281896e-02 1.000000e+00 1.000000e+00
+## LG2.#CHROM718           1.889031e+01 1.384542e-05 2.649355e-04
+## LG2.#CHROM755          -2.953263e-01 1.000000e+00 1.000000e+00
+## LG2.#CHROM769          -8.385978e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM787           8.065599e-01 3.691393e-01 8.380459e-01
+## LG2.#CHROM825           3.907343e+01 4.081608e-10 2.742841e-07
+## LG2.#CHROM849           8.927679e+00 2.808810e-03 1.319944e-02
+## LG2.#CHROM912           1.248387e+01 4.104798e-04 2.943077e-03
+## LG2.#CHROM919           1.772975e+01 2.546138e-05 3.888646e-04
+## LG2.#CHROM934          -1.958576e+00 1.000000e+00 1.000000e+00
+## LG2.#CHROM968           1.362671e+00 2.430751e-01 5.854711e-01
+## LG2.#CHROM982           2.893658e-01 5.906272e-01 1.000000e+00
+## LG5.#CHROM13           -8.395365e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM42            7.505384e+00 6.151482e-03 2.551726e-02
+## LG5.#CHROM203           2.093305e+00 1.479457e-01 3.698609e-01
+## LG5.#CHROM274           2.662471e+00 1.027410e-01 2.761679e-01
+## LG5.#CHROM276          -1.784551e-01 1.000000e+00 1.000000e+00
+## LG5.#CHROM278          -3.726163e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM302           3.913320e+00 4.790488e-02 1.483506e-01
+## LG5.#CHROM315          -7.444431e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM388          -9.371815e-01 1.000000e+00 1.000000e+00
+## LG5.#CHROM433          -3.133903e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM435          -1.855391e+01 1.000000e+00 1.000000e+00
+## LG5.#CHROM537          -6.452097e-01 1.000000e+00 1.000000e+00
+## LG5.#CHROM549          -9.025715e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM558           3.564305e-01 5.504954e-01 1.000000e+00
+## LG5.#CHROM618          -1.510670e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM620           1.013116e+01 1.457834e-03 7.653631e-03
+## LG5.#CHROM624          -6.562506e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM626           6.809907e+00 9.065349e-03 3.524543e-02
+## LG5.#CHROM655           1.261853e+01 3.819420e-04 2.820494e-03
+## LG5.#CHROM685          -1.428161e+01 1.000000e+00 1.000000e+00
+## LG5.#CHROM693           1.892278e+01 1.361172e-05 2.649355e-04
+## LG5.#CHROM698          -1.108827e+00 1.000000e+00 1.000000e+00
+## LG5.#CHROM823          -9.404344e-01 1.000000e+00 1.000000e+00
+## LG5.#CHROM838           3.078978e-01 5.789730e-01 1.000000e+00
+## LG5.#CHROM995          -1.436979e+00 1.000000e+00 1.000000e+00
+## LG16.#CHROM18          -5.765684e-01 1.000000e+00 1.000000e+00
+## LG16.#CHROM67          -1.832872e+00 1.000000e+00 1.000000e+00
+## LG16.#CHROM125         -1.779056e+01 1.000000e+00 1.000000e+00
+## LG16.#CHROM163         -1.328712e+00 1.000000e+00 1.000000e+00
+## LG16.#CHROM180          1.214891e-01 7.274250e-01 1.000000e+00
+## LG16.#CHROM225          1.216379e+01 4.872639e-04 3.287799e-03
+## LG16.#CHROM237         -2.661015e+01 1.000000e+00 1.000000e+00
+## LG16.#CHROM260          1.283574e+01 3.400612e-04 2.596831e-03
+## LG16.#CHROM389         -6.269462e+00 1.000000e+00 1.000000e+00
+## LG16.#CHROM500          8.338112e+00 3.882193e-03 1.727704e-02
+## LG16.#CHROM501          1.013763e+01 1.452724e-03 7.653631e-03
+## LG16.#CHROM506         -6.819885e+00 1.000000e+00 1.000000e+00
+## LG16.#CHROM521         -1.733463e+01 1.000000e+00 1.000000e+00
+## LG16.#CHROM552          1.875735e+00 1.708197e-01 4.220252e-01
+## LG16.#CHROM560          1.977908e-01 6.565100e-01 1.000000e+00
+## LG16.#CHROM579         -1.439044e+01 1.000000e+00 1.000000e+00
+## LG16.#CHROM613          5.140031e+00 2.338023e-02 7.935107e-02
+## LG16.#CHROM630          1.291496e+01 3.259657e-04 2.517804e-03
+## LG16.#CHROM729          6.113592e+00 1.341463e-02 5.036105e-02
+## LG16.#CHROM760          9.671132e+00 1.871859e-03 9.249187e-03
+## LG16.#CHROM770          3.667002e-01 5.448085e-01 1.000000e+00
+## LG16.#CHROM835         -1.722987e-02 1.000000e+00 1.000000e+00
+## LG16.#CHROM858          2.695729e+00 1.006175e-01 2.726409e-01
+## LG16.#CHROM898          3.600997e+01 1.963104e-09 4.397353e-07
+## LG16.#CHROM954         -1.736562e+01 1.000000e+00 1.000000e+00
+## LG16.#CHROM972          8.676939e-02 7.683251e-01 1.000000e+00
+## LG16.#CHROM986          1.106427e+01 8.800716e-04 5.328001e-03
+## LG7.#CHROM6            -9.514657e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM39            7.413886e-03 9.313838e-01 1.000000e+00
+## LG7.#CHROM115           6.057776e+00 1.384519e-02 5.168872e-02
+## LG7.#CHROM127           3.276746e+01 1.038690e-08 1.163333e-06
+## LG7.#CHROM158          -4.226372e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM179          -1.285059e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM251           1.019892e+01 1.405227e-03 7.533512e-03
+## LG7.#CHROM281          -5.554655e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM287          -2.401044e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM345          -4.916727e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM404          -2.455742e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM416           7.664623e+00 5.631401e-03 2.393643e-02
+## LG7.#CHROM477           4.470191e+00 3.449113e-02 1.125148e-01
+## LG7.#CHROM495          -9.421542e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM509           9.955264e-01 3.183954e-01 7.302448e-01
+## LG7.#CHROM533          -6.541742e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM614           4.818175e-02 8.262579e-01 1.000000e+00
+## LG7.#CHROM629           1.300541e-01 7.183760e-01 1.000000e+00
+## LG7.#CHROM678           3.554067e+00 5.939970e-02 1.750728e-01
+## LG7.#CHROM701           1.245694e+01 4.164425e-04 2.945783e-03
+## LG7.#CHROM709           1.050442e+01 1.190893e-03 6.801327e-03
+## LG7.#CHROM754          -6.240446e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM777          -1.305728e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM779           4.928786e-02 8.243071e-01 1.000000e+00
+## LG7.#CHROM790          -2.361905e+01 1.000000e+00 1.000000e+00
+## LG7.#CHROM814          -5.954464e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM863           8.141403e+00 4.326579e-03 1.886617e-02
+## LG7.#CHROM864          -2.853596e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM865          -4.299958e-01 1.000000e+00 1.000000e+00
+## LG7.#CHROM887          -5.140405e+00 1.000000e+00 1.000000e+00
+## LG7.#CHROM889           1.335618e+01 2.575724e-04 2.140885e-03
+## LG7.#CHROM897           4.031453e+00 4.465946e-02 1.395868e-01
+## LG7.#CHROM907           8.896534e+00 2.857124e-03 1.333325e-02
+## LG7.#CHROM933           1.937119e-01 6.598450e-01 1.000000e+00
+## LG11.#CHROM73          -4.923931e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM84          -4.388083e-01 1.000000e+00 1.000000e+00
+## LG11.#CHROM99           4.940996e-02 8.240932e-01 1.000000e+00
+## LG11.#CHROM120          2.280681e+01 1.791300e-06 6.018769e-05
+## LG11.#CHROM186         -3.094461e-01 1.000000e+00 1.000000e+00
+## LG11.#CHROM198         -3.272214e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM212         -2.252028e+01 1.000000e+00 1.000000e+00
+## LG11.#CHROM235          1.052959e+01 1.174781e-03 6.801327e-03
+## LG11.#CHROM303         -5.537329e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM309          2.964605e+01 5.185816e-08 4.356085e-06
+## LG11.#CHROM348          3.226115e+00 7.247243e-02 2.025657e-01
+## LG11.#CHROM371          3.351917e+01 7.056511e-09 9.483950e-07
+## LG11.#CHROM409         -2.825019e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM454          5.950545e+00 1.471274e-02 5.432396e-02
+## LG11.#CHROM578          2.638830e-01 6.074649e-01 1.000000e+00
+## LG11.#CHROM582         -3.065846e+01 1.000000e+00 1.000000e+00
+## LG11.#CHROM604         -2.617249e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM605          1.030675e+01 1.325443e-03 7.241446e-03
+## LG11.#CHROM639         -3.470296e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM660         -1.958374e+01 1.000000e+00 1.000000e+00
+## LG11.#CHROM717          3.224983e+01 1.355689e-08 1.301462e-06
+## LG11.#CHROM881         -3.844628e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM923          1.461056e+00 2.267622e-01 5.521166e-01
+## LG11.#CHROM945         -1.123735e+01 1.000000e+00 1.000000e+00
+## LG11.#CHROM951         -1.481089e+01 1.000000e+00 1.000000e+00
+## LG11.#CHROM966         -2.595765e+00 1.000000e+00 1.000000e+00
+## LG11.#CHROM980          1.185271e+00 2.762855e-01 6.514521e-01
+## LG11.#CHROM983          1.818899e+01 2.000316e-05 3.278567e-04
+## LG10.#CHROM8            6.401295e+00 1.140372e-02 4.329546e-02
+## LG10.#CHROM93           1.746341e+01 2.928905e-05 4.195841e-04
+## LG10.#CHROM154         -3.809134e-01 1.000000e+00 1.000000e+00
+## LG10.#CHROM181         -1.603615e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM190          1.643550e+01 5.033369e-05 6.149861e-04
+## LG10.#CHROM220         -9.866549e+00 1.000000e+00 1.000000e+00
+## LG10.#CHROM221         -4.481635e-01 1.000000e+00 1.000000e+00
+## LG10.#CHROM231          1.271872e+01 3.620140e-04 2.730626e-03
+## LG10.#CHROM269         -2.504465e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM286         -2.091186e+00 1.000000e+00 1.000000e+00
+## LG10.#CHROM340          8.581354e+00 3.396227e-03 1.542071e-02
+## LG10.#CHROM364         -9.532176e+00 1.000000e+00 1.000000e+00
+## LG10.#CHROM383          9.966802e+00 1.593881e-03 8.074041e-03
+## LG10.#CHROM428         -2.417484e-01 1.000000e+00 1.000000e+00
+## LG10.#CHROM464          5.647842e+00 1.747686e-02 6.233240e-02
+## LG10.#CHROM517          9.877468e+00 1.673150e-03 8.328569e-03
+## LG10.#CHROM565          8.973802e-02 7.645105e-01 1.000000e+00
+## LG10.#CHROM572          3.756624e+00 5.259868e-02 1.606651e-01
+## LG10.#CHROM616         -1.112311e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM682         -1.954317e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM725         -1.227028e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM728         -2.871202e+00 1.000000e+00 1.000000e+00
+## LG10.#CHROM785          1.247842e+01 4.116804e-04 2.943077e-03
+## LG10.#CHROM834         -2.128458e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM854          2.327977e+00 1.270669e-01 3.309649e-01
+## LG10.#CHROM860         -3.910517e+01 1.000000e+00 1.000000e+00
+## LG10.#CHROM911          1.225483e+01 4.640561e-04 3.214904e-03
+## LG10.#CHROM963         -1.054244e+01 1.000000e+00 1.000000e+00
+## LG13.#CHROM9            5.028610e+00 2.493190e-02 8.377120e-02
+## LG13.#CHROM46           1.294070e+01 3.215146e-04 2.512300e-03
+## LG13.#CHROM87          -1.210688e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM192         -8.306214e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM199          1.929568e-01 6.604670e-01 1.000000e+00
+## LG13.#CHROM273          1.306605e+00 2.530102e-01 6.048147e-01
+## LG13.#CHROM285          2.939036e+00 8.646233e-02 2.381258e-01
+## LG13.#CHROM377          1.330695e+01 2.644248e-04 2.140885e-03
+## LG13.#CHROM393         -4.657724e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM422         -1.035335e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM449          2.507222e+01 5.522276e-07 2.650693e-05
+## LG13.#CHROM473         -1.609697e+01 1.000000e+00 1.000000e+00
+## LG13.#CHROM482          1.167810e+01 6.323994e-04 4.077173e-03
+## LG13.#CHROM493          6.909714e+00 8.572869e-03 3.368987e-02
+## LG13.#CHROM505         -2.251211e+01 1.000000e+00 1.000000e+00
+## LG13.#CHROM523         -1.401635e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM647         -9.837023e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM690          5.628646e+00 1.766928e-02 6.249344e-02
+## LG13.#CHROM723          9.962065e+00 1.597987e-03 8.074041e-03
+## LG13.#CHROM753          5.209672e+00 2.246157e-02 7.780504e-02
+## LG13.#CHROM758          2.563721e+00 1.093409e-01 2.927375e-01
+## LG13.#CHROM812          1.917215e+01 1.194432e-05 2.589221e-04
+## LG13.#CHROM845         -3.581914e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM884         -7.668870e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM891          3.748070e+00 5.286851e-02 1.607585e-01
+## LG13.#CHROM910          9.558326e-02 7.571957e-01 1.000000e+00
+## LG13.#CHROM946         -1.043204e+01 1.000000e+00 1.000000e+00
+## LG13.#CHROM961         -7.990275e+00 1.000000e+00 1.000000e+00
+## LG13.#CHROM991          1.710450e+01 3.537843e-05 4.754861e-04
+## LG13.#CHROM998          1.314557e+01 2.881994e-04 2.278470e-03
+## scaffold_406.#CHROM10  -5.245995e-04 1.000000e+00 1.000000e+00
+## scaffold_406.#CHROM365 -5.245995e-04 1.000000e+00 1.000000e+00
+## LG19.#CHROM11          -1.919652e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM78          -1.822683e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM91           3.276623e+00 7.027340e-02 1.984190e-01
+## LG19.#CHROM105          8.462577e+00 3.625279e-03 1.635025e-02
+## LG19.#CHROM132          4.964993e+00 2.586541e-02 8.625288e-02
+## LG19.#CHROM167          1.684907e+01 4.047314e-05 5.230375e-04
+## LG19.#CHROM313          2.326167e+01 1.413896e-06 5.004483e-05
+## LG19.#CHROM367         -2.649887e-01 1.000000e+00 1.000000e+00
+## LG19.#CHROM445          1.081288e+01 1.007966e-03 5.941694e-03
+## LG19.#CHROM474         -2.115831e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM486         -6.026188e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM581         -2.619727e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM583          8.104020e-02 7.758927e-01 1.000000e+00
+## LG19.#CHROM617         -5.060383e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM662          1.235422e+01 4.399904e-04 3.079933e-03
+## LG19.#CHROM672         -4.159127e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM694          1.944960e+01 1.032895e-05 2.393468e-04
+## LG19.#CHROM724         -1.292824e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM730         -1.526109e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM783         -2.086430e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM810         -3.759860e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM824         -1.117948e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM937         -1.084848e+01 1.000000e+00 1.000000e+00
+## LG19.#CHROM950         -1.718767e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM964         -9.022142e+00 1.000000e+00 1.000000e+00
+## LG19.#CHROM994          1.998213e+01 7.816930e-06 2.020376e-04
+## LG4.#CHROM14            2.264444e+00 1.323737e-01 3.408242e-01
+## LG4.#CHROM137           1.056190e+01 1.154423e-03 6.745848e-03
+## LG4.#CHROM140          -3.108126e-01 1.000000e+00 1.000000e+00
+## LG4.#CHROM238          -9.999168e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM279           5.951630e+00 1.470369e-02 5.432396e-02
+## LG4.#CHROM293          -7.099585e-01 1.000000e+00 1.000000e+00
+## LG4.#CHROM312           8.602252e+00 3.357475e-03 1.534846e-02
+## LG4.#CHROM324          -1.433635e+01 1.000000e+00 1.000000e+00
+## LG4.#CHROM356          -6.869633e-01 1.000000e+00 1.000000e+00
+## LG4.#CHROM358           3.995596e+00 4.561931e-02 1.419267e-01
+## LG4.#CHROM394           1.674933e+01 4.265740e-05 5.408636e-04
+## LG4.#CHROM401          -1.099629e+01 1.000000e+00 1.000000e+00
+## LG4.#CHROM436           7.589911e+00 5.869583e-03 2.449913e-02
+## LG4.#CHROM559          -5.195821e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM570           3.013612e-01 5.830303e-01 1.000000e+00
+## LG4.#CHROM598          -9.714610e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM625           9.320197e+00 2.266416e-03 1.087880e-02
+## LG4.#CHROM627          -1.142978e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM632           4.276523e+00 3.864233e-02 1.242471e-01
+## LG4.#CHROM664           2.036528e+01 6.398001e-06 1.719783e-04
+## LG4.#CHROM697           1.212761e+01 4.968066e-04 3.305486e-03
+## LG4.#CHROM720          -4.147811e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM745          -1.403089e+01 1.000000e+00 1.000000e+00
+## LG4.#CHROM759          -2.781767e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM792          -2.706958e+00 1.000000e+00 1.000000e+00
+## LG4.#CHROM873           1.538439e+01 8.770998e-05 9.506630e-04
+## LG4.#CHROM899           2.140629e+00 1.434430e-01 3.651277e-01
+## LG4.#CHROM957           3.210260e+00 7.317786e-02 2.032046e-01
+## LG4.#CHROM976          -7.553509e-04 1.000000e+00 1.000000e+00
+## LG15.#CHROM16          -3.409211e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM44           1.093087e+00 2.957881e-01 6.925771e-01
+## LG15.#CHROM71          -5.645367e-02 1.000000e+00 1.000000e+00
+## LG15.#CHROM80           1.179387e+01 5.942592e-04 3.877108e-03
+## LG15.#CHROM81           3.222191e+00 7.264633e-02 2.025657e-01
+## LG15.#CHROM103         -9.269388e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM185          2.469732e-01 6.192144e-01 1.000000e+00
+## LG15.#CHROM219         -8.462582e-01 1.000000e+00 1.000000e+00
+## LG15.#CHROM223          2.681549e+00 1.015170e-01 2.739735e-01
+## LG15.#CHROM246         -1.226497e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM268          3.512855e+00 6.089443e-02 1.780544e-01
+## LG15.#CHROM277         -7.971850e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM280          7.196489e-01 3.962591e-01 8.876204e-01
+## LG15.#CHROM290          8.409668e-01 3.591204e-01 8.180641e-01
+## LG15.#CHROM321         -1.587720e+01 1.000000e+00 1.000000e+00
+## LG15.#CHROM329         -4.740388e+01 1.000000e+00 1.000000e+00
+## LG15.#CHROM470         -5.162347e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM530         -1.236448e+01 1.000000e+00 1.000000e+00
+## LG15.#CHROM555          6.512873e+00 1.070963e-02 4.112498e-02
+## LG15.#CHROM569         -7.706752e-02 1.000000e+00 1.000000e+00
+## LG15.#CHROM936         -2.108161e+00 1.000000e+00 1.000000e+00
+## LG15.#CHROM956         -2.177311e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM31           -2.433577e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM61            1.112722e+01 8.507014e-04 5.244691e-03
+## LG3.#CHROM94            1.029645e-02 9.191763e-01 1.000000e+00
+## LG3.#CHROM110           3.410245e+00 6.479283e-02 1.860717e-01
+## LG3.#CHROM128          -3.040300e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM160          -3.852044e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM166           2.364533e+00 1.241211e-01 3.258179e-01
+## LG3.#CHROM193           1.423508e+01 1.613345e-04 1.548811e-03
+## LG3.#CHROM218           7.934687e+00 4.849603e-03 2.075754e-02
+## LG3.#CHROM229           4.502136e-01 5.022335e-01 1.000000e+00
+## LG3.#CHROM241           1.610641e+01 5.988102e-05 6.937939e-04
+## LG3.#CHROM266          -2.338105e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM314          -5.176500e-01 1.000000e+00 1.000000e+00
+## LG3.#CHROM325           5.555424e+00 1.842351e-02 6.448230e-02
+## LG3.#CHROM335          -2.490470e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM408          -1.068796e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM432           8.623460e+00 3.318608e-03 1.527469e-02
+## LG3.#CHROM438           7.615785e+00 5.785958e-03 2.430102e-02
+## LG3.#CHROM469          -6.117871e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM475          -1.008169e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM492           6.206062e-01 4.308221e-01 9.430373e-01
+## LG3.#CHROM525          -1.059132e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM527          -7.808138e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM594           9.633884e+00 1.910203e-03 9.369753e-03
+## LG3.#CHROM661           3.127747e+00 7.697003e-02 2.128554e-01
+## LG3.#CHROM674           1.524290e+00 2.169714e-01 5.301993e-01
+## LG3.#CHROM699           7.100692e+00 7.705422e-03 3.063931e-02
+## LG3.#CHROM700          -1.764066e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM703           7.109464e+00 7.667804e-03 3.063931e-02
+## LG3.#CHROM704           1.335927e+01 2.571484e-04 2.140885e-03
+## LG3.#CHROM773           1.049908e+00 3.055283e-01 7.055498e-01
+## LG3.#CHROM776          -6.429275e+00 1.000000e+00 1.000000e+00
+## LG3.#CHROM803           1.705062e+01 3.639654e-05 4.795779e-04
+## LG3.#CHROM809           3.802744e-01 5.374564e-01 1.000000e+00
+## LG3.#CHROM813          -1.338774e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM821           1.014077e+00 3.139280e-01 7.224644e-01
+## LG3.#CHROM878           2.432449e+00 1.188471e-01 3.144301e-01
+## LG3.#CHROM901          -1.468129e+01 1.000000e+00 1.000000e+00
+## LG3.#CHROM904          -9.712628e-01 1.000000e+00 1.000000e+00
+## LG3.#CHROM917           1.163454e+01 6.473839e-04 4.077173e-03
+## LG3.#CHROM932           1.937755e+00 1.639125e-01 4.064547e-01
+## LG14.#CHROM19          -4.996022e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM48          -1.232124e+01 1.000000e+00 1.000000e+00
+## LG14.#CHROM49          -1.766461e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM66           2.104032e+00 1.469113e-01 3.698609e-01
+## LG14.#CHROM104          1.800864e+01 2.199048e-05 3.436652e-04
+## LG14.#CHROM136          1.561031e+01 7.782904e-05 8.573954e-04
+## LG14.#CHROM170          1.023960e+01 1.374574e-03 7.449303e-03
+## LG14.#CHROM196          3.727148e+00 5.353472e-02 1.618116e-01
+## LG14.#CHROM211         -6.160840e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM236         -1.461756e+01 1.000000e+00 1.000000e+00
+## LG14.#CHROM248          7.969409e-01 3.720096e-01 8.388941e-01
+## LG14.#CHROM259          1.302231e+00 2.538062e-01 6.048147e-01
+## LG14.#CHROM264         -2.407628e+01 1.000000e+00 1.000000e+00
+## LG14.#CHROM373         -1.343226e+01 1.000000e+00 1.000000e+00
+## LG14.#CHROM376         -1.196692e+01 1.000000e+00 1.000000e+00
+## LG14.#CHROM434          7.348425e+00 6.712155e-03 2.750346e-02
+## LG14.#CHROM481          9.392312e+00 2.178972e-03 1.061065e-02
+## LG14.#CHROM599          3.054672e-01 5.804751e-01 1.000000e+00
+## LG14.#CHROM642          9.913578e+00 1.640639e-03 8.227681e-03
+## LG14.#CHROM646          6.500028e-02 7.987605e-01 1.000000e+00
+## LG14.#CHROM663         -8.718186e-02 1.000000e+00 1.000000e+00
+## LG14.#CHROM683         -4.373327e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM734          1.099228e+01 9.149222e-04 5.489533e-03
+## LG14.#CHROM736         -2.078109e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM789          7.157837e+00 7.463714e-03 3.003363e-02
+## LG14.#CHROM793          4.760160e+00 2.912583e-02 9.641655e-02
+## LG14.#CHROM801          2.508962e-01 6.164448e-01 1.000000e+00
+## LG14.#CHROM804          1.031885e+01 1.316785e-03 7.241446e-03
+## LG14.#CHROM805         -3.274876e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM816          9.816951e-02 7.540374e-01 1.000000e+00
+## LG14.#CHROM819         -9.430210e+00 1.000000e+00 1.000000e+00
+## LG14.#CHROM900          2.092182e+00 1.480545e-01 3.698609e-01
+## LG14.#CHROM902          2.355061e+00 1.248770e-01 3.265267e-01
+## LG14.#CHROM916         -8.150426e-02 1.000000e+00 1.000000e+00
+## LG14.#CHROM988         -1.237968e+01 1.000000e+00 1.000000e+00
+## LG22.#CHROM20          -2.186694e+00 1.000000e+00 1.000000e+00
+## LG22.#CHROM54           4.201933e+00 4.037792e-02 1.290653e-01
+## LG22.#CHROM57          -1.225601e+01 1.000000e+00 1.000000e+00
+## LG22.#CHROM118         -1.099091e+00 1.000000e+00 1.000000e+00
+## LG22.#CHROM130          4.155592e+00 4.149727e-02 1.315385e-01
+## LG22.#CHROM288          2.802899e+01 1.195115e-07 7.301066e-06
+## LG22.#CHROM346          6.089697e-01 4.351760e-01 9.484378e-01
+## LG22.#CHROM567         -1.076765e+01 1.000000e+00 1.000000e+00
+## LG22.#CHROM648          3.177164e-01 5.729832e-01 1.000000e+00
+## LG22.#CHROM659          5.793073e+00 1.608944e-02 5.812960e-02
+## LG22.#CHROM676          8.130959e+00 4.351572e-03 1.886617e-02
+## LG22.#CHROM750         -1.977353e+00 1.000000e+00 1.000000e+00
+## LG22.#CHROM797          8.846951e+00 2.935789e-03 1.360586e-02
+## LG22.#CHROM851          3.511582e+00 6.094124e-02 1.780544e-01
+## LG22.#CHROM906         -1.237668e-01 1.000000e+00 1.000000e+00
+## LG12.#CHROM22          -7.464070e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM63           2.373773e+00 1.233886e-01 3.251651e-01
+## LG12.#CHROM64          -9.098088e-01 1.000000e+00 1.000000e+00
+## LG12.#CHROM88           1.465004e+01 1.294317e-04 1.317850e-03
+## LG12.#CHROM135          1.209638e+01 5.051990e-04 3.328370e-03
+## LG12.#CHROM171         -5.117174e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM411          1.162935e+01 6.491927e-04 4.077173e-03
+## LG12.#CHROM444         -1.647814e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM451         -2.032045e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM453         -3.611689e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM467          6.264569e+00 1.231761e-02 4.650245e-02
+## LG12.#CHROM510          7.493932e-02 7.842764e-01 1.000000e+00
+## LG12.#CHROM600          1.779839e+00 1.821691e-01 4.484162e-01
+## LG12.#CHROM635          5.873481e+00 1.537063e-02 5.583277e-02
+## LG12.#CHROM667          2.178059e+01 3.056765e-06 9.742776e-05
+## LG12.#CHROM670         -1.381019e-01 1.000000e+00 1.000000e+00
+## LG12.#CHROM722         -3.418500e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM741          2.919306e+01 6.551354e-08 4.891677e-06
+## LG12.#CHROM744          9.170807e+00 2.459062e-03 1.171978e-02
+## LG12.#CHROM749         -3.918654e+00 1.000000e+00 1.000000e+00
+## LG12.#CHROM866          1.053387e+00 3.047282e-01 7.055498e-01
+## LG12.#CHROM875          2.427957e-01 6.221942e-01 1.000000e+00
+## LG12.#CHROM926         -3.977440e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM23           3.579308e-01 5.496577e-01 1.000000e+00
+## LG17.#CHROM56           1.843227e+01 1.760513e-05 3.033500e-04
+## LG17.#CHROM86           0.000000e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM102         -4.872569e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM119          1.109600e+01 8.651435e-04 5.285240e-03
+## LG17.#CHROM159          1.451899e+01 1.387539e-04 1.373212e-03
+## LG17.#CHROM301          1.018936e+01 1.412533e-03 7.533512e-03
+## LG17.#CHROM307         -1.803259e+01 1.000000e+00 1.000000e+00
+## LG17.#CHROM337         -5.740551e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM370         -3.152137e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM405         -6.246000e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM410          7.460389e+00 6.307138e-03 2.600243e-02
+## LG17.#CHROM450          1.809568e+01 2.100772e-05 3.361235e-04
+## LG17.#CHROM476         -4.913240e+01 1.000000e+00 1.000000e+00
+## LG17.#CHROM498          4.606219e+00 3.185620e-02 1.049381e-01
+## LG17.#CHROM534         -3.141934e+01 1.000000e+00 1.000000e+00
+## LG17.#CHROM633          3.584610e+00 5.831709e-02 1.727389e-01
+## LG17.#CHROM706         -1.652683e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM775          2.564554e-02 8.727690e-01 1.000000e+00
+## LG17.#CHROM788          7.079973e+00 7.795020e-03 3.081325e-02
+## LG17.#CHROM827          1.112844e+00 2.914645e-01 6.848397e-01
+## LG17.#CHROM861          6.064911e-01 4.361120e-01 9.484378e-01
+## LG17.#CHROM867          1.508507e+01 1.027727e-04 1.079114e-03
+## LG17.#CHROM892         -3.680487e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM960         -1.832007e+01 1.000000e+00 1.000000e+00
+## LG17.#CHROM973          2.312960e+00 1.282995e-01 3.328853e-01
+## LG17.#CHROM992         -8.853988e+00 1.000000e+00 1.000000e+00
+## LG17.#CHROM997          1.965284e+01 9.286504e-06 2.311308e-04
+## scaffold_511           -1.675735e+00 1.000000e+00 1.000000e+00
+## scaffold_461.#CHROM26  -2.602476e+01 1.000000e+00 1.000000e+00
+## scaffold_461.#CHROM832 -7.339639e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM27            1.374456e+01 2.094259e-04 1.845399e-03
+## LG8.#CHROM83            6.650861e+00 9.910795e-03 3.827617e-02
+## LG8.#CHROM97            2.833968e+01 1.017881e-07 6.840163e-06
+## LG8.#CHROM146          -7.227573e-02 1.000000e+00 1.000000e+00
+## LG8.#CHROM149           1.011508e+01 1.470612e-03 7.660862e-03
+## LG8.#CHROM155           3.516009e+01 3.036843e-09 5.101896e-07
+## LG8.#CHROM176          -1.477458e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM214          -1.732408e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM217           1.885389e+01 1.411231e-05 2.649355e-04
+## LG8.#CHROM227          -4.420067e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM256          -2.837859e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM299           3.872801e+00 4.907457e-02 1.512757e-01
+## LG8.#CHROM306           1.509684e+01 1.021339e-04 1.079114e-03
+## LG8.#CHROM375           1.216684e+01 4.864669e-04 3.287799e-03
+## LG8.#CHROM407          -2.868500e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM430          -4.555929e-01 1.000000e+00 1.000000e+00
+## LG8.#CHROM466          -5.326604e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM484           9.358209e+00 2.219889e-03 1.073213e-02
+## LG8.#CHROM490           1.387765e+01 1.951052e-04 1.748143e-03
+## LG8.#CHROM497           2.097398e+00 1.475501e-01 3.698609e-01
+## LG8.#CHROM515          -2.454853e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM516           7.343408e-02 7.864008e-01 1.000000e+00
+## LG8.#CHROM535           2.508179e+01 5.494925e-07 2.650693e-05
+## LG8.#CHROM551           3.435618e+00 6.380472e-02 1.848137e-01
+## LG8.#CHROM576          -3.754818e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM586           1.165140e+01 6.415439e-04 4.077173e-03
+## LG8.#CHROM601           6.317333e-02 8.015489e-01 1.000000e+00
+## LG8.#CHROM637           1.397328e+01 1.854271e-04 1.719560e-03
+## LG8.#CHROM677           3.583651e+00 5.835078e-02 1.727389e-01
+## LG8.#CHROM726           5.237287e+00 2.210773e-02 7.697613e-02
+## LG8.#CHROM781          -2.978517e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM795          -4.903848e-01 1.000000e+00 1.000000e+00
+## LG8.#CHROM798          -5.161551e+00 1.000000e+00 1.000000e+00
+## LG8.#CHROM826           2.279919e+00 1.310587e-01 3.387364e-01
+## LG8.#CHROM846           1.447925e+00 2.288612e-01 5.552157e-01
+## LG8.#CHROM852           7.287059e+00 6.945308e-03 2.828635e-02
+## LG8.#CHROM857           2.894990e+00 8.885532e-02 2.427267e-01
+## LG8.#CHROM862          -1.091359e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM883          -1.885493e+01 1.000000e+00 1.000000e+00
+## LG8.#CHROM908           4.491000e+00 3.407373e-02 1.116954e-01
+## LG8.#CHROM925           1.269973e+01 3.657089e-04 2.730626e-03
+## LG8.#CHROM965          -4.865130e+00 1.000000e+00 1.000000e+00
+## scaffold_587            1.742521e+01 2.988356e-05 4.195841e-04
+## scaffold_909            2.392014e-02 8.770883e-01 1.000000e+00
+## LG21.#CHROM89           1.755077e+00 1.852398e-01 4.543108e-01
+## LG21.#CHROM134         -2.591438e+00 1.000000e+00 1.000000e+00
+## LG21.#CHROM195         -1.220280e+01 1.000000e+00 1.000000e+00
+## LG21.#CHROM228         -7.346499e+00 1.000000e+00 1.000000e+00
+## LG21.#CHROM234         -1.479456e+01 1.000000e+00 1.000000e+00
+## LG21.#CHROM257          4.452248e+00 3.485533e-02 1.131535e-01
+## LG21.#CHROM414          1.001675e+01 1.551231e-03 7.957460e-03
+## LG21.#CHROM443          4.195770e+00 4.052496e-02 1.290653e-01
+## LG21.#CHROM531         -1.519754e+01 1.000000e+00 1.000000e+00
+## LG21.#CHROM554          2.134119e+00 1.440532e-01 3.652972e-01
+## LG21.#CHROM608         -4.531972e+00 1.000000e+00 1.000000e+00
+## LG21.#CHROM695         -3.895373e+01 1.000000e+00 1.000000e+00
+## LG21.#CHROM714          3.328567e+00 6.808619e-02 1.938725e-01
+## LG21.#CHROM715          6.738179e-01 4.117237e-01 9.115877e-01
+## LG21.#CHROM806         -5.581939e+00 1.000000e+00 1.000000e+00
+## LG21.#CHROM841          6.719145e-01 4.123849e-01 9.115877e-01
+## LG18.#CHROM121          1.562997e+01 7.702405e-05 8.573954e-04
+## LG18.#CHROM168         -1.601055e+00 1.000000e+00 1.000000e+00
+## LG18.#CHROM230         -5.097838e-03 1.000000e+00 1.000000e+00
+## LG18.#CHROM261          8.009189e-01 3.708188e-01 8.388941e-01
+## LG18.#CHROM271          3.681624e+00 5.501525e-02 1.643122e-01
+## LG18.#CHROM316         -4.867071e+01 1.000000e+00 1.000000e+00
+## LG18.#CHROM347         -6.179424e+00 1.000000e+00 1.000000e+00
+## LG18.#CHROM357         -2.995330e+00 1.000000e+00 1.000000e+00
+## LG18.#CHROM361          4.924115e-01 4.828536e-01 1.000000e+00
+## LG18.#CHROM369         -1.719483e+00 1.000000e+00 1.000000e+00
+## LG18.#CHROM382          2.186752e+00 1.392026e-01 3.556811e-01
+## LG18.#CHROM387         -2.537543e+00 1.000000e+00 1.000000e+00
+## LG18.#CHROM390          4.960867e+00 2.592721e-02 8.625288e-02
+## LG18.#CHROM397          1.091004e+01 9.564460e-04 5.687891e-03
+## LG18.#CHROM461          1.448875e+01 1.409994e-04 1.373212e-03
+## LG18.#CHROM487          1.239928e+00 2.654849e-01 6.304094e-01
+## LG18.#CHROM519          1.879076e+01 1.458722e-05 2.649355e-04
+## LG18.#CHROM541         -3.198005e-01 1.000000e+00 1.000000e+00
+## LG18.#CHROM591          2.368333e+01 1.135618e-06 4.489030e-05
+## LG18.#CHROM929         -5.512114e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM45            1.387887e+01 1.949784e-04 1.748143e-03
+## LG9.#CHROM69            2.752724e+01 1.548975e-07 8.674257e-06
+## LG9.#CHROM108          -2.295959e+01 1.000000e+00 1.000000e+00
+## LG9.#CHROM143           1.766746e-01 6.742467e-01 1.000000e+00
+## LG9.#CHROM172           4.121710e+00 4.233627e-02 1.335680e-01
+## LG9.#CHROM182           1.372648e+01 2.114520e-04 1.845399e-03
+## LG9.#CHROM210           1.449512e+01 1.405232e-04 1.373212e-03
+## LG9.#CHROM330           8.103981e+00 4.416814e-03 1.902628e-02
+## LG9.#CHROM336          -1.134030e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM341          -7.146554e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM343           1.667866e+01 4.427620e-05 5.509927e-04
+## LG9.#CHROM380          -2.449602e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM448          -5.275659e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM460          -2.923220e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM491           3.424099e+00 6.425129e-02 1.853084e-01
+## LG9.#CHROM504           2.920273e+00 8.747306e-02 2.399261e-01
+## LG9.#CHROM507          -7.844772e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM543           5.570860e+00 1.826179e-02 6.425089e-02
+## LG9.#CHROM564           8.320146e+00 3.920776e-03 1.733396e-02
+## LG9.#CHROM622           6.925844e-01 4.052867e-01 9.048262e-01
+## LG9.#CHROM653           1.332804e+01 2.614673e-04 2.140885e-03
+## LG9.#CHROM689          -9.921732e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM738           1.246269e-01 7.240695e-01 1.000000e+00
+## LG9.#CHROM774          -3.286754e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM802          -6.433583e+00 1.000000e+00 1.000000e+00
+## LG9.#CHROM818           9.858630e-01 3.207556e-01 7.331557e-01
+## LG9.#CHROM830           3.361941e-02 8.545187e-01 1.000000e+00
+## LG9.#CHROM833           2.497742e+00 1.140097e-01 3.028241e-01
+## LG9.#CHROM853          -6.369053e-01 1.000000e+00 1.000000e+00
+## LG9.#CHROM877           8.446910e+00 3.656641e-03 1.638175e-02
+## LG9.#CHROM924           3.262719e+00 7.087152e-02 1.992706e-01
+## LG9.#CHROM959          -1.547234e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM77           -9.758204e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM205           1.360861e+01 2.251505e-04 1.939759e-03
+## LG6.#CHROM247           1.141761e+01 7.275139e-04 4.526753e-03
+## LG6.#CHROM265          -8.356618e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM275          -8.134193e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM291           2.080140e+01 5.094582e-06 1.488504e-04
+## LG6.#CHROM352          -2.932040e+01 1.000000e+00 1.000000e+00
+## LG6.#CHROM395           1.083682e+00 2.978754e-01 6.950426e-01
+## LG6.#CHROM412          -1.130191e+01 1.000000e+00 1.000000e+00
+## LG6.#CHROM471           3.598332e-01 5.485989e-01 1.000000e+00
+## LG6.#CHROM540           1.954038e+01 9.849531e-06 2.363887e-04
+## LG6.#CHROM584          -5.112460e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM631           1.929524e+01 1.119850e-05 2.508465e-04
+## LG6.#CHROM651           1.478615e+01 1.204166e-04 1.244923e-03
+## LG6.#CHROM680           1.332412e+01 2.620141e-04 2.140885e-03
+## LG6.#CHROM687          -2.885107e-01 1.000000e+00 1.000000e+00
+## LG6.#CHROM743          -6.183965e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM800          -7.409269e-04 1.000000e+00 1.000000e+00
+## LG6.#CHROM829           1.054117e+00 3.045608e-01 7.055498e-01
+## LG6.#CHROM847          -2.579837e+01 1.000000e+00 1.000000e+00
+## LG6.#CHROM879           2.535038e+00 1.113442e-01 2.969179e-01
+## LG6.#CHROM940          -2.021618e-01 1.000000e+00 1.000000e+00
+## LG6.#CHROM944          -7.601448e+00 1.000000e+00 1.000000e+00
+## LG6.#CHROM967           2.385839e+01 1.036888e-06 4.354930e-05
+## LG6.#CHROM974          -6.586654e-01 1.000000e+00 1.000000e+00
+## LG6.#CHROM989          -6.762442e+00 1.000000e+00 1.000000e+00
+## scaffold_439.#CHROM138  1.824612e+01 1.941205e-05 3.261224e-04
+## scaffold_439.#CHROM141 -8.270084e+00 1.000000e+00 1.000000e+00
+## scaffold_1130          -2.212945e-01 1.000000e+00 1.000000e+00
+## scaffold_391            1.400725e+00 2.366022e-01 5.719306e-01
+## scaffold_427           -4.533477e+00 1.000000e+00 1.000000e+00
+## scaffold_970            2.326023e+01 1.414958e-06 5.004483e-05
+## scaffold_396           -5.157993e+00 1.000000e+00 1.000000e+00
+## scaffold_174.#CHROM253  4.938710e-01 4.822056e-01 1.000000e+00
+## scaffold_174.#CHROM483  5.171472e+00 2.296075e-02 7.872256e-02
+## scaffold_174.#CHROM768  0.000000e+00 1.000000e+00 1.000000e+00
+## scaffold_891.#CHROM258 -2.095733e+01 1.000000e+00 1.000000e+00
+## scaffold_891.#CHROM262  1.596593e+01 6.449264e-05 7.345603e-04
+## scaffold_516           -1.291465e+01 1.000000e+00 1.000000e+00
+## scaffold_646           -2.947237e+01 1.000000e+00 1.000000e+00
+## scaffold_712           -2.222475e+00 1.000000e+00 1.000000e+00
+## scaffold_1108          -3.058452e+00 1.000000e+00 1.000000e+00
+## scaffold_1844           2.668825e-01 6.054307e-01 1.000000e+00
+## scaffold_418            1.215618e+01 4.892557e-04 3.287799e-03
+## scaffold_1185           8.267002e+00 4.037211e-03 1.773206e-02
+## scaffold_1017          -6.765196e+00 1.000000e+00 1.000000e+00
+## scaffold_1116           1.881082e+01 1.443455e-05 2.649355e-04
+## scaffold_620            0.000000e+00 1.000000e+00 1.000000e+00
+## scaffold_520            3.650646e+01 1.521608e-09 4.397353e-07
+## scaffold_584            6.415919e-01 4.231350e-01 9.322842e-01
+## scaffold_1005           0.000000e+00 1.000000e+00 1.000000e+00
+## scaffold_684            3.625175e-02 8.489965e-01 1.000000e+00
+## scaffold_536           -1.303485e-01 1.000000e+00 1.000000e+00
+## scaffold_715.#CHROM702 -4.889798e-01 1.000000e+00 1.000000e+00
+## scaffold_715.#CHROM796  3.926563e-01 5.309064e-01 1.000000e+00
+## scaffold_489           -2.763706e-02 1.000000e+00 1.000000e+00
+## scaffold_286           -3.456956e-01 1.000000e+00 1.000000e+00
+## scaffold_393            2.110107e-02 8.845040e-01 1.000000e+00
+## scaffold_569            5.101803e+00 2.390098e-02 8.071085e-02
+## scaffold_407            1.507555e-01 6.978145e-01 1.000000e+00
+## scaffold_829.#CHROM941  1.614967e+01 5.852870e-05 6.900225e-04
+## scaffold_829.#CHROM981  1.614967e+01 5.852870e-05 6.900225e-04
+## scaffold_1258          -3.828573e+00 1.000000e+00 1.000000e+00
+## scaffold_573            1.345349e+00 2.460929e-01 5.906229e-01
+## scaffold_408            2.721549e+00 9.900187e-02 2.693492e-01</code></pre>
+</div>
 </div>
 <div id="figures" class="section level2">
 <h2>Figures</h2>

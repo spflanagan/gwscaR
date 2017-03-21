@@ -35,6 +35,7 @@ To run the program, you need to do a bit of file manipulation. First, it's good 
 
 ```{r}
 vcf$SNP<-paste(vcf$`#CHROM`,vcf$POS,sep=".")
+head(vcf$SNP)
 locus.info<-c("#CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO","FORMAT","SNP")
 ```
 Also, you need to create vectors for the groups that you want to compare. In this case, compare males and females. The females have names with "FEM" and males have names with PRM and NPM.
@@ -45,9 +46,10 @@ grp2<-c(grep("PRM",colnames(vcf),value=T),grep("NPM",colnames(vcf),value=T))
 
 Then you calculate Fsts between the two groups with fst.one.vcf and create a data frame. 
 ```{r}
-sel<-fst.one.vcf(vcf,c(locus.info,grp1),c(locus.info,grp2),
-    cov.thresh=0.5,maf=0.05)
+sel<-do.call(rbind,apply(vcf,1,fst.one.vcf,group1=c(locus.info,grp1),group2=c(locus.info,grp2),
+    cov.thresh=0.5,maf=0.05))
 sel<-sel[!is.na(sel$Fst),] #Remove the ones that weren't polymorphic
+head(sel)
 ```
 To identify the SNPs that are outliers, compare the value of 2NFst(k-1) to the chi-squared distribution with k-1 degrees of freedom, and then adjust for multiple tests using the Benjamini-Hochberg (1995) false discovery rate.
 ```{r}
@@ -58,7 +60,7 @@ sel$Chi.p.adj<-p.adjust(sel$Chi.p,method="BH")
 
 ### The wrapper function
 For ease of implementation, all of the above steps are contained in the wrapper function `gwsca`. 
-```{r, eval=FALSE}
+```{r,eval=FALSE}
 sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
 ```
 
@@ -67,9 +69,20 @@ sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
 The `gwscaR` package includes a function to plot genome-wide statistics. 
 
 ```{r}
-fst.plot(sel, ci.dat=c(mo.top1,0),fst.name="Fst", 
-             chrom.name="Chrom", axis.size=0,bp.name="Pos",
-             sig.col=c("black","black"),groups=as.factor(scaffs[scaffs %in% levels(factor(mo.plot$Chrom))]))
+bounds<-data.frame(levels(sel$Chrom),tapply(as.numeric(sel$Pos),sel$Chrom,max))
+lgs<-c("LG1","LG2","LG3","LG4","LG5","LG6","LG7","LG8","LG9","LG10",
+       "LG11","LG12","LG13","LG14","LG15","LG16","LG17","LG18","LG19",
+       "LG20","LG21","LG22")
+par(mar=c(2,2,2,2))
+sel.plot<-fst.plot(sel, fst.name="Fst",
+             chrom.name="Chrom",bp.name="Pos",
+             group.boundaries = bounds)
+
+#Or if you just want to plot the linkage groups
+sel.plot<-fst.plot(sel, fst.name="Fst",
+             chrom.name="Chrom",bp.name="Pos",
+             group.boundaries = bounds, groups=lgs)
+
 ```
 
 ## Figures

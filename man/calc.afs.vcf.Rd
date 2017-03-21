@@ -2,17 +2,33 @@
 % Please edit documentation in R/gwscaR.R
 \name{calc.afs.vcf}
 \alias{calc.afs.vcf}
-\title{A function that calculates the allele frequencies from a vcf}
+\alias{calc.afs.vcf}
+\title{Calculate allele frequencies from a vcf file}
 \usage{
+calc.afs.vcf(vcf)
+
 calc.afs.vcf(vcf)
 }
 \arguments{
 \item{vcf}{A data.frame with genotype data in vcf format}
+
+\item{vcf.row}{A single row of a vcf (used in conjunctioin with apply)}
 }
 \value{
+A data.frame with the columns:
+ Chrom
+ Pos
+ Ref
+ RefFreq 
+ Alt 
+ AltFreq 
+ @export
+
 out A data.frame with columns Chrom, Pos, Ref (the reference allele),
 RefFreq (frequency of reference allele), Alt (alternative allele), and AltFreq (frequency of the alternative allele)
 }
 \description{
+Calculate allele frequencies from a vcf file
+
 A function that calculates the allele frequencies from a vcf
 }

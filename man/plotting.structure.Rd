@@ -5,8 +5,8 @@
 \title{This plots the output of structure}
 \usage{
 plotting.structure(structure.out, k, pop.order, filename = paste("str.k", k,
-  ".jpeg", sep = ""), make.file = TRUE, plot.new = TRUE, colors = NULL,
-  xlabel = TRUE, ylabel = NULL)
+  ".jpeg", sep = ""), make.file = TRUE, lab.cex = 1, plot.new = TRUE,
+  colors = NULL, xlabel = TRUE, ylabel = NULL, xlabcol = NULL)
 }
 \arguments{
 \item{structure.out}{A data.frame containing the structure output.}
@@ -19,6 +19,8 @@ plotting.structure(structure.out, k, pop.order, filename = paste("str.k", k,
 
 \item{make.file}{A boolean (TRUE/FALSE) indicating whether the jpeg should be created}
 
+\item{lab.cex}{Size of the labels}
+
 \item{plot.new}{A boolean (TRUE/FALSE) indicating whether this is being added to an existing plot}
 
 \item{colors}{A list of colors for the structure colors (if not provided, defaults to rainbow palette)}
@@ -26,6 +28,8 @@ plotting.structure(structure.out, k, pop.order, filename = paste("str.k", k,
 \item{xlabel}{A boolean (TRUE/FALSE) indicating whether x labels should be plotted (default is TRUE)}
 
 \item{ylabel}{An optional label for the y-axis.}
+
+\item{xlabcol}{An optional vector of colors for x-axis labels}
 }
 \description{
 This plots the output of structure
