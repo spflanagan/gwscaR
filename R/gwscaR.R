@@ -640,13 +640,13 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
   fst.dat<-data.frame(Locus=character(),
                       Hs1=numeric(),Hs2=numeric(),Hs=numeric(),Ht=numeric(),Fst=numeric(),NumAlleles=numeric(),
                       Num1=numeric(),Num2=numeric(),stringsAsFactors=F)
-  grp1<-raw[raw$IID %in% group1,]
-  grp2<-raw[raw$IID %in% group2,]
+  grp1<-raw[raw[,2] %in% group1,]
+  grp2<-raw[raw[,2] %in% group2,]
   for(i in 7:ncol(raw)){
     na1<-length(grp1[is.na(grp1[,i]),i])/nrow(grp1)
     na2<-length(grp2[is.na(grp2[,i]),i])/nrow(grp2)
-    gt1<-grp1[!is.na(grp1[,i]),i]
-    gt2<-grp2[!is.na(grp2[,i]),i]
+    gt1<-as.character(grp1[!is.na(grp1[,i]),i])
+    gt2<-as.character(grp2[!is.na(grp2[,i]),i])
     gt1[gt1=="1"]<-"1/2"
     gt1[gt1=="2"]<-"2/2"
     gt1[gt1=="0"]<-"1/1"
@@ -1000,5 +1000,15 @@ plotting.structure<-function(structure.out, k, pop.order,
   if(make.file==TRUE) {dev.off()}
 }
 
-
+#' Find significant loci using chi-square test
+#' @param fst.df A data.frame containing at least the following columns: Fst, Num1 (number of individuals genotyped in pop 1), Num2 (number of individuals genotyped in pop2)
+#' @return fst.df The same dataframe but with additional columns
+#' @export
+fst.sig<-function(fst.df){
+  fst.df<-fst.df[!is.na(fst.df$Fst),]
+  fst.df$Chi<-2*((fst.df$Num1+fst.df$Num2)/2)*fst.df$Fst
+  fst.df$Chi.p<-1-pchisq(fst.df$Chi,1)
+  fst.df$Chi.p.adj<-p.adjust(fst.df$Chi.p,method="BH")
+  return(fst.df)
+}
 
