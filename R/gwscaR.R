@@ -517,23 +517,23 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
     c<-strsplit(as.character(x),split=":")[[1]][1]
     return(c)
   }))
-  num.ind<-length(gt1)
+  num.ind1<-length(gt1[gt1 %in% c("0/0","1/0","0/1","1/1","./.")])
   gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
   gt1[gt1=="1/0"]<-"0/1"
   gt1<-gsub(pattern = "0",replacement = vcf.row["REF"],gt1)
   gt1<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt1)
-  if(length(gt1)/num.ind>=cov.thresh){
+  if(length(gt1)/num.ind1>=cov.thresh){
     al1<-unlist(strsplit(as.character(gt1),split = "/"))
     gt2<-unlist(lapply(vcf.row[group2],function(x){
       c<-strsplit(as.character(x),split=":")[[1]][1]
       return(c)
     }))
-    num.ind<-length(gt2)
+    num.ind2<-length(gt2[gt2 %in% c("0/0","1/0","0/1","1/1","./.")])
     gt2<-gt2[gt2 %in% c("0/0","1/0","0/1","1/1")]
     gt2[gt2=="1/0"]<-"0/1"
     gt2<-gsub(pattern = "0",replacement = vcf.row["REF"],gt2)
     gt2<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt2)
-    if(length(gt2)/num.ind>=cov.thresh){
+    if(length(gt2)/num.ind2>=cov.thresh){
       al2<-unlist(strsplit(as.character(gt2),split="/"))
       #calculate frequencies
       freq1<-summary(factor(al1))/sum(summary(factor(al1)))
@@ -545,7 +545,7 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
          & min(freq1,freq2) >= maf){ #and match the maf
         hs1<-2*freq1[1]*freq1[2]
         hs2<-2*freq2[1]*freq2[2]
-        hs<-mean(c(hs1,hs2))
+        hs<-((hs1*length(gt1))+(hs2*length(gt2)))/(length(gt1)+length(gt2)) #weighted avg
         ht<-2*freqall[1]*freqall[2]
         fst<-(ht-hs)/ht
       } else {
