@@ -36,10 +36,10 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
     lgs<-scaffold.order$object
   } else{
     if(!is.null(group.boundaries)){
-      scaff.ord<-levels(factor(group.boundaries[,1]))
+      scaff.ord<-unique(group.boundaries[,1])
       lgs<-scaff.ord
     }else{
-      scaff.ord<-levels(factor(fst.dat[,chrom.name]))
+      scaff.ord<-unique(fst.dat[,chrom.name])
       lgs<-scaff.ord
     }
   }
@@ -48,8 +48,14 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
     scaff.ord<-groups
   }
   fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
-  these.scaffs<-scaff.ord[scaff.ord %in% factor(fst.dat[,chrom.name])]
+  these.scaffs<-scaff.ord[scaff.ord %in% unique(fst.dat[,chrom.name])]
   all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
+
+  #keep only the scaffolds you're plotting
+  if(!is.null(groups))
+  {
+    all.scaff<-all.scaff[names(all.scaff) %in% groups]
+  }
 
   group.boundaries<-group.boundaries[scaff.ord,]
   last.max<-0
@@ -59,9 +65,10 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
   #set up the rectangles
   for(i in 1:length(scaff.ord)){
     if(is.null(group.boundaries)){
-      new.max<-last.max+nrow(all.scaff[[scaff.ord[i]]])
+      new.max<-last.max+nrow(all.scaff[[as.character(scaff.ord[i])]])
     }else{
-      new.max<-as.numeric(group.boundaries[scaff.ord[i],2])+as.numeric(last.max)
+      new.max<-as.numeric(group.boundaries[(group.boundaries[1,]) %in% scaff.ord[i],2])+
+        as.numeric(last.max)#this isn't working right
     }
     rect.xs<-rbind(rect.xs,c(last.max, new.max))
     rownames(rect.xs)[i]<-scaff.ord[i]
@@ -74,20 +81,22 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
       #then this is done by relative position only
       all.scaff[[i]]<-all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
       all.scaff[[i]][,bp.name]<-
-        seq(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+1,rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
+        seq(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+1,
+            rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
     }else{
       #then it takes genome space into account
 
       all.scaff[[i]]<-
         all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
       all.scaff[[i]][,bp.name]<-
-        as.numeric(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1])+as.numeric(all.scaff[[i]][,bp.name])
+        as.numeric(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1])+
+        as.numeric(as.character(all.scaff[[i]][,bp.name]))
 
     }
   }
   #change BP to plot
-  x.max<-max(rect.xs)
-  x.min<-min(rect.xs)
+  x.max<-max(rect.xs,na.rm=T)
+  x.min<-min(rect.xs,na.rm=T)
   if(is.null(y.lim)){
     y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
     y.min<-min(fst.dat[,fst.name])-0.1*min(fst.dat[,fst.name])
@@ -153,7 +162,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
 #' @export
 parse.vcf<-function(filename){
   #if(substr(filename,nchar(filename)-3,nchar(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
-  vcf<-read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F)
+  vcf<-read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F,strip.white = T)
   header.start<-grep("#CHROM",scan(filename,what="character"))
   header<-scan(filename,what="character")[header.start:(header.start+ncol(vcf)-1)]
   colnames(vcf)<-header
@@ -323,21 +332,22 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
           #calculate frequencies
           freq1<-summary(factor(al1))/sum(summary(factor(al1)))
           freq2<-summary(factor(al2))/sum(summary(factor(al2)))
-          freqall<-summary(as.factor(c(al1,al2)))/
-            sum(summary(as.factor(c(al1,al2))))
+          freqall<-mean(c(freq1[1],freq2[1]))
+          #freqall<-summary(as.factor(c(al1,al2)))/
+          #  sum(summary(as.factor(c(al1,al2))))
           hets<-c(names(freq1)[2],names(freq2)[2])
           if(length(freq1)>1 & length(freq2)>1){ #both must be polymorphic
             hs1<-2*freq1[1]*freq1[2]
             hs2<-2*freq2[1]*freq2[2]
             hs<-mean(c(hs1,hs2))
-            ht<-2*freqall[1]*freqall[2]
+            ht<-2*freqall*(1-freqall)
             fst<-(ht-hs)/ht
           } else {
             hs1<-1-sum(freq1*freq1)
             hs2<-1-sum(freq2*freq2)
             if(length(freqall)<=1){ fst<-0 }
             else{
-              ht<-2*freqall[1]*freqall[2]
+              ht<-2*freqall*(1-freqall)
               fst<-NA
             }
           }
@@ -362,9 +372,9 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
 #'  Chrom
 #'  Pos
 #'  Ref
-#'  RefFreq 
-#'  Alt 
-#'  AltFreq 
+#'  RefFreq
+#'  Alt
+#'  AltFreq
 #'  @export
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply
@@ -434,12 +444,11 @@ calc.fst.nei<-function(al1,al2){
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
   freq2<-summary(factor(al2))/sum(summary(factor(al2)))
   al12<-c(al1,al2)
-  freqall<-summary(as.factor(al12))/
-    sum(summary(as.factor(al12)))
+  freqall<-mean(c(freq1[1],freq2[1]))
   if(length(freq1)>1 & length(freq2)>1){ #both must be polymorphic
     hs1<-1-sum(freq1*freq1)
     hs2<-1-sum(freq2*freq2)
-    hw<-sum(hs1,hs2)
+    hw<-sum(c(hs1,hs2))
     hb<-1-sum(freqall*freqall)
     fst<-1-(hw/(2*hb))
   } else {
@@ -475,12 +484,12 @@ calc.fst.wright<-function(al1,al2){
   freq1<-summary(factor(al1))/sum(summary(factor(al1)))
   freq2<-summary(factor(al2))/sum(summary(factor(al2)))
   al12<-c(al1,al2)
-  freqall<-summary(as.factor(al12))/
-    sum(summary(as.factor(al12)))
+  freqall<-mean(c(freq1[1],freq2[1]))
   if(length(freq1)>1 & length(freq2)>1){ #both must be polymorphic
     hs1<-1-sum(freq1*freq1)
     hs2<-1-sum(freq2*freq2)
-    hs<-(hs1*length(al1)+hs2*length(al2))/(length(al1)+length(al2))
+   # hs<-(hs1*length(al1)+hs2*length(al2))/(length(al1)+length(al2))
+    hs<-mean(c(hs1,hs2))
     ht<-1-sum(freqall*freqall)
     fst<-(ht-hs)/ht
   } else {
@@ -538,22 +547,24 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
       #calculate frequencies
       freq1<-summary(factor(al1))/sum(summary(factor(al1)))
       freq2<-summary(factor(al2))/sum(summary(factor(al2)))
-      freqall<-summary(as.factor(c(al1,al2)))/
-        sum(summary(as.factor(c(al1,al2))))
+      freqall<-mean(c(freq1[1],freq2[1]))
+     # freqall<-summary(as.factor(c(al1,al2)))/
+      #  sum(summary(as.factor(c(al1,al2))))
       hets<-c(names(freq1)[2],names(freq2)[2])
       if(length(freq1)>1 & length(freq2)>1 #both must be polymorphic
          & min(freq1,freq2) >= maf){ #and match the maf
         hs1<-2*freq1[1]*freq1[2]
         hs2<-2*freq2[1]*freq2[2]
-        hs<-((hs1*length(gt1))+(hs2*length(gt2)))/(length(gt1)+length(gt2)) #weighted avg
-        ht<-2*freqall[1]*freqall[2]
+        #hs<-((hs1*length(gt1))+(hs2*length(gt2)))/(length(gt1)+length(gt2)) #weighted avg
+        hs<-mean(c(hs1,hs2))
+        ht<-2*freqall*(1-freqall)
         fst<-(ht-hs)/ht
       } else {
         hs1<-1-sum(freq1*freq1)
         hs2<-1-sum(freq2*freq2)
         if(length(freqall)<=1){ fst<-0 }
         else{
-          ht<-2*freqall[1]*freqall[2]
+          ht<-2*freqall*(1-freqall)
           fst<-NA
         }
       }
@@ -569,43 +580,6 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
                     Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
                     Num1=length(gt1),Num2=length(gt2)))
 }#end function fst.one.vcf
-
-#' A function that calculates the allele frequencies from a vcf
-#' @param vcf A data.frame with genotype data in vcf format
-#' @return out A data.frame with columns Chrom, Pos, Ref (the reference allele),
-#' RefFreq (frequency of reference allele), Alt (alternative allele), and AltFreq (frequency of the alternative allele)
-#' @export
-calc.afs.vcf<-function(vcf){
-  #use in conjunction with apply
-  out<-apply(vcf,1,function(vcf.row){
-    al1<-vcf.alleles(vcf.row)
-    #calculate frequencies
-    if(length(al1)>0){
-      freq1<-summary(factor(al1))/sum(summary(factor(al1)))
-      if(length(freq1)==1)
-      {
-        if(names(freq1)==vcf.row["REF"])
-        {
-          freq1<-c(freq1,0)
-          names(freq1)<-unlist(c(vcf.row["REF"],vcf.row["ALT"]))
-        }
-        else
-        {
-          freq1<-c(freq1,0)
-          names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
-        }
-      }
-      return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
-                        RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
-                        Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
-    }else{
-      return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
-                        RefFreq=0,Alt=vcf.row["ALT"],AltFreq=0))
-    }
-  })
-  return(out)
-
-}
 
 #' Choose one SNP per RAD locus from a vcf
 #' @param vcf A data.frame in vcf format
@@ -800,8 +774,7 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
       pop2<-factor(ped.split[[pop.order[j]]][ped.split[[pop.order[j]]]!="0"])
       freq1<-summary(pop1)/sum(summary(pop1))
       freq2<-summary(pop2)/sum(summary(pop2))
-      freqall<-summary(as.factor(c(pop1,pop2)))/
-        sum(summary(as.factor(c(pop1,pop2))))
+      freqall<-mean(c(freq1[1],freq2[1]))
       if(length(freq1)>1){ hs1<-2*freq1[1]*freq1[2]
       } else {
         hs1<-0
@@ -811,8 +784,9 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
         hs2<-0
       }
       if(length(freqall)>1){
-        hs<-(hs1*length(pop1)+hs2*length(pop2))/(length(pop1)+length(pop2))
-        ht<-2*freqall[1]*freqall[2]
+       # hs<-(hs1*length(pop1)+hs2*length(pop2))/(length(pop1)+length(pop2))
+        hs<-mean(c(hs1,hs2))
+        ht<-2*freqall*(1-freqall)
         fst<-(ht-hs)/ht
       }
       if(length(freqall)<=1){ fst<-1 }
@@ -966,7 +940,7 @@ changeorder.df<-function(dat,order.list){
 #' @param lab.cex Size of the labels
 #' @export
 
-plotting.structure<-function(structure.out, k, pop.order, 
+plotting.structure<-function(structure.out, k, pop.order,
                              filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,lab.cex=1,
                              plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL,xlabcol=NULL){
   str.split<-split(structure.out,structure.out[,1])
@@ -981,7 +955,7 @@ plotting.structure<-function(structure.out, k, pop.order,
   if(make.file==TRUE){
     jpeg(filename,width=7, height=1.25, units="in", res=300)
     par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
-  } else { 
+  } else {
     if(plot.new==TRUE){
       par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
     }
@@ -995,7 +969,7 @@ plotting.structure<-function(structure.out, k, pop.order,
       mtext(pop.index, 1, line=0.5, cex=lab.cex, outer=F,col=xlabcol[i])}
     if(!is.null(ylabel)){
       if(i == 1) { mtext(ylabel,2,cex=lab.cex) }
-    }	
+    }
   }
   if(make.file==TRUE) {dev.off()}
 }

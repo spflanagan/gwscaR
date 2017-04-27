@@ -25,22 +25,42 @@ sel$Chi.p.adj<-p.adjust(sel$Chi.p,method="BH")
 
 ## ----eval=FALSE----------------------------------------------------------
 #  sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
-#  head(sel)
 
-## ------------------------------------------------------------------------
-head(sel)
-colnames(sel)
-vcf[1:5,1:20]
-locus.info
+## ----fig.show='hold'-----------------------------------------------------
+par(mar=c(2,2,2,0),oma=c(1,1,1,1))
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
+             chrom.name="Chrom",bp.name="Pos")
 
-## ------------------------------------------------------------------------
-fst.plot(sel, fst.name="Fst", 
-             chrom.name="Chrom", axis.size=0,bp.name="Pos",
-             sig.col=c("black","black"))
+#plot without the scaffolds
+lgs<-seq(1,22)
+sel$Chrom <-as.numeric(as.character(sel$Chrom)) #the lgs and chrom have to be the same class
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
+             chrom.name="Chrom",bp.name="Pos",
+             groups=lgs)
+
+
+## ---- fig.show='hold'----------------------------------------------------
+#create a data.frame with the starts and stops for the chromosomes
+bounds<-data.frame(levels(as.factor(vcf$`#CHROM`)),tapply(as.numeric(as.character(vcf$POS)),vcf$`#CHROM`,max))
+
+par(mar=c(2,2,2,0),oma=c(1,1,1,1))
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
+             chrom.name="Chrom",bp.name="Pos",
+             group.boundaries = bounds)
+#highlight points that have adjusted p-values < 0.05
+#points(sel.plot$Pos[sel.plot$Chi.p.adj<0.05],sel.plot$Fst[sel.plot$Chi.p.adj<0.05],col="cornflowerblue",pch=19)
+
+#Or if you just want to plot the linkage groups
+lgs<-seq(1,22)
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
+             chrom.name="Chrom",bp.name="Pos",
+             group.boundaries = bounds, groups=lgs)
+
 
 ## ---- fig.show='hold'----------------------------------------------------
 plot(1:10)
 plot(10:1)
+points(1:10,col="blue")
 
 ## ---- echo=FALSE, results='asis'-----------------------------------------
 knitr::kable(head(mtcars, 10))

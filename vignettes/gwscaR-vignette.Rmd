@@ -68,18 +68,37 @@ sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
 
 The `gwscaR` package includes a function to plot genome-wide statistics. 
 
-```{r}
-bounds<-data.frame(levels(sel$Chrom),tapply(as.numeric(sel$Pos),sel$Chrom,max))
-lgs<-c("LG1","LG2","LG3","LG4","LG5","LG6","LG7","LG8","LG9","LG10",
-       "LG11","LG12","LG13","LG14","LG15","LG16","LG17","LG18","LG19",
-       "LG20","LG21","LG22")
-par(mar=c(2,2,2,2))
-sel.plot<-fst.plot(sel, fst.name="Fst",
+```{r,fig.show='hold'}
+par(mar=c(2,2,2,0),oma=c(1,1,1,1))
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
+             chrom.name="Chrom",bp.name="Pos")
+
+#plot without the scaffolds
+lgs<-seq(1,22)
+sel$Chrom <-as.numeric(as.character(sel$Chrom)) #the lgs and chrom have to be the same class
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
+             chrom.name="Chrom",bp.name="Pos",
+             groups=lgs)
+
+```
+
+
+If you're comparing different sets of Fsts from the same species, you might have different loci represented in each comparison. But you might want the graphs to have the chromosomes line up nicely...so you can take advantage of `fst.plot`'s `group.boundaries` option
+
+```{r, fig.show='hold'}
+#create a data.frame with the starts and stops for the chromosomes
+bounds<-data.frame(levels(as.factor(vcf$`#CHROM`)),tapply(as.numeric(as.character(vcf$POS)),vcf$`#CHROM`,max))
+
+par(mar=c(2,2,2,0),oma=c(1,1,1,1))
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
              chrom.name="Chrom",bp.name="Pos",
              group.boundaries = bounds)
+#highlight points that have adjusted p-values < 0.05
+#points(sel.plot$Pos[sel.plot$Chi.p.adj<0.05],sel.plot$Fst[sel.plot$Chi.p.adj<0.05],col="cornflowerblue",pch=19)
 
 #Or if you just want to plot the linkage groups
-sel.plot<-fst.plot(sel, fst.name="Fst",
+lgs<-seq(1,22)
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
              chrom.name="Chrom",bp.name="Pos",
              group.boundaries = bounds, groups=lgs)
 
@@ -92,6 +111,7 @@ The figure sizes have been customised so that you can easily put two images side
 ```{r, fig.show='hold'}
 plot(1:10)
 plot(10:1)
+points(1:10,col="blue")
 ```
 
 You can enable figure captions by `fig_caption: yes` in YAML:
