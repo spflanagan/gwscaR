@@ -4,22 +4,22 @@
 \alias{fst.plot}
 \title{Plot genome-wide statistics from a data frame.}
 \usage{
-fst.plot(fst.dat, ci.dat = NULL, sig.col = c("red", "yellow"),
-  pt.col = "grey7", fst.name = "Fst", chrom.name = "Chrom",
-  bp.name = "BP", axis.size = 0.5, scaffold.order = NULL, groups = NULL,
-  print.names = FALSE, y.lim = NULL, group.boundaries = NULL,
-  pt.cex = 0.5, ...)
+fst.plot(fst.dat, scaffold.widths = NULL, scaffs.to.plot = NULL,
+  fst.name = "Fst", chrom.name = "Chrom", bp.name = "BP", y.lim = NULL,
+  xlabels = NULL, xlab.indices = NULL, axis.size = 0.5,
+  pt.cols = c("darkgrey", "lightgrey"), pt.cex = 0.5, ...)
 }
 \arguments{
 \item{fst.dat}{The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.}
 
-\item{ci.dat}{A vector containing two values, upper and lower cutoff values (in that order).
-Points above or below the cutoffs will be colored based on sig.col. Default is NULL, which turns this option off.}
+\item{scaffold.widths}{A data.frame with first column naming the chromosomes/linkage groups, second column having the last number of loci on the chromosome for indexing purposes.
+e.g.:
+ Chrom   End
+ LG1     3945850
+ LG2     435215
+This parameter is used to make multiple plots from the same overall dataset have the same widths.}
 
-\item{sig.col}{A vector containing two color values, the first for points above the upper cutoff value and the second for points below the lower cutoff value.
-The defaults are red and yellow.}
-
-\item{pt.col}{The color of the points. The default is grey7.}
+\item{scaffs.to.plot}{A vector or list containing the names of the chromosomes/scaffolds you want to include in the order in which you would like them to be plotted.}
 
 \item{fst.name}{The name of the column containing the statistic to be plotted. Default is "Fst".}
 
@@ -27,25 +27,20 @@ The defaults are red and yellow.}
 
 \item{bp.name}{The name of the column containing the basepair information for each locus. Default is "BP".}
 
-\item{axis.size}{The value of cex.axis passed to the plotting of the y-axis. Default is 0.5. Set axis.size = 0 to suppress plotting of the y-axis.}
-
-\item{scaffold.order}{A vector or list containing the names of the chromosomes/scaffolds in the order in which you would like them to be plotted.}
-
-\item{groups}{A vector indicating which chromosomes to plot (generally to exclude those scaffolds not found in this particular set of statistics due to pruning/filters)}
-
-\item{print.names}{A TRUE/FALSE value indicating whether chromosome/scaffold IDs should be printed beneath the x-axis.}
-
 \item{y.lim}{The limits for the y-axis.}
 
-\item{group.boundaries}{A data.frame with first column naming the chromosomes/linkage groups, second column having the last number of loci on the chromosome for indexing purposes.
-e.g.:
- Chrom   End
- LG1     3945850
- LG2     435215
-This parameter is used to make multiple plots from the same overall dataset have the same widths.}
+\item{xlabels}{Either a boolean (TRUE) or a vector of labels for the x-axis}
+
+\item{xlab.indices}{If the xlabels are not the same as the names of the chromosomes in fst.dat, then provide xlab.indices, which is a vector of integers that are the indices in scaffs.to.plot for which chromosome sets you would like to label.}
+
+\item{axis.size}{The value of cex.axis passed to the plotting of the y-axis. Default is 0.5. Set axis.size = 0 to suppress plotting of the y-axis.}
+
+\item{pt.cols}{The color of the points. The default is grey7.}
+
+\item{pt.cex}{The size of the points}
 }
 \value{
-xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+new.dat The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 }
 \description{
 Plot genome-wide statistics from a data frame.

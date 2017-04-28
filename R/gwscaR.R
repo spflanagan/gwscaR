@@ -4,6 +4,111 @@
 
 #' Plot genome-wide statistics from a data frame.
 #' @param fst.dat The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.
+#' @param pt.cols The color of the points. The default is grey7.
+#' @param fst.name The name of the column containing the statistic to be plotted. Default is "Fst".
+#' @param chrom.name The name of the column containing the chromosome information for each locus. Default is "Chrom".
+#' @param bp.name The name of the column containing the basepair information for each locus. Default is "BP".
+#' @param axis.size The value of cex.axis passed to the plotting of the y-axis. Default is 0.5. Set axis.size = 0 to suppress plotting of the y-axis.
+#' @param scaffs.to.plot A vector or list containing the names of the chromosomes/scaffolds you want to include in the order in which you would like them to be plotted.
+#' @param y.lim The limits for the y-axis.
+#' @param pt.cex The size of the points
+#' @param xlabels Either a boolean (TRUE) or a vector of labels for the x-axis
+#' @param xlab.indices If the xlabels are not the same as the names of the chromosomes in fst.dat, then provide xlab.indices, which is a vector of integers that are the indices in scaffs.to.plot for which chromosome sets you would like to label.
+#' @param scaffold.widths A data.frame with first column naming the chromosomes/linkage groups, second column having the last number of loci on the chromosome for indexing purposes.
+#' e.g.:
+#'  Chrom   End
+#'  LG1     3945850
+#'  LG2     435215
+#' This parameter is used to make multiple plots from the same overall dataset have the same widths.
+#' @return new.dat The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+#' @seealso Flanagan & Jones 2017
+#' @export
+fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
+                   fst.name="Fst", chrom.name="Chrom", bp.name="BP",
+                   y.lim=NULL,xlabels=NULL,xlab.indices=NULL,
+                   axis.size=0.5,pt.cols=c("darkgrey","lightgrey"),pt.cex=0.5,...){
+  #make sure fsts are numeric
+  fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
+  #if scaffold widths aren't provided, we add them ourselves
+  if(is.null(scaffold.widths)){
+    scaffold.widths<-data.frame(Chrom=levels(as.factor(fst.dat[,chrom.name])),
+                                Max=tapply(as.numeric(as.character(fst.dat[,bp.name])),
+                                       fst.dat[,chrom.name],max))
+  }
+  #if no specific scaffolds are provided, we plot them all
+  if(is.null(scaffs.to.plot)){
+    scaffs.to.plot<-unique(fst.dat[,chrom.name])
+  }
+
+  #set up new dataframe
+  new.dat<-data.frame(stringsAsFactors = F)
+  last.max<-0
+  for(i in 1:length(scaffs.to.plot)){
+    #pull out the data for this scaffold
+    chrom.dat<-fst.dat[fst.dat[,chrom.name] %in% scaffs.to.plot[i],]
+    chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
+    new.dat<-rbind(new.dat,chrom.dat)
+    last.max<-max(chrom.dat$plot.pos)+
+                    as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
+  }
+  #make sure everything is the corret class
+  new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
+  new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
+  scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
+  #determine the axis limits
+  x.max<-max(new.dat$plot.pos,na.rm=T)
+  x.min<-min(new.dat$plot.pos,na.rm=T)
+  if(is.null(y.lim)){
+    y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
+    y.min<-min(fst.dat[,fst.name])-0.1*min(fst.dat[,fst.name])
+    if(min(fst.dat[,fst.name]) < 0) {
+      y.min<-min(fst.dat[,fst.name]) - 0.1*min(fst.dat[,fst.name])
+    } else {
+      y.min<-0
+    }
+
+    y.lim<-c(y.min,y.max)
+  }
+
+  #plot
+  colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
+                     stringsAsFactors = F)
+  colors[as.numeric(colors$lg)%%2==0,"col"]<-pt.cols[2]
+  plot(new.dat$plot.pos,new.dat[,fst.name],
+       xlim=c(x.min,x.max),ylim=y.lim,
+       pch=19, cex=pt.cex, col=colors$col,...,
+       bty="n",axes=F, xlab="", ylab="")
+  #optionally add the y-axis
+  if(axis.size>0){
+    axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
+                     round((y.lim[2]-y.lim[1])/2, digits=2)),
+         ylim =y.lim, pos=0,
+         labels=seq(round(y.lim[1],2),round(y.lim[2],2),
+                    round((y.lim[2]-y.lim[1])/2, digits=2)),
+         las=1,tck = -0.01, xlab="", ylab="", cex.axis=axis.size)
+  }
+  #optionally add the x-axis
+  if(!is.null(xlabels)){
+    #is this a boolean or a list?
+    if(class(xlabels)=="logical" & xlabels==TRUE){
+      xlabels<-as.character(scaffs.to.plot)
+    }
+    #if there are not indices, they should just be the ones that match scaffolds
+    if(is.null(xlab.indices)){
+      xlab.indices<-which(scaffs.to.plot %in% xlabels)
+    }
+    for(i in 1:length(xlabels)){
+      text(x=median(new.dat[new.dat[,chrom.name] %in% scaffs.to.plot[xlab.indices[i]],"plot.pos"]),
+           y=(y.lim[1]-((y.lim[2]-y.lim[1])/20)),
+           labels=xlabels[i],adj=1,xpd=TRUE,cex=as.numeric(axis.size))
+    }
+  }
+  return(new.dat)
+}
+
+#' Plot genome-wide statistics from a data frame with rectangles.
+#' @note This fst.plot function is more efficient but this will work for most cases (might be buggy in some cases)
+#' @param fst.dat The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.
 #' @param ci.dat A vector containing two values, upper and lower cutoff values (in that order).
 #' Points above or below the cutoffs will be colored based on sig.col. Default is NULL, which turns this option off.
 #' @param sig.col A vector containing two color values, the first for points above the upper cutoff value and the second for points below the lower cutoff value.
@@ -26,7 +131,7 @@
 #' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @seealso Flanagan & Jones 2017
 #' @export
-fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
+fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
                    fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
                    scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
                    group.boundaries=NULL,pt.cex=0.5,...){
@@ -68,7 +173,7 @@ fst.plot<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7"
       new.max<-last.max+nrow(all.scaff[[as.character(scaff.ord[i])]])
     }else{
       new.max<-as.numeric(group.boundaries[(group.boundaries[1,]) %in% scaff.ord[i],2])+
-        as.numeric(last.max)#this isn't working right
+        as.numeric(as.character(last.max))
     }
     rect.xs<-rbind(rect.xs,c(last.max, new.max))
     rownames(rect.xs)[i]<-scaff.ord[i]

@@ -2,7 +2,7 @@
 title: "An Introduction to Using gwscaR"
 author: "Sarah P. Flanagan"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{"An Introduction to Using gwscaR"}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,7 +18,8 @@ Selection components analysis compares allele frequencies among individuals in a
 - Run a Fst-based genome-wide selection components analysis
 - Plot genome-wide values (e.g., Fsts)
 - Manipulate vcf and plink files
-- Calculate pairwise Fst and Pst between two groups and test for significant isolation by distance
+- Calculate pairwise Fst and Pst between two groups 
+- Test for significant isolation by distance at each locus
 
 
 ## Genome-wide selection components analysis
@@ -69,16 +70,17 @@ sel<-gwsca(vcf,locus.info,grp1,grp2,prop.ind.thresh=0.5,maf.cutoff=0.05)
 The `gwscaR` package includes a function to plot genome-wide statistics. 
 
 ```{r,fig.show='hold'}
+lgs<-seq(1,22)
 par(mar=c(2,2,2,0),oma=c(1,1,1,1))
-sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
-             chrom.name="Chrom",bp.name="Pos")
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=0.6,
+                   xlabels=lgs,xlab.indices = seq(1,22),
+                   chrom.name="Chrom",bp.name="Pos")
 
 #plot without the scaffolds
-lgs<-seq(1,22)
 sel$Chrom <-as.numeric(as.character(sel$Chrom)) #the lgs and chrom have to be the same class
-sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
-             chrom.name="Chrom",bp.name="Pos",
-             groups=lgs)
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 0.6,
+             chrom.name="Chrom",bp.name="Pos",xlabels=TRUE,
+             scaffs.to.plot=lgs)
 
 ```
 
@@ -90,47 +92,82 @@ If you're comparing different sets of Fsts from the same species, you might have
 bounds<-data.frame(levels(as.factor(vcf$`#CHROM`)),tapply(as.numeric(as.character(vcf$POS)),vcf$`#CHROM`,max))
 
 par(mar=c(2,2,2,0),oma=c(1,1,1,1))
-sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=1,
-             chrom.name="Chrom",bp.name="Pos",
-             group.boundaries = bounds)
-#highlight points that have adjusted p-values < 0.05
-#points(sel.plot$Pos[sel.plot$Chi.p.adj<0.05],sel.plot$Fst[sel.plot$Chi.p.adj<0.05],col="cornflowerblue",pch=19)
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size=0.6,
+             chrom.name="Chrom",bp.name="Pos",xlabels=lgs,
+             scaffold.widths = bounds)
 
 #Or if you just want to plot the linkage groups
 lgs<-seq(1,22)
-sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 1,
-             chrom.name="Chrom",bp.name="Pos",
-             group.boundaries = bounds, groups=lgs)
+sel.plot<-fst.plot(sel, fst.name="Fst",axis.size = 0.6,
+             chrom.name="Chrom",bp.name="Pos",xlabels=T,
+             scaffold.widths = bounds, scaffs.to.plot=lgs)
+
+#And you can highlight the points that have adjusted p-values < 0.05
+points(sel.plot$plot.pos[sel.plot$Chi.p.adj<0.05],sel.plot$Fst[sel.plot$Chi.p.adj<0.05],
+       col="cornflowerblue",pch=19,cex=0.75) #only one point is significant in this example
 
 ```
 
-## Figures
+Notice that in each of the examples above, the xlabels have been specified in different ways. The `fst.plot` function has a number of ways to specify plotting parameters so please see the documentation for more details.
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
+## Other Useful Functions
 
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-points(1:10,col="blue")
+The `gwscaR` package can be used in a broader context than just genome-wide selection components analysis. It also contains useful functions for performing typical population genetics analyses and file manipulations. Here I will highlight some of those functions.
+
+### Merging vcf files
+
+In the above examples you've already seen that `gwscaR` allows you to easily read a vcf file into a data.frame format. The package also allows you to merge two vcf files using `combine.vcfs` in case you have two groups of individuals that were genotyped at the same loci.
+
+### Choosing a single SNP per RAD locus
+
+Many population genomics tests have the assumption of linkage equilibrium among loci, an assumption which is violated by using multiple SNPs per RAD locus. Therefore, the function `choose.one.snp` allows you to randomly select one SNP per RAD locus from a vcf.
+
+### Comparing each SNP to a distance matrix
+
+The `fst.ibd.byloc` function is helpful because it allows you to identify loci that are significantly affected by isolation by distance and distinguish them from loci that are not significantly isolated by distance. This function simply performs a Mantel test for each SNP. It uses data in ped file format and you must give it a list of the populations you're comparing (this ensures that you're comparing the same pairwise relationships represented in your distance matrices).
+
+```{r,eval=F}
+ibd.by.loc<-fst.ibd.byloc(sub.ped,dist,pop.list) 
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+### Plotting STRUCTURE output
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
+The popular population structure program, STRUCTURE (Pritchard et al 2000), assigns proportions of each individual's genome to population clusters. A companion program allows you to plot the graphs, but that program didn't allow me the customization options that I desired (including embedding a structure plot in a multi-figure graph; see Flanagan et al 2016 for an example), so I wrote my own plotting function, `plotting.structure`
 
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+### Calculating Pst and comparing it to Fst
 
-## More Examples
+Sometimes you will have both genetic data and phenotypic data, and you might be interested in comparing population differentiation at both levels. One way to do that is to calculate Pst, which is analagous to Fst but with regards to phenotypes. `gwscaR` contains a funcion to calculate this metric for you, `pairwise.pst`. Once you've calculated Pst, you can compare it to Fsts using the funtion `fst.pst.byloc` and to a distance matrix with `pst.mantel`.
 
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+```{r,eval=F}
+fem.psts<-apply(fem.phenotype.data[,3:10],2,function(x){
+	pst<-pairwise.pst(data.frame(fem.phenotype.data[,1],x),pop.list)
+	return(pst)
+})
 
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+fem.pst.fst.loc<-fst.pst.byloc(sub.ped,fem.phenotype.data,pop.list,1)
+
+fem.dist<-.pst.mantel(fem.phenotype.data,dist,1)
+
 ```
 
-Also a quote using `>`:
+For more detail on this method and to see an example, please see Flanagan et al. (2016).
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+## Citations
+
+Christiansen FB and Frydenberg O. 1973. Selection component analysis of natural polymorphisms using population samples including mother-offspring combinations. Theoretical Population Biology 4: 425-44.
+
+Flanagan SP and Jones AG. 2015. Identifying signatures of sexual selection using genomewide selection components analysis. Ecology and Evolution 5: 2722-2744.
+
+Flanagan SP and Jones AG. 2017. Genome-wide selection components analysis in a fish with male pregnancy. Evolution 71: 1096 - 1105.
+
+Flanagan SP, Rose E, and Jones AG. 2016. Population genomics reveals multiple drivers of population differentiation in a sex-role-reversed pipefish. Molecular Ecology 25: 5043-5072.
+
+Monnahan PJ, Colicchio J, and Kelly JK. 2015. A genomic selection component analysis characterizes migration-selection balance. Evolution 69: 1713-1727.
+
+Pritchard JK, Stephens M, and Donnelly P. 2000. Inference of population struccture using multilocus genotype data. Genetics 155: 945-959.
+
+***
+*If you run into any problems, find any bugs, or have other comments on gwscaR please contact me: spflanagan.phd@gmail.com.*  
+
+***
+
