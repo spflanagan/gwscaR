@@ -416,7 +416,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
         c<-strsplit(as.character(x),split=":")[[1]][1]
         return(c)
       }))
-      num.ind<-length(gt1)-10
+      num.ind<-length(gt1)-9
       gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
       gt1[gt1=="1/0"]<-"0/1"
       gt1<-gsub(pattern = "0",replacement = vcf1.row["REF"],gt1)
@@ -467,8 +467,10 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
   }#end else vcf2
 
   return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
-                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
-                    Num1=length(gt1),Num2=(length(gt2))))
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,
+                    NumAlleles=length(unique(c(al1,al2))),
+                    Num1=length(gt1),Num2=(length(gt2))),
+         stringsAsFactors=FALSE)
 }#end function
 
 #' Calculate allele frequencies from a vcf file
