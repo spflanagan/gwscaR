@@ -684,8 +684,8 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
   }
 
   return(data.frame(Chrom=vcf.row["#CHROM"],Pos=vcf.row["POS"],
-                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
-                    Num1=length(gt1),Num2=length(gt2)))
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(unique(c(al1,al2))),
+                    Num1=length(gt1),Num2=length(gt2),stringsAsFactors = FALSE,row.names=NULL))
 }#end function fst.one.vcf
 
 #' Choose one SNP per RAD locus from a vcf
@@ -854,8 +854,8 @@ combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
 #' @return sel A dataframe with the Fst values and Chi-squared values
 #' @export
 gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05){
-  sel<-fst.one.vcf(vcf,c(locus.info,group1),c(locus.info,group2),
-    cov.thresh=prop.ind.thresh,maf=maf.cutoff)
+  sel<-do.call(rbind,apply(vcf,1,fst.one.vcf,group1=c(locus.info,group1),group2=c(locus.info,group2),
+    cov.thresh=prop.ind.thresh,maf=maf.cutoff))
   sel<-sel[!is.na(sel$Fst),]
   sel$Chi<-2*((sel$Num1+sel$Num2)/2)*sel$Fst
   sel$Chi.p<-1-pchisq(sel$Chi,1)
