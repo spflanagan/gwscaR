@@ -51,7 +51,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
     last.max<-max(chrom.dat$plot.pos)+
                     as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
   }
-  #make sure everything is the corret class
+  #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
@@ -73,7 +73,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   #plot
   colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
                      stringsAsFactors = F)
-  colors[as.numeric(colors$lg)%%2==0,"col"]<-pt.cols[2]
+  colors[as.numeric(as.factor(colors$lg))%%2==0,"col"]<-pt.cols[2]
   plot(new.dat$plot.pos,new.dat[,fst.name],
        xlim=c(x.min,x.max),ylim=y.lim,
        pch=19, cex=pt.cex, col=colors$col,...,
@@ -638,8 +638,8 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
   gt1[gt1=="1/0"]<-"0/1"
   gt1<-gsub(pattern = "0",replacement = vcf.row["REF"],gt1)
   gt1<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt1)
+  al1<-unlist(strsplit(as.character(gt1),split = "/"))
   if(length(gt1)/num.ind1>=cov.thresh){
-    al1<-unlist(strsplit(as.character(gt1),split = "/"))
     gt2<-unlist(lapply(vcf.row[group2],function(x){
       c<-strsplit(as.character(x),split=":")[[1]][1]
       return(c)
@@ -649,8 +649,8 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
     gt2[gt2=="1/0"]<-"0/1"
     gt2<-gsub(pattern = "0",replacement = vcf.row["REF"],gt2)
     gt2<-gsub(pattern = "1",replacement = vcf.row["ALT"],gt2)
+    al2<-unlist(strsplit(as.character(gt2),split="/"))
     if(length(gt2)/num.ind2>=cov.thresh){
-      al2<-unlist(strsplit(as.character(gt2),split="/"))
       #calculate frequencies
       freq1<-summary(factor(al1))/sum(summary(factor(al1)))
       freq2<-summary(factor(al2))/sum(summary(factor(al2)))
@@ -666,6 +666,7 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
         hs<-mean(c(hs1,hs2))
         ht<-2*freqall*(1-freqall)
         fst<-(ht-hs)/ht
+        num.al<-length(unique(c(al1,al2)))
       } else {
         hs1<-1-sum(freq1*freq1)
         hs2<-1-sum(freq2*freq2)
@@ -674,17 +675,20 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
           ht<-2*freqall*(1-freqall)
           fst<-NA
         }
+        num.al<-length(unique(c(al1,al2)))
       }
     }
     else {
       fst<-NA #gt2 doesn't pass coverage threshold
+      num.al<-length(unique(c(al1,al2)))
     }
   }else {
     fst<-NA #it doesn't pass the coverage threshold
+    num.al<-length(unique(al1))
   }
 
   return(data.frame(Chrom=vcf.row["#CHROM"],Pos=vcf.row["POS"],
-                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(unique(c(al1,al2))),
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=num.al,
                     Num1=length(gt1),Num2=length(gt2),stringsAsFactors = FALSE,row.names=NULL))
 }#end function fst.one.vcf
 
