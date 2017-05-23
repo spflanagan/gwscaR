@@ -392,7 +392,6 @@ vcf.cov.ind<-function(vcf){
 #'  Num1=number of individuals genotyped & included in Fst calculations in population 1 (vcf1)
 #'  Num2=number of individuals genotyped & included in Fst calculations in population 2 (vcf2)
 #'  @export
-
 fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
   #match.index is the column used to match the two
   #use in conjunction with apply
@@ -412,18 +411,18 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       fst<-NA
     }else #we're good to go
     {
-      gt1<-unlist(lapply(vcf1.row,function(x){
+      gt1<-unlist(lapply(vcf1.row,function(x){ 
         c<-strsplit(as.character(x),split=":")[[1]][1]
         return(c)
       }))
-      num.ind<-length(gt1)-9
+      num.ind<-length(gt1)-10
       gt1<-gt1[gt1 %in% c("0/0","1/0","0/1","1/1")]
       gt1[gt1=="1/0"]<-"0/1"
       gt1<-gsub(pattern = "0",replacement = vcf1.row["REF"],gt1)
       gt1<-gsub(pattern = "1",replacement = vcf1.row["ALT"],gt1)
       if(length(gt1)/num.ind>=cov.thresh){
         al1<-unlist(strsplit(as.character(gt1),split = "/"))
-        gt2<-unlist(lapply(vcf2.row,function(x){
+        gt2<-unlist(lapply(vcf2.row,function(x){ 
           c<-strsplit(as.character(x),split=":")[[1]][1]
           return(c)
         }))
@@ -435,24 +434,23 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
         if(length(gt2)/num.ind>=cov.thresh){
           al2<-unlist(strsplit(as.character(gt2),split="/"))
           #calculate frequencies
-          freq1<-summary(factor(al1))/sum(summary(factor(al1)))
-          freq2<-summary(factor(al2))/sum(summary(factor(al2)))
-          freqall<-mean(c(freq1[1],freq2[1]))
-          #freqall<-summary(as.factor(c(al1,al2)))/
-          #  sum(summary(as.factor(c(al1,al2))))
+          freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
+          freq2<-summary(factor(al2))/sum(summary(factor(al2)))	
+          freqall<-summary(as.factor(c(al1,al2)))/
+            sum(summary(as.factor(c(al1,al2))))
           hets<-c(names(freq1)[2],names(freq2)[2])
           if(length(freq1)>1 & length(freq2)>1){ #both must be polymorphic
             hs1<-2*freq1[1]*freq1[2]
             hs2<-2*freq2[1]*freq2[2]
             hs<-mean(c(hs1,hs2))
-            ht<-2*freqall*(1-freqall)
+            ht<-2*freqall[1]*freqall[2]
             fst<-(ht-hs)/ht
           } else {
             hs1<-1-sum(freq1*freq1)
             hs2<-1-sum(freq2*freq2)
             if(length(freqall)<=1){ fst<-0 }
-            else{
-              ht<-2*freqall*(1-freqall)
+            else{ 
+              ht<-2*freqall[1]*freqall[2]
               fst<-NA
             }
           }
@@ -465,12 +463,10 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       }
     }#end else good to go
   }#end else vcf2
-
-  return(data.frame(Chrom=vcf1.row["#CHROM"],Pos=vcf1.row["POS"],
-                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,
-                    NumAlleles=length(unique(c(al1,al2))),
-                    Num1=length(gt1),Num2=(length(gt2))),
-         stringsAsFactors=FALSE)
+  
+  return(data.frame(Chrom=vcf1.row[1],Pos=vcf1.row["POS"],
+                    Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
+                    Num1=length(gt1),Num2=(length(gt2)),stringsAsFactors=F))
 }#end function
 
 #' Calculate allele frequencies from a vcf file
@@ -687,7 +683,7 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
     num.al<-length(unique(al1))
   }
 
-  return(data.frame(Chrom=vcf.row["#CHROM"],Pos=vcf.row["POS"],
+  return(data.frame(Chrom=vcf.row[1],Pos=vcf.row["POS"],
                     Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=num.al,
                     Num1=length(gt1),Num2=length(gt2),stringsAsFactors = FALSE,row.names=NULL))
 }#end function fst.one.vcf
