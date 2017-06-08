@@ -35,9 +35,10 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
                                 Max=tapply(as.numeric(as.character(fst.dat[,bp.name])),
                                        fst.dat[,chrom.name],max))
   }
+  colnames(scaffold.widths)<-c("Chrom","Max")
   #if no specific scaffolds are provided, we plot them all
   if(is.null(scaffs.to.plot)){
-    scaffs.to.plot<-unique(fst.dat[,chrom.name])
+    scaffs.to.plot<-scaffold.widths[,1]#unique(fst.dat[,chrom.name])
   }
 
   #set up new dataframe
@@ -46,13 +47,18 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   for(i in 1:length(scaffs.to.plot)){
     #pull out the data for this scaffold
     chrom.dat<-fst.dat[fst.dat[,chrom.name] %in% scaffs.to.plot[i],]
-    chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
-    new.dat<-rbind(new.dat,chrom.dat)
-    last.max<-max(chrom.dat$plot.pos)+
-                    as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
+    if(nrow(chrom.dat)>0){
+      chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
+      new.dat<-rbind(new.dat,chrom.dat)
+   #last.max<-max(chrom.dat$plot.pos)+
+     #               as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
+    }
+      last.max<-last.max+
+        as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
   }
   #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
+  
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
   #determine the axis limits
@@ -1093,3 +1099,38 @@ fst.sig<-function(fst.df){
   return(fst.df)
 }
 
+#' Calculate mean pairwise Fsts
+#' @param vcf A data.frame containing the contents of a vcf file
+#' @param pop.list1 A list of populations. This will be used to subset the vcf file to extract individuals for each pairwise comparison so it must contain a string found in individual IDs.
+#' @param pop.list2 A list of populations. Same requirements as pop.list1. Individuals from populations in pop.list1 will be compared to individuals in pop.list2.
+#' @return mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.
+#' @export
+calc.mean.fst <- function(vcf,pop.list1,pop.list2) {
+  mu<-data.frame(Chrom=vcf$`#CHROM`,Pos=vcf$POS,SNP=vcf$SNP,
+                 Sum.Fst=rep(0,nrow(vcf)),Count=rep(0,nrow(vcf)),
+                 Mean.Fst=rep(0,nrow(vcf)),stringsAsFactors=FALSE)
+  for(i in 1:length(pop.list1)){
+    for(j in 1:length(pop.list2)){
+      fsts<-gwsca(vcf=vcf,locus.info=locus.info,
+                  group1=colnames(vcf)[grep(pop.list1[i],colnames(vcf))],
+                  group2=colnames(vcf)[grep(pop.list2[j],colnames(vcf))])
+      fsts$Fst[fsts$Fst==0]<-NA #replace ones that weren't calc'd with NA
+      fsts$SNP<-paste(fsts$Chrom,as.numeric(as.character(fsts$Pos)),sep=".")
+      new.mu<-do.call("rbind",apply(mu,1,function(x){
+        new.x<-data.frame(Chrom=x["Chrom"],Pos=x["Pos"],SNP=x["SNP"],
+                          Sum.Fst=as.numeric(x["Sum.Fst"]),Count=as.numeric(x["Count"]),
+                          Mean.Fst=as.numeric(x["Mean.Fst"]),stringsAsFactors=FALSE)
+        this.fst<-fsts[fsts$SNP %in% x["SNP"],]
+        if(nrow(this.fst)>0){
+          if(!is.na(this.fst["Fst"])){
+            new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
+            new.x["Count"]<-new.x["Count"]+1
+          }}
+        return(new.x)
+      }))
+      mu<-new.mu
+    }
+  }
+  mu$Mean.Fst<-mu$Sum.Fst/mu$Count
+  return(mu)
+}
