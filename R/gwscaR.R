@@ -1105,7 +1105,7 @@ fst.sig<-function(fst.df){
 #' @param pop.list2 A list of populations. Same requirements as pop.list1. Individuals from populations in pop.list1 will be compared to individuals in pop.list2.
 #' @return mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.
 #' @export
-calc.mean.fst <- function(vcf,pop.list1,pop.list2) {
+calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=0.2) {
   mu<-data.frame(Chrom=vcf$`#CHROM`,Pos=vcf$POS,SNP=vcf$SNP,
                  Sum.Fst=rep(0,nrow(vcf)),Count=rep(0,nrow(vcf)),
                  Mean.Fst=rep(0,nrow(vcf)),stringsAsFactors=FALSE)
@@ -1113,7 +1113,8 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2) {
     for(j in 1:length(pop.list2)){
       fsts<-gwsca(vcf=vcf,locus.info=locus.info,
                   group1=colnames(vcf)[grep(pop.list1[i],colnames(vcf))],
-                  group2=colnames(vcf)[grep(pop.list2[j],colnames(vcf))])
+                  group2=colnames(vcf)[grep(pop.list2[j],colnames(vcf))],
+                  maf.cutoff = maf.cutoff,prop.ind.thresh = cov.thresh)
       fsts$Fst[fsts$Fst==0]<-NA #replace ones that weren't calc'd with NA
       fsts$SNP<-paste(fsts$Chrom,as.numeric(as.character(fsts$Pos)),sep=".")
       new.mu<-do.call("rbind",apply(mu,1,function(x){
@@ -1123,8 +1124,13 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2) {
         this.fst<-fsts[fsts$SNP %in% x["SNP"],]
         if(nrow(this.fst)>0){
           if(!is.na(this.fst["Fst"])){
-            new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
-            new.x["Count"]<-new.x["Count"]+1
+            if(!is.na(new.x["Sum.Fst"])){
+              new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
+              new.x["Count"]<-new.x["Count"]+1
+            }else{
+              new.x["Sum.Fst"]<-this.fst["Fst"]
+              new.x["Count"]<-new.x["Count"]+1
+            }
           }}
         return(new.x)
       }))
