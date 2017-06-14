@@ -4,7 +4,7 @@
 
 #' Plot genome-wide statistics from a data frame.
 #' @param fst.dat The data.frame containing at least three columns: the statistic to be plotted, the chromosome ID, and the BP ID for each locus. Each row is a locus.
-#' @param pt.cols The color of the points. The default is grey7.
+#' @param pt.cols The color of the points. The default is c("darkgrey","lightgrey").
 #' @param fst.name The name of the column containing the statistic to be plotted. Default is "Fst".
 #' @param chrom.name The name of the column containing the chromosome information for each locus. Default is "Chrom".
 #' @param bp.name The name of the column containing the basepair information for each locus. Default is "BP".
@@ -58,7 +58,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   }
   #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
-  
+
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
   #determine the axis limits
@@ -96,7 +96,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   #optionally add the x-axis
   if(!is.null(xlabels)){
     #is this a boolean or a list?
-    if(class(xlabels)=="logical" & xlabels==TRUE){
+    if(class(xlabels)=="logical"){
       xlabels<-as.character(scaffs.to.plot)
     }
     #if there are not indices, they should just be the ones that match scaffolds
@@ -417,7 +417,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       fst<-NA
     }else #we're good to go
     {
-      gt1<-unlist(lapply(vcf1.row,function(x){ 
+      gt1<-unlist(lapply(vcf1.row,function(x){
         c<-strsplit(as.character(x),split=":")[[1]][1]
         return(c)
       }))
@@ -428,7 +428,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       gt1<-gsub(pattern = "1",replacement = vcf1.row["ALT"],gt1)
       if(length(gt1)/num.ind>=cov.thresh){
         al1<-unlist(strsplit(as.character(gt1),split = "/"))
-        gt2<-unlist(lapply(vcf2.row,function(x){ 
+        gt2<-unlist(lapply(vcf2.row,function(x){
           c<-strsplit(as.character(x),split=":")[[1]][1]
           return(c)
         }))
@@ -440,8 +440,8 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
         if(length(gt2)/num.ind>=cov.thresh){
           al2<-unlist(strsplit(as.character(gt2),split="/"))
           #calculate frequencies
-          freq1<-summary(factor(al1))/sum(summary(factor(al1)))	
-          freq2<-summary(factor(al2))/sum(summary(factor(al2)))	
+          freq1<-summary(factor(al1))/sum(summary(factor(al1)))
+          freq2<-summary(factor(al2))/sum(summary(factor(al2)))
           freqall<-summary(as.factor(c(al1,al2)))/
             sum(summary(as.factor(c(al1,al2))))
           hets<-c(names(freq1)[2],names(freq2)[2])
@@ -455,7 +455,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
             hs1<-1-sum(freq1*freq1)
             hs2<-1-sum(freq2*freq2)
             if(length(freqall)<=1){ fst<-0 }
-            else{ 
+            else{
               ht<-2*freqall[1]*freqall[2]
               fst<-NA
             }
@@ -469,7 +469,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       }
     }#end else good to go
   }#end else vcf2
-  
+
   return(data.frame(Chrom=vcf1.row[1],Pos=vcf1.row["POS"],
                     Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
                     Num1=length(gt1),Num2=(length(gt2)),stringsAsFactors=F))
