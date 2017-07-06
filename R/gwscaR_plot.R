@@ -47,6 +47,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   last.max<-0
   for(i in 1:length(scaffs.to.plot)){
     #pull out the data for this scaffold
+    if(nrow(scaffold.widths[scaffold.widths$Chrom %in% scaffs.to.plot[i],])>0){ #sanity check
     chrom.dat<-fst.dat[fst.dat[,chrom.name] %in% scaffs.to.plot[i],]
     if(nrow(chrom.dat)>0){
       chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
@@ -55,7 +56,10 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
       #               as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
     }
     last.max<-last.max+
-      as.numeric(scaffold.widths[scaffs.to.plot[i],2])
+      as.numeric(scaffold.widths[scaffold.widths$Chrom %in% scaffs.to.plot[i],2])
+    }else{
+      print(paste(scaffs.to.plot[i], "has no designated width."))
+    }
   }
   #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
@@ -80,7 +84,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   #plot
   colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
                      stringsAsFactors = F)
-  colors[as.numeric(as.factor(colors$lg))%%2==0,"col"]<-pt.cols[2]
+  colors[as.numeric(factor(colors$lg,levels=scaffs))%%2==0,"col"]<-pt.cols[2] #defining the levels maintains the order
   plot(new.dat$plot.pos,new.dat[,fst.name],
        xlim=c(x.min,x.max),ylim=y.lim,...,
        cex=pt.cex, col=colors$col,

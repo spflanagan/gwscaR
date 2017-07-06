@@ -83,7 +83,7 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL){
 #' }
 #' @export
 get.dist<-function(vcf.row,pop.list){
-  if(("package:ape" %in% search() == FALSE){
+  if("package:ape" %in% search() == FALSE){
     stop("ERROR: You must load the package ape for get.dist() to run.")
   }
   fst.matrix<-matrix(nrow=length(pop.list),ncol=length(pop.list))
