@@ -10,6 +10,7 @@
 #' @param vcf.row A row of a vcf file; use this in conjunction with apply
 #' @return pi The nucleotide diversity at that site
 #' @example all.pi<-apply(vcf,1,pi)
+#' @export
 calc.pi<-function(vcf.row){
   alleles<-vcf.alleles(vcf.row)
   af.num<-table(alleles)
@@ -20,6 +21,7 @@ calc.pi<-function(vcf.row){
 
 #' Calculate rho (private alleles)
 #' @note rho=1 if allele in pop j is only found in that pop and at least one ind was genotyped at that site in each pop; rho = 0 otherwise
+#' @export
 calc.rho<-function(vcf.row,pop.list){
   pop.alleles<-lapply(pop.list,function(pop){
     pop.vcf<-cbind(vcf.row[1:9],vcf.row[grep(pop,colnames(vcf.row))])
@@ -41,6 +43,7 @@ calc.rho<-function(vcf.row,pop.list){
 }
 
 #' Calculate a sliding average
+#' @export
 sliding.avg<-function(dat,win.start,width){
   if((win.start+width)>nrow(dat)){
     win.end<-nrow(dat)
@@ -54,6 +57,12 @@ sliding.avg<-function(dat,win.start,width){
 }
 
 #' Calculate a sliding window
+#' @param vcf A vcf file
+#' @param chr The chromosome you want to calculate the sliding window in
+#' @param stat the population genetics statistic you want to use. choices are "pi" or "rho"
+#' @param width The width for the sliding window. Default is 250
+#' @param pop.list An optional parameter allowing you to specificy the populations you want to include.
+#' @export
 sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL){
   avg.dat<-lapply(chr,function(chr){
     chr.vcf<-vcf[vcf[,1] %in% chr,]
@@ -103,7 +112,7 @@ get.dist<-function(vcf.row,pop.list){
 }
 
 #' Generate a treemix file from vcf
-#' 
+#' @export
 treemix.from.vcf<-function(vcf,pop.list){
   tm.df<-matrix(nrow=nrow(vcf),ncol=length(pop.list))
   for(i in 1:nrow(vcf)){

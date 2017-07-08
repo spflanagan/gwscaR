@@ -120,14 +120,9 @@ vcf.cov.ind<-function(vcf){
 
 #' Calculate allele frequencies from a vcf file
 #' @param vcf.row A single row of a vcf (used in conjunctioin with apply)
-#' @return A data.frame with the columns:
-#'  Chrom
-#'  Pos
-#'  Ref
-#'  RefFreq
-#'  Alt
-#'  AltFreq
-#'  @export
+#' @return A data.frame with the columns: Chrom,Pos,Ref,RefFreq,Alt,AltFreq
+#'  
+#' @export
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply
   #e.g. apply(vcf,1,afs.vcf)
