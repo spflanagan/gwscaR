@@ -43,6 +43,10 @@ calc.rho<-function(vcf.row,pop.list){
 }
 
 #' Calculate a sliding average
+#' @param dat A vector (or row of a data frame) containing the values you would like to calculate your sliding window over.
+#' @param win.start The beginning of where you want to start your sliding window
+#' @param width The width of the sliding window
+#' @return The average value of dat within that sliding window.
 #' @export
 sliding.avg<-function(dat,win.start,width){
   if((win.start+width)>nrow(dat)){
@@ -52,7 +56,7 @@ sliding.avg<-function(dat,win.start,width){
   }
   win.dat<-dat[win.start:win.end,]
   avg.dat<-data.frame(Avg.Pos=mean(dat[win.start:win.end,1]),
-                      Avg.Pi=mean(win.dat[,2]))
+                      Avg.Stat=mean(win.dat[,2]))
   return(avg.dat)
 }
 
@@ -62,15 +66,16 @@ sliding.avg<-function(dat,win.start,width){
 #' @param stat the population genetics statistic you want to use. choices are "pi" or "rho"
 #' @param width The width for the sliding window. Default is 250
 #' @param pop.list An optional parameter allowing you to specificy the populations you want to include.
+#' @return A vector with the averaged statistic
 #' @export
-sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL){
+sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
   avg.dat<-lapply(chr,function(chr){
     chr.vcf<-vcf[vcf[,1] %in% chr,]
     if(stat=="pi"){
       dat<-data.frame(Pos=chr.vcf$POS,Pi=unlist(apply(chr.vcf,1,calc.pi))) }
     if(stat=="rho"){
       dat<-data.frame(Pos=chr.vcf$POS,Rho=unlist(apply(chr.vcf,1,calc.rho,pop.list=pop.list))) }
-    steps<-seq(1,nrow(chr.vcf),50)
+    steps<-seq(1,nrow(chr.vcf),nsteps)
     if(stat=="pi"){
       avg.stat<-do.call("rbind",lapply(steps,sliding.avg,dat=dat,width=width)) }
     if(stat=="rho"){
@@ -112,6 +117,9 @@ get.dist<-function(vcf.row,pop.list){
 }
 
 #' Generate a treemix file from vcf
+#' @param vcf A vcf file
+#' @param pop.list a list of populations
+#' @return A matrix of allele counts for each population for each locus, aka an input file for treemix
 #' @export
 treemix.from.vcf<-function(vcf,pop.list){
   tm.df<-matrix(nrow=nrow(vcf),ncol=length(pop.list))

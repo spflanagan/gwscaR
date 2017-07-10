@@ -150,6 +150,10 @@ calc.afs.vcf<-function(vcf.row){
       names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
     }
   }
+  if(length(freq1)==0){
+    freq1<-c(0,0)
+    names(freq1)<-unlist(c(vcf.row["ALT"],vcf.row["REF"]))
+  }
   return(data.frame(Chrom=vcf.row["#CHROM"], Pos=vcf.row["POS"], Ref=vcf.row["REF"],
                     RefFreq=freq1[names(freq1) %in% vcf.row["REF"]],
                     Alt=vcf.row["ALT"],AltFreq=freq1[names(freq1) %in% vcf.row["ALT"]]))
