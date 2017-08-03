@@ -96,7 +96,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
          ylim =y.lim, pos=0,
          labels=seq(round(y.lim[1],2),round(y.lim[2],2),
                     round((y.lim[2]-y.lim[1])/2, digits=2)),
-         las=1,tck = -0.01, xlab="", ylab="", cex.axis=axis.size)
+         las=1, xlab="", ylab="", cex.axis=axis.size)
   }
   #optionally add the x-axis
   if(!is.null(xlabels)){

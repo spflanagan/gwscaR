@@ -93,10 +93,10 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
 #' @return fst.tree A neighbor-joining tree from the ape package
 #' @example fst.trees<-list()
 #' for(vcf.row in 1: nrow(vcf)){
-#'   fst.trees<-c(fst.trees,get.dist(vcf[vcf.row,],pop.list)) #getting an error
+#'   fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list)) #getting an error
 #' }
 #' @export
-get.dist<-function(vcf.row,pop.list){
+get.nj<-function(vcf.row,pop.list){
   if("package:ape" %in% search() == FALSE){
     stop("ERROR: You must load the package ape for get.dist() to run.")
   }
@@ -112,8 +112,7 @@ get.dist<-function(vcf.row,pop.list){
   colnames(fst.matrix)<-pop.list
   rownames(fst.matrix)<-pop.list
   fst.nj<-ape::njs(as.dist(t(fst.matrix)))
-  fst.tree<-write.tree(fst.nj,digits=0)
-  return(fst.tree)
+  return(fst.nj)
 }
 
 #' Generate a treemix file from vcf
