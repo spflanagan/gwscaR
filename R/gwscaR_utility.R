@@ -54,8 +54,9 @@ choose.one.snp<-function(vcf){
 #' @param gpop.name A name for the output genepop file
 #' @return gpop A dataframe in genepop format
 #' @export
-#' @example gpop<-vcf2gpop(vcf,pop.list=c("TXSP","TXCC","TXFW","TXCB","LAFW","ALST","ALFW","FLSG","FLKB",
-"FLFD","FLSI","FLAB","FLPB","FLHB","FLCC","FLLG")),"out.genepop")
+#' @example 
+#' gpop<-vcf2gpop(vcf,pop.list=c("TXSP","TXCC","TXFW","TXCB","LAFW","ALST","ALFW","FLSG","FLKB",
+#' "FLFD","FLSI","FLAB","FLPB","FLHB","FLCC","FLLG")),"out.genepop")
 vcf2gpop<-function(vcf,pop.list,gpop.name){#without the SNP column
   locusids<-paste(vcf$`#CHROM`,as.character(vcf$POS),sep=".")
   indids<-colnames(vcf)[10:nrow(vcf)]
