@@ -84,7 +84,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   #plot
   colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
                      stringsAsFactors = F)
-  colors[as.numeric(factor(colors$lg,levels=scaffs))%%2==0,"col"]<-pt.cols[2] #defining the levels maintains the order
+  colors[as.numeric(factor(colors$lg,levels=scaffs.to.plot))%%2==0,"col"]<-pt.cols[2] #defining the levels maintains the order
   plot(new.dat$plot.pos,new.dat[,fst.name],
        xlim=c(x.min,x.max),ylim=y.lim,...,
        cex=pt.cex, col=colors$col,
