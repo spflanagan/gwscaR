@@ -9,7 +9,7 @@
 #' @note Hohenlohe did a similar thing and weighted pi by all nt sites (not just SNPs) but rho by SNPs only
 #' @param vcf.row A row of a vcf file; use this in conjunction with apply
 #' @return pi The nucleotide diversity at that site
-#' @example all.pi<-apply(vcf,1,pi)
+#' @example all.pi<-apply(vcf,1,calc.pi)
 #' @export
 calc.pi<-function(vcf.row){
   alleles<-vcf.alleles(vcf.row)
@@ -18,6 +18,29 @@ calc.pi<-function(vcf.row){
   pi<-1-sum(choose(af.num,2))/choose(n,2)
   return(pi)
 }
+
+#' calculate observed heterozygosity
+#' @note proportion of diploid genotypes in the sample that are heterozygotes (Hohenlohe et al 2010)
+#' @param vcf.row A row of a vcf file, used in conjunction with apply
+#' @param pop.list A list of population strings to search for to subset vcf (pop names must be in individual ID names)
+#' @return het Observed heterozygosity
+#' @example all.het<-apply(vcf,1,calc.het)
+#' @export
+calc.het<-function(vcf.row,pop.list=NULL){
+  if(is.null(pop.list)){
+    inds<-names(vcf.row[10:length(vcf.row)])
+  } else{
+    inds<-unlist(lapply(pop.list,grep, x=names(vcf.row),value=T))
+  }
+  gt<-unlist(lapply(vcf.row[inds],function(x){
+    c<-strsplit(as.character(x),split=":")[[1]][1]
+    return(c)
+  }))
+  gt<-gt[gt != "./."]
+  het<-length(gt[gt %in% c("0/1","1/0")])/length(gt)
+  return(as.numeric(het))
+}
+  
 
 #' Calculate rho (private alleles)
 #' @note rho=1 if allele in pop j is only found in that pop and at least one ind was genotyped at that site in each pop; rho = 0 otherwise
@@ -74,12 +97,11 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
     if(stat=="pi"){
       dat<-data.frame(Pos=chr.vcf$POS,Pi=unlist(apply(chr.vcf,1,calc.pi))) }
     if(stat=="rho"){
-      dat<-data.frame(Pos=chr.vcf$POS,Rho=unlist(apply(chr.vcf,1,calc.rho,pop.list=pop.list))) }
+      dat<-data.frame(Pos=chr.vcf$POS,Rho=unlist(apply(chr.vcf,1,calc.rho))) }
+    if(stat=="het"){
+      dat<-data.frame(Pos=chr.vcf$POS,Het=unlist(apply(chr.vcf,1,calc.het,pop.list=pop.list))) }
     steps<-seq(1,nrow(chr.vcf),nsteps)
-    if(stat=="pi"){
-      avg.stat<-do.call("rbind",lapply(steps,sliding.avg,dat=dat,width=width)) }
-    if(stat=="rho"){
-      avg.stat<-do.call("rbind",lapply(steps,sliding.avg,dat=dat,width=width)) }
+    avg.stat<-do.call("rbind",lapply(steps,sliding.avg,dat=dat,width=width))
     avg.stat$Chr<-rep(chr,nrow(avg.stat))
     head(avg.stat)
     return(avg.stat)
