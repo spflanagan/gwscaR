@@ -71,7 +71,8 @@ calc.rho<-function(vcf.row,pop.list){
 #' @param width The width of the sliding window
 #' @return The average value of dat within that sliding window.
 #' @export
-sliding.avg<-function(dat,win.start,width){
+sliding.avg<-function(win.start,dat,width){
+
   if((win.start+width)>nrow(dat)){
     win.end<-nrow(dat)
   }else {
@@ -94,6 +95,10 @@ sliding.avg<-function(dat,win.start,width){
 sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
   avg.dat<-lapply(chr,function(chr){
     chr.vcf<-vcf[vcf[,1] %in% chr,]
+    if(nsteps>nrow(chr.vcf)){ #sanity checks
+      nsteps<-round(nrow(chr.vcf)/10)
+      width<-round(nrow(chr.vcf)/5)
+    }
     if(stat=="pi"){
       dat<-data.frame(Pos=chr.vcf$POS,Pi=unlist(apply(chr.vcf,1,calc.pi))) }
     if(stat=="rho"){
@@ -102,6 +107,11 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
       dat<-data.frame(Pos=chr.vcf$POS,Het=unlist(apply(chr.vcf,1,calc.het,pop.list=pop.list))) }
     steps<-seq(1,nrow(chr.vcf),nsteps)
     avg.stat<-do.call("rbind",lapply(steps,sliding.avg,dat=dat,width=width))
+    #add start and finish
+    avg1<-sliding.avg(1,dat,nsteps)
+    avg2<-sliding.avg(nrow(chr.vcf)-nsteps,dat,nsteps)
+    avg.stat<-data.frame(Avg.Pos=c(dat$Pos[1],avg.stat$Avg.Pos,dat$Pos[nrow(chr.vcf)]),
+                         Avg.Stat=c(avg1$Avg.Stat, avg.stat$Avg.Stat,avg2$Avg.Stat))
     avg.stat$Chr<-rep(chr,nrow(avg.stat))
     head(avg.stat)
     return(avg.stat)
