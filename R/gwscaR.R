@@ -186,14 +186,14 @@ vcf.alleles<-function(vcf.row){
 #' @export
 extract.gt.vcf<-function(vcf){
   if(length(strsplit(as.character(vcf[1,10]),":")[[1]])>1){
-    new<-vcf[,1:3]
+    new<-vcf[,1:9]
     for(i in 10:ncol(vcf)){
       new<-cbind(new,
                  sapply(vcf[,i],function(x) {
                    strsplit(as.character(x),":")[[1]][1]})
       )
     }
-    colnames(new)<-colnames(vcf[,c(1:3,10:ncol(vcf))])
+    colnames(new)<-colnames(vcf[,c(1:9,10:ncol(vcf))])
     vcf<-new
   }
   return(vcf)
@@ -251,7 +251,7 @@ infer.mat.alleles<-function(dad.kid, vcf){
 combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf1<-extract.gt.vcf(vcf1)
   vcf2<-extract.gt.vcf(vcf2)
-  col.id<-c(colnames(vcf1)[1:3],colnames(vcf1)[!(colnames(vcf1) %in%
+  col.id<-c(colnames(vcf1)[1:9],colnames(vcf1)[!(colnames(vcf1) %in%
                                                    colnames(vcf2))])
   vcf1a<-vcf1[,col.id]
   vcf1a$index<-paste(vcf1a$`#CHROM`,vcf1a$ID,vcf1a$POS,sep=".")
@@ -259,11 +259,14 @@ combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf<-merge(vcf1a,vcf2, by="index")
   addedon<-vcf[duplicated(vcf$index),"index"]
   if(!is.null(dim(addedon))) vcf<-vcf[!(vcf$index %in% addedon),]
-  drops<-c("index","#CHROM.y","POS.y","ID.y")
+  drops<-c("index","#CHROM.y","POS.y","ID.y","REF.y","ALT.y","QUAL.y",
+           "FILTER.y","INFO.y","FORMAT.y")
   vcf<-vcf[,!(colnames(vcf) %in% drops)]
-  colnames(vcf)[1:3]<-c("CHROM","POS","ID")
-  write.table(vcf,vcf.name,col.names=T,row.names=F,
+  colnames(vcf)[1:9]<-colnames(vcf1)[1:9]
+  if(vcf.name!=""){
+    write.table(vcf,vcf.name,col.names=T,row.names=F,
               quote=F,sep='\t')
+  }
   return(vcf)
 }
 
