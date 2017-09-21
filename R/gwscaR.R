@@ -40,8 +40,8 @@ vcf.cov.loc<-function(vcf,subset=NULL){
   if(is.null(subset)){
     subset<-colnames(vcf)[10:ncol(vcf)]
   }
-  cov.dat<-do.call("rbind",apply(vcf[,subset],1,function(vcf.row){
-    cov<-unlist(lapply(vcf.row,function(x){
+  cov.dat<-do.call("rbind",apply(vcf,1,function(vcf.row){
+    cov<-unlist(lapply(vcf.row[subset],function(x){
       c<-strsplit(as.character(x),split=":")[[1]][3]
       return(c)
     }))
@@ -69,7 +69,7 @@ vcf.cov.loc<-function(vcf,subset=NULL){
       strsplit(as.character(x),split=":")[[1]][1]
     }))
     het<-length(het[het=="0/1" | het=="1/0"])
-    return(data.frame(Chrom=vcf.row[1],Pos=vcf.row["POS"],Locus=vcf.row["ID"],
+    return(data.frame(Chrom=vcf.row[1],Pos=vcf.row[2],Locus=vcf.row[3],
                       NumMissing=miss, NumPresent=pres,PropMissing=miss/(miss+pres),
                       AvgCovRef=ref,AvgCovAlt=alt, AvgCovRatio=ref/alt,AvgCovTotal=tot/pres, CovVariance=var.cov,
                       NumHet=het,PropHet=het/pres,TotalNumReads = tot,stringsAsFactors = F))
