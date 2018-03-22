@@ -377,7 +377,13 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=
                           Sum.Fst=as.numeric(x["Sum.Fst"]),Count=as.numeric(x["Count"]),
                           Mean.Fst=as.numeric(x["Mean.Fst"]),stringsAsFactors=FALSE)
         this.fst<-fsts[fsts$SNP %in% x["SNP"],]
-        if(nrow(this.fst)>0){
+        if(nrow(this.fst)>1){ #if there are multiple records, keep the one with the maximum sample size
+          this.fst<-this.fst[this.fst$Num1+this.fst$Num2 == max(this.fst$Num1+this.fst$Num2),]
+          if(nrow(this.fst)>1){#if they have the same sample size, randomly choose one.
+            this.fst<-this.fst[sample(nrow(this.fst),size = 1,replace = FALSE),]
+          }
+        }
+        if(nrow(this.fst)==1){
           if(!is.na(this.fst["Fst"])){
             if(!is.na(new.x["Sum.Fst"])){
               new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
@@ -387,6 +393,7 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=
               new.x["Count"]<-new.x["Count"]+1
             }
           }}
+        
         return(new.x)
       }))
       mu<-new.mu
