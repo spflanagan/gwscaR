@@ -68,10 +68,10 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
   #determine the axis limits
-  if(last.max>max(new.dat$plot.pos)){
+  if(last.max>=max(new.dat$plot.pos)){
     x.max<-last.max
   }else{
-    x.max<-max(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot,2],na.rm=T)
+    x.max<-max(new.dat$plot.pos)#max(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot,2],na.rm=T)
   }
   x.min<-min(new.dat$plot.pos,na.rm=T)
   if(is.null(y.lim)){
