@@ -87,8 +87,8 @@ vcf2gpop<-function(vcf,pop.list,gpop.name){#without the SNP column
 #' @return co.afs A dataframe with all of the allele frequencies
 #' @export
 #' @example
-#' co.afs<-vcf2gpop(vcf,"coancestry_afs.txt")
-vcf2coancestry<-function(vcf,out.name="coancestry_afs.txt"){
+#' co.afs<-vcf2coanAF(vcf,"coancestry_afs.txt")
+vcf2coanAF<-function(vcf,out.name="coancestry_afs.txt"){
   co.afs<-do.call(rbind,apply(vcf,1,function(vcf.row,out.name){
     af<-calc.afs.vcf(vcf.row)
     snp.name<-paste(af$Chrom,trimws(af$Pos),sep=".")
@@ -100,4 +100,28 @@ vcf2coancestry<-function(vcf,out.name="coancestry_afs.txt"){
     return(data.frame(co.af))
   },out.name=out.name))
   return(co.afs)
+}
+
+#' Convert a vcf df to a coancestry input file
+#' @param vcf A data.frame in vcf format
+#' @param out.name A name for a an output file (default is coancestry_gty.txt)
+#' @return co.gt A dataframe with all of the genotypes
+#' @export
+#' @example
+#' co.gts<-vcf2coanGT(vcf,"coancestry_gty.txt")
+vcf2coanGT<-function(vcf,out.name="coancestry_afs.txt"){
+  gts<-extract.gt.vcf(vcf)
+  co.gt<-do.call(cbind,apply(gts,1,function(gt){
+    snp.name<-paste(gt["#CHROM"],trimws(gt["POS"]),sep=".")
+    rname<-paste(snp.name,gt["REF"],sep="_")
+    aname<-paste(snp.name,gt["ALT"],sep="_")
+    g<-do.call(rbind,lapply(gt[10:length(gt)],function(x) {
+      strsplit(as.character(x),"/")[[1]]}))
+    g[g=="0"]<-rname
+    g[g=="1"]<-aname
+    g[g=="."]<-0
+    return(as.data.frame(g))
+  }))
+  write.table(co.gt,out.name,row.names=TRUE,col.names=FALSE,quote=FALSE,sep='\t')
+  return(co.gt)
 }
