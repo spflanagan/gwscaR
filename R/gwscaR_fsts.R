@@ -89,7 +89,7 @@ fst.two.vcf<-function(vcf1.row,vcf2,match.index, cov.thresh=0.2){
       }
     }#end else good to go
   }#end else vcf2
-  
+
   return(data.frame(Chrom=vcf1.row[1],Pos=vcf1.row["POS"],
                     Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=length(factor(freqall)),
                     Num1=length(gt1),Num2=(length(gt2)),stringsAsFactors=F))
@@ -189,7 +189,7 @@ calc.fst.wright<-function(al1,al2){
 #' Fst, NumAlleles, Num1 (number of individuals in pop1), and Num2 (number of individuals in pop2)
 #' @export
 fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
-  
+
   hs1<-hs2<-hs<-ht<-0
   freqall<-gt1<-gt2<-NULL
   gt1<-unlist(lapply(vcf.row[group1],function(x){
@@ -249,7 +249,7 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
     fst<-NA #it doesn't pass the coverage threshold
     num.al<-length(unique(al1))
   }
-  
+
   return(data.frame(Chrom=vcf.row[1],Pos=vcf.row["POS"],
                     Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=fst,NumAlleles=num.al,
                     Num1=length(gt1),Num2=length(gt2),stringsAsFactors = FALSE,row.names=NULL))
@@ -289,7 +289,7 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
     gt2[gt2=="1"]<-"1/2"
     gt2[gt2=="2"]<-"2/2"
     gt2[gt2=="0"]<-"1/1"
-    
+
     if(na1<=(1-cov.thresh)){
       al1<-unlist(strsplit(as.character(gt1),split = "/"))
       if(na2<=(1-cov.thresh)){
@@ -307,7 +307,7 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
     }
     fst.dat[(i-6),]<-cbind(as.character(colnames(raw)[i]),fst["Hs1"],fst["Hs2"],as.numeric(fst["Hs"]),fst["Ht"],
                            as.numeric(fst["Fst"]),fst["NumAlleles"],fst["Num1"],fst["Num2"])
-    
+
   }
   return(fst.dat)
 }#end fst.one.plink
@@ -377,6 +377,7 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=
                           Sum.Fst=as.numeric(x["Sum.Fst"]),Count=as.numeric(x["Count"]),
                           Mean.Fst=as.numeric(x["Mean.Fst"]),stringsAsFactors=FALSE)
         this.fst<-fsts[fsts$SNP %in% x["SNP"],]
+
         if(nrow(this.fst)>0){
           for(k in 1:nrow(this.fst)){
             if(!is.na(this.fst[k,"Fst"])){
@@ -389,6 +390,23 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=
               }}
           }
         }
+        if(nrow(this.fst)>1){ #if there are multiple records, keep the one with the maximum sample size
+          this.fst<-this.fst[this.fst$Num1+this.fst$Num2 == max(this.fst$Num1+this.fst$Num2),]
+          if(nrow(this.fst)>1){#if they have the same sample size, randomly choose one.
+            this.fst<-this.fst[sample(nrow(this.fst),size = 1,replace = FALSE),]
+          }
+        }
+        if(nrow(this.fst)==1){
+          if(!is.na(this.fst["Fst"])){
+            if(!is.na(new.x["Sum.Fst"])){
+              new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
+              new.x["Count"]<-new.x["Count"]+1
+            }else{
+              new.x["Sum.Fst"]<-this.fst["Fst"]
+              new.x["Count"]<-new.x["Count"]+1
+            }
+          }}
+
         return(new.x)
       }))
       mu<-new.mu

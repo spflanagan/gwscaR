@@ -48,15 +48,15 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   for(i in 1:length(scaffs.to.plot)){
     #pull out the data for this scaffold
     if(nrow(scaffold.widths[scaffold.widths$Chrom %in% scaffs.to.plot[i],])>0){ #sanity check
-    chrom.dat<-fst.dat[fst.dat[,chrom.name] %in% scaffs.to.plot[i],]
-    if(nrow(chrom.dat)>0){
-      chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
-      new.dat<-rbind(new.dat,chrom.dat)
-      #last.max<-max(chrom.dat$plot.pos)+
-      #               as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
-    }
-    last.max<-last.max+
-      as.numeric(scaffold.widths[scaffold.widths$Chrom %in% scaffs.to.plot[i],2])
+      chrom.dat<-fst.dat[fst.dat[,chrom.name] %in% scaffs.to.plot[i],]
+      if(nrow(chrom.dat)>0){
+        chrom.dat$plot.pos<-as.numeric(as.character(chrom.dat[,bp.name]))+last.max
+        new.dat<-rbind(new.dat,chrom.dat)
+        #last.max<-max(chrom.dat$plot.pos)+
+        #               as.numeric(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot[i],2])
+      }
+      last.max<-last.max+
+        as.numeric(scaffold.widths[scaffold.widths$Chrom %in% scaffs.to.plot[i],2])
     }else{
       print(paste(scaffs.to.plot[i], "has no designated width."))
     }
@@ -64,10 +64,15 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
   
+  
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
   #determine the axis limits
-  x.max<-max(new.dat$plot.pos,na.rm=T)
+  if(last.max>=max(new.dat$plot.pos)){
+    x.max<-last.max
+  }else{
+    x.max<-max(new.dat$plot.pos)#max(scaffold.widths[scaffold.widths[,1] %in% scaffs.to.plot,2],na.rm=T)
+  }
   x.min<-min(new.dat$plot.pos,na.rm=T)
   if(is.null(y.lim)){
     y.max<-max(fst.dat[,fst.name])+0.1*max(fst.dat[,fst.name])
