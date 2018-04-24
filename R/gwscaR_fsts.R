@@ -378,15 +378,17 @@ calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=
                           Mean.Fst=as.numeric(x["Mean.Fst"]),stringsAsFactors=FALSE)
         this.fst<-fsts[fsts$SNP %in% x["SNP"],]
         if(nrow(this.fst)>0){
-          if(!is.na(this.fst["Fst"])){
-            if(!is.na(new.x["Sum.Fst"])){
-              new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst["Fst"]
-              new.x["Count"]<-new.x["Count"]+1
-            }else{
-              new.x["Sum.Fst"]<-this.fst["Fst"]
-              new.x["Count"]<-new.x["Count"]+1
-            }
-          }}
+          for(k in 1:nrow(this.fst)){
+            if(!is.na(this.fst[k,"Fst"])){
+              if(!is.na(new.x["Sum.Fst"])){
+                new.x["Sum.Fst"]<-new.x["Sum.Fst"]+this.fst[k,"Fst"]
+                new.x["Count"]<-new.x["Count"]+1
+              }else{
+                new.x["Sum.Fst"]<-this.fst[k,"Fst"]
+                new.x["Count"]<-new.x["Count"]+1
+              }}
+          }
+        }
         return(new.x)
       }))
       mu<-new.mu
