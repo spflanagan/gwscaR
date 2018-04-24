@@ -91,12 +91,13 @@ vcf2gpop<-function(vcf,pop.list,gpop.name){#without the SNP column
 vcf2coancestry<-function(vcf,out.name="coancestry_afs.txt"){
   co.afs<-do.call(rbind,apply(vcf,1,function(vcf.row,out.name){
     af<-calc.afs.vcf(vcf.row)
-    snp.name<-paste(af$X.CHROM,af$POS,sep=".")
-    co.af<-c(af$RefFreq,af$AltFreq)
-    names(co.af)<-c(paste(snp.name,af$REF,sep="_"),paste(snp.name,af$ALT,sep="_"))
-    write.table(co.af,out.name,sep='\t',append = TRUE,quote=TRUE,row.names = FALSE,col.names = TRUE)
+    snp.name<-paste(af$Chrom,trimws(af$Pos),sep=".")
+    co.af<-cbind(af$RefFreq,af$AltFreq)
+    colnames(co.af)<-c(paste(snp.name,af$Ref,sep="_"),paste(snp.name,af$Alt,sep="_"))
+    suppressWarnings(write.table(co.af,out.name,sep='\t',append = TRUE,quote=FALSE,row.names = FALSE,col.names = TRUE))
     row.names(co.af)<-snp.name
-    return(co.af)
+    colnames(co.af)<-NULL
+    return(data.frame(co.af))
   },out.name=out.name))
   return(co.afs)
 }
