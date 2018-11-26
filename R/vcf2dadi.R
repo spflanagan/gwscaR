@@ -1,6 +1,4 @@
-devtools::install_github("spflanagan/gwscaR")
-library(gwscaR)
-vcf<-parse.vcf("~/Research/fwsw/drad.sub.vcf")
+
 
 #' Convert a vcf file to a SNPs input file for dadi
 #' @param vcf The vcf dataframe (from parse.vcf) or the name of the vcf file
@@ -86,6 +84,8 @@ vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NUL
   #reorder the columns
   dadi.snps<-dadi.snps[,c("Ingroup","Outgroup","Allele1",grep("_1",colnames(dadi.snps),value=TRUE),"Allele2",
                           grep("_2",colnames(dadi.snps),value=TRUE),"GeneID","Position")]
+  colnames(dadi.snps)<-gsub("_1","",colnames(dadi.snps))
+  colnames(dadi.snps)<-gsub("_2"," ",colnames(dadi.snps))
   #write to file
   if(!is.null(filename)){
     write.table(dadi.snps,filename,col.names = TRUE,row.names = FALSE,sep='\t',quote=FALSE)
