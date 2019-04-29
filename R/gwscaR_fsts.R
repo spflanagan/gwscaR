@@ -173,7 +173,7 @@ calc.fst.wright<-function(al1,al2){
       fst<-NA
     }
   }
-  return(data.frame(Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=as.numeric(fst),NumAlleles=length(factor(freqall)),
+  return(data.frame(Hs1=hs1,Hs2=hs2,Hs=hs,Ht=ht,Fst=as.numeric(fst),NumAlleles=length(unique(al12)),
                     Num1=length(al1),Num2=length(al2)))
 }
 
@@ -272,42 +272,42 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
 #'  Num1 = the number of individuals in pop 1
 #'  Num2 = the number of individuals in pop 2
 #' @export
-fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2){
+fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2,loc_names=NULL){
   fst.dat<-data.frame(Locus=character(),
                       Hs1=numeric(),Hs2=numeric(),Hs=numeric(),Ht=numeric(),Fst=numeric(),NumAlleles=numeric(),
                       Num1=numeric(),Num2=numeric(),stringsAsFactors=F)
   grp1<-raw[raw[,2] %in% group1,]
   grp2<-raw[raw[,2] %in% group2,]
-  for(i in 7:ncol(raw)){
-    na1<-length(grp1[is.na(grp1[,i]),i])/nrow(grp1)
-    na2<-length(grp2[is.na(grp2[,i]),i])/nrow(grp2)
-    gt1<-as.character(grp1[!is.na(grp1[,i]),i])
-    gt2<-as.character(grp2[!is.na(grp2[,i]),i])
-    gt1[gt1=="1"]<-"1/2"
-    gt1[gt1=="2"]<-"2/2"
-    gt1[gt1=="0"]<-"1/1"
-    gt2[gt2=="1"]<-"1/2"
-    gt2[gt2=="2"]<-"2/2"
-    gt2[gt2=="0"]<-"1/1"
+  n<-1
+  for(i in seq(7,ncol(raw),by = 2)){
+    # get all the alleles
+    alleles<-unique(unlist(grp1[,i:(i+1)],grp2[,i:(i+1)]))
+    alleles<-alleles[alleles!=0]
+    # figure out how many are NA in each group
+    na1<-length(grp1[grp1[,i]==0,i])/nrow(grp1)
+    na2<-length(grp2[grp2[,i]==0,i])/nrow(grp2)
+    # get the alleles for each group
+    al1<-unlist(c(as.character(grp1[grp1[,i]%in% alleles,i]),as.character(grp1[grp1[,i+1]%in% alleles,i+1])))
+    al2<-unlist(c(as.character(grp2[grp2[,i]%in% alleles,i]),as.character(grp2[grp2[,i+1]%in% alleles,i+1])))
 
-    if(na1<=(1-cov.thresh)){
-      al1<-unlist(strsplit(as.character(gt1),split = "/"))
-      if(na2<=(1-cov.thresh)){
-        al2<-unlist(strsplit(as.character(gt2),split="/"))
-        #calculate frequencies
-        fst<-calc.fst.wright(al1,al2)
-      }
-      else {
-        fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
-                        Num1=length(al1),Num2=length(al2)) #gt2 doesn't pass coverage threshold
-      }
-    }else {
-      fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
-                      Num1=length(al1),Num2=length(al2)) #it doesn't pass the coverage threshold
+    if(na1<=(1-cov.thresh) & na2<=(1-cov.thresh)){
+      #calculate fst
+      fst<-calc.fst.wright(al1,al2)
     }
-    fst.dat[(i-6),]<-cbind(as.character(colnames(raw)[i]),fst["Hs1"],fst["Hs2"],as.numeric(fst["Hs"]),fst["Ht"],
-                           as.numeric(fst["Fst"]),fst["NumAlleles"],fst["Num1"],fst["Num2"])
+    else {
+      fst<-data.frame(Hs1=NA,Hs2=NA,Hs=NA,Ht=NA,Fst=NA,NumAlleles=length(factor(c(al1,al2))),
+                      Num1=length(al1),Num2=length(al2)) #gt2 doesn't pass coverage threshold
+    }
 
+    if(is.null(loc_names)){
+      fst.dat[n,]<-cbind(n,fst["Hs1"],fst["Hs2"],as.numeric(fst["Hs"]),fst["Ht"],
+                         as.numeric(fst["Fst"]),fst["NumAlleles"],fst["Num1"]/2,fst["Num2"]/2)
+    }else{
+      fst.dat[n,]<-cbind(loc_names[n],fst["Hs1"],fst["Hs2"],as.numeric(fst["Hs"]),fst["Ht"],
+                         as.numeric(fst["Fst"]),fst["NumAlleles"],fst["Num1"]/2,fst["Num2"]/2)
+    }
+
+    n<-n+1
   }
   return(fst.dat)
 }#end fst.one.plink

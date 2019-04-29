@@ -29,6 +29,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
                    y.lim=NULL,xlabels=NULL,xlab.indices=NULL,
                    axis.size=0.5,pt.cols=c("darkgrey","lightgrey"),pt.cex=0.5,...){
   #make sure fsts are numeric
+  fst.dat<-fst.dat[!is.na(fst.dat[,fst.name]),]
   fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
   #if scaffold widths aren't provided, we add them ourselves
   if(is.null(scaffold.widths)){
@@ -41,7 +42,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   if(is.null(scaffs.to.plot)){
     scaffs.to.plot<-scaffold.widths[,1]#unique(fst.dat[,chrom.name])
   }
-  
+
   #set up new dataframe
   new.dat<-data.frame(stringsAsFactors = F)
   last.max<-0
@@ -63,8 +64,8 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   }
   #make sure everything is the correct class
   new.dat$plot.pos<-as.numeric(as.character(new.dat$plot.pos))
-  
-  
+
+
   new.dat[,chrom.name]<-as.factor(as.character(new.dat[,chrom.name]))
   scaffs.to.plot<-as.factor(as.character(scaffs.to.plot))
   #determine the axis limits
@@ -82,10 +83,10 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
     } else {
       y.min<-0
     }
-    
+
     y.lim<-c(y.min,y.max)
   }
-  
+
   #plot
   colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
                      stringsAsFactors = F)
@@ -151,7 +152,7 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
                         fst.name="Fst", chrom.name="Chrom", bp.name="BP",axis.size=0.5,
                         scaffold.order=NULL,groups=NULL,print.names=FALSE,y.lim=NULL,
                         group.boundaries=NULL,pt.cex=0.5,...){
-  
+
   if(!is.null(scaffold.order)){
     scaff.ord<-scaffold.order$component_id
     lgs<-scaffold.order$object
@@ -171,13 +172,13 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
   fst.dat[,fst.name]<-as.numeric(as.character(fst.dat[,fst.name]))
   these.scaffs<-scaff.ord[scaff.ord %in% unique(fst.dat[,chrom.name])]
   all.scaff<-split(fst.dat, factor(fst.dat[,chrom.name]))
-  
+
   #keep only the scaffolds you're plotting
   if(!is.null(groups))
   {
     all.scaff<-all.scaff[names(all.scaff) %in% groups]
   }
-  
+
   group.boundaries<-group.boundaries[scaff.ord,]
   last.max<-0
   rect.xs<-NULL
@@ -206,13 +207,13 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
             rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1]+nrow(all.scaff[[i]]),1)
     }else{
       #then it takes genome space into account
-      
+
       all.scaff[[i]]<-
         all.scaff[[i]][order(all.scaff[[i]][,bp.name]),]
       all.scaff[[i]][,bp.name]<-
         as.numeric(rect.xs[rownames(rect.xs) %in% names(all.scaff)[i],1])+
         as.numeric(as.character(all.scaff[[i]][,bp.name]))
-      
+
     }
   }
   #change BP to plot
@@ -226,7 +227,7 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
     } else {
       y.min<-0
     }
-    
+
     y.lim<-c(y.min,y.max)
   }
   displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
@@ -335,7 +336,7 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
   covplot = data.frame(matrix(nrow = nrow(cov), ncol = ncol(cov)))
   for(i in 1:length(poporder)){
     for( j in 1:length(poporder)){
-      
+
       covplot[i, j] = cov[which(names(cov)==poporder[i]), which(names(cov)==poporder[j])]
       rownames(covplot)[i]<-poporder[i]
       colnames(covplot)[j]<-poporder[j]
@@ -361,23 +362,23 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
 #' @param ... legend parameters
 #' @return Nothing is returned
 #' @notes Modified from https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
-#' @example 
+#' @example
 #' plot(rnorm(50), rnorm(50), col=c("steelblue", "indianred"), pch=c(15,19))
 #' outer.legend("top",legend=c("A","B"),pch=c(15,19),col=c("steelblue", "indianred"),ncol=2)
 #' @export
 outer.legend <- function(...) {
-  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0), 
+  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0),
               mar=c(0, 0, 0, 0), new=TRUE)
   on.exit(par(opar))
   plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
   legend(...)
 }
 
-#' Create violin plots with 
+#' Create violin plots with
 #' @param ... legend parameters
 #' @return Optionally returns the summary statistics of the data.
 #' @notes Modified from vioplot() in library(vioplot)
-#' @example 
+#' @example
 #' mu<-2
 #' si<-0.6
 #' bimodal<-c(rnorm(1000,-mu,si),rnorm(1000,mu,si))
@@ -393,15 +394,15 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
   # process multiple datas
   datas <- list(x,...)
   n <- length(datas)
-  
+
   if(missing(at)) at <- 1:n
-  
+
   # pass 1
   #
   # - calculate base range
   # - estimate density
   #
-  
+
   # setup parameters for density estimation
   upper  <- vector(mode="numeric",length=n)
   lower  <- vector(mode="numeric",length=n)
@@ -411,16 +412,16 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
   base   <- vector(mode="list",length=n)
   height <- vector(mode="list",length=n)
   baserange <- c(Inf,-Inf)
-  
+
   # global args for sm.density function-call
   args <- list(display="none")
-  
+
   if (!(is.null(h)))
     args <- c(args, h=h)
-  
+
   for(i in 1:n) {
     data<-datas[[i]]
-    
+
     # calculate plot parameters
     #   1- and 3-quantile, median, IQR, upper- and lower-adjacent
     data.min <- min(data)
@@ -431,46 +432,46 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
     iqd <- q3[i]-q1[i]
     upper[i] <- min( q3[i] + range*iqd, data.max )
     lower[i] <- max( q1[i] - range*iqd, data.min )
-    
+
     #   strategy:
     #       xmin = min(lower, data.min))
     #       ymax = max(upper, data.max))
     #
-    
+
     est.xlim <- c( min(lower[i], data.min), max(upper[i], data.max) )
-    
+
     # estimate density curve
     smout <- do.call("sm.density", c( list(data, xlim=est.xlim), args ) )
-    
+
     # calculate stretch factor
     #
     #  the plots density heights is defined in range 0.0 ... 0.5
     #  we scale maximum estimated point to 0.4 per data
     #
     hscale <- 0.4/max(smout$estimate) * wex
-    
+
     # add density curve x,y pair to lists
     base[[i]]   <- smout$eval.points
     height[[i]] <- smout$estimate * hscale
-    
+
     # calculate min,max base ranges
     t <- range(base[[i]])
     baserange[1] <- min(baserange[1],t[1])
     baserange[2] <- max(baserange[2],t[2])
-    
+
   }
-  
+
   # pass 2
   #
   # - plot graphics
-  
+
   # setup parameters for plot
   if(!add){
     xlim <- if(n==1)
       at + c(-.5, .5)
     else
       range(at) + min(diff(at))/2 * c(-1,1)
-    
+
     if (is.null(ylim)) {
       ylim <- baserange
     }
@@ -491,7 +492,7 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
     colMed<-c(colMed,rep(colMed,n-length(colMed)))
   }
   boxwidth <- 0.05 * wex
-  
+
   # setup plot
   if(!add)
     plot.new()
@@ -508,26 +509,26 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
         }
       }
     }
-    
+
     if(axis.box){ box() }
     for(i in 1:n) {
       # plot left/right density curve
       polygon( c(at[i]-height[[i]], rev(at[i]+height[[i]])),
                c(base[[i]], rev(base[[i]])),
                col = col[i], border=border[i], lty=lty, lwd=lwd)
-      
+
       if(drawRect){
         # plot IQR
         lines( at[c( i, i)], c(lower[i], upper[i]) ,lwd=lwd, lty=lty)
-        
+
         # plot 50% KI box
         rect( at[i]-boxwidth/2, q1[i], at[i]+boxwidth/2, q3[i], col=rectCol)
-        
+
         # plot median point
         points( at[i], med[i], pch=pchMed, col=colMed )
       }
     }
-    
+
   }
   else {
     if(!add){
@@ -542,21 +543,21 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
         }
       }
     }
-    
+
     if(axis.box){ box() }
     for(i in 1:n) {
       # plot left/right density curve
       polygon( c(base[[i]], rev(base[[i]])),
                c(at[i]-height[[i]], rev(at[i]+height[[i]])),
                col = col[i], border=border[i], lty=lty, lwd=lwd)
-      
+
       if(drawRect){
         # plot IQR
         lines( c(lower[i], upper[i]), at[c(i,i)] ,lwd=lwd, lty=lty)
-        
+
         # plot 50% KI box
         rect( q1[i], at[i]-boxwidth/2, q3[i], at[i]+boxwidth/2,  col=rectCol)
-        
+
         # plot median point
         points( med[i], at[i], pch=pchMed, col=colMed )
       }
