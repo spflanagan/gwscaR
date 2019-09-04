@@ -51,17 +51,19 @@ choose.one.snp<-function(vcf){
 #' Convert a vcf df to a genepop file
 #' @param vcf A data.frame in vcf format
 #' @param pop.list A list of population names (the individuals must have names containing the population names)
+#' @param pop.map A data frame with col 1 = ID names and col 2 = pop names
 #' @param gpop.name A name for the output genepop file
 #' @return gpop A dataframe in genepop format
 #' @export
 #' @example
 #' gpop<-vcf2gpop(vcf,pop.list=c("TXSP","TXCC","TXFW","TXCB","LAFW","ALST","ALFW","FLSG","FLKB",
 #' "FLFD","FLSI","FLAB","FLPB","FLHB","FLCC","FLLG")),"out.genepop")
-vcf2gpop<-function(vcf,pop.list,gpop.name){#without the SNP column
-  locusids<-paste(vcf$`#CHROM`,as.character(vcf$POS),sep=".")
-  indids<-colnames(vcf)[10:nrow(vcf)]
+vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP column
+  locusids<-paste(vcf$`#CHROM`,as.character(vcf$POS),sep="_")
+  locusids<-gsub("\\.","_",locusids)
+  indids<-colnames(vcf)[10:ncol(vcf)]
   gpop.mat<-extract.gt.vcf(vcf[,colnames(vcf)!="SNP"])
-  gpop<-t(gpop.mat[,4:ncol(gpop.mat)])
+  gpop<-t(gpop.mat[,10:ncol(gpop.mat)])
   gpop[gpop=="0/0"]<-"0101"
   gpop[gpop=="0/1"]<-"0102"
   gpop[gpop=="1/0"]<-"0201"
@@ -70,11 +72,23 @@ vcf2gpop<-function(vcf,pop.list,gpop.name){#without the SNP column
   #write to file
   write.table(locusids,gpop.name,sep='\n',quote=FALSE,
               col.names = paste("Title line: ",gpop.name,sep=""),row.names=FALSE)
-  for(i in 1:length(pop.list)){
-    pop<-gpop[grep(pop.list[i],rownames(gpop)),]
-    write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
-    rownames(pop)<-paste(rownames(pop),",",sep="")
-    write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+  if(!is.null(pop.list)){
+    for(i in 1:length(pop.list)){
+      pop<-gpop[grep(pop.list[i],rownames(gpop)),,drop=FALSE]
+      write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
+      rownames(pop)<-paste(rownames(pop),",",sep="")
+      write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+    }
+  } else if(!is.null(pop.map)){
+    for(i in 1:length(unique(pop.map[,2]))){
+      pname<-unique(pop.map[,2])[i]
+      pop<-gpop[rownames(gpop) %in% pop.map[pop.map[,2]==pname,1],,drop=FALSE]
+      write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
+      rownames(pop)<-paste(rownames(pop),",",sep="")
+      write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+    }
+  } else {
+    stop("Must provide a pop.list or pop.map")
   }
   colnames(gpop)<-locusids
   return(gpop)
