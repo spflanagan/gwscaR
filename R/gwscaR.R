@@ -121,7 +121,7 @@ vcf.cov.ind<-function(vcf){
 #' Calculate allele frequencies from a vcf file
 #' @param vcf.row A single row of a vcf (used in conjunctioin with apply)
 #' @return A data.frame with the columns: Chrom,Pos,Ref,RefFreq,Alt,AltFreq
-#'  
+#'
 #' @export
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply
@@ -283,7 +283,7 @@ fst.sig<-function(fst.df){
 }
 
 #' Conduct selection components analysis
-#' @param vcf A data.frme with genotype data in vcf format
+#' @param vcf A data.frame with genotype data in vcf format
 #' @param locus.info A list of column names with the locus info (e.g. c(#CHROM,POS))
 #' @param group1 A list of column names with individuals from the first group
 #' @param group2 A list of column names with individuals from the second group
