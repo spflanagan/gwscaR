@@ -231,13 +231,13 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
         fst<-(ht-hs)/ht
         num.al<-length(unique(c(al1,al2)))
       } else {
-        hs1<-1-sum(freq1*freq1)
-        hs2<-1-sum(freq2*freq2)
+
+        hs1<-1-sum(freq1[1]*freq1[1])
+        hs2<-1-sum(freq2[1]*freq2[1])
+        hs<-mean(c(hs1,hs2))
+        ht<-2*freqall*(1-freqall)
         if(length(freqall)<=1){ fst<-0 }
-        else{
-          ht<-2*freqall*(1-freqall)
-          fst<-NA
-        }
+        else{ fst<-NA }
         num.al<-length(unique(c(al1,al2)))
       }
     }
