@@ -64,11 +64,11 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
   indids<-colnames(vcf)[10:ncol(vcf)]
   gpop.mat<-extract.gt.vcf(vcf[,colnames(vcf)!="SNP"])
   gpop<-t(gpop.mat[,10:ncol(gpop.mat)])
-  gpop[gpop=="0/0"]<-"0101"
-  gpop[gpop=="0/1"]<-"0102"
-  gpop[gpop=="1/0"]<-"0201"
-  gpop[gpop=="1/1"]<-"0202"
-  gpop[gpop=="./."]<-"0000"
+  gpop[gpop=="0/0" | gpop=="0|0"]<-"0101"
+  gpop[gpop=="0/1" | gpop=="0|1"]<-"0102"
+  gpop[gpop=="1/0" | gpop=="1|0"]<-"0201"
+  gpop[gpop=="1/1" | gpop=="1|1"]<-"0202"
+  gpop[gpop=="./." | gpop==".|."]<-"0000"
   #write to file
   write.table(locusids,gpop.name,sep='\n',quote=FALSE,
               col.names = paste("Title line: ",gpop.name,sep=""),row.names=FALSE)
@@ -81,11 +81,14 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
     }
   } else if(!is.null(pop.map)){
     for(i in 1:length(unique(pop.map[,2]))){
+
       pname<-unique(pop.map[,2])[i]
-      pop<-gpop[rownames(gpop) %in% pop.map[pop.map[,2]==pname,1],,drop=FALSE]
-      write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
-      rownames(pop)<-paste(rownames(pop),",",sep="")
-      write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+      pop<-gpop[rownames(gpop) %in% pop.map[pop.map[,2]%in%pname,1],,drop=FALSE]
+      if(nrow(pop)>0){
+        write.table(paste("POP",pname,sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
+        rownames(pop)<-paste(rownames(pop),",",sep="")
+        write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+      }
     }
   } else {
     stop("Must provide a pop.list or pop.map")
