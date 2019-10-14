@@ -8,7 +8,7 @@ gwsca(vcf, locus.info, group1, group2, prop.ind.thresh = 0.5,
   maf.cutoff = 0.05)
 }
 \arguments{
-\item{vcf}{A data.frme with genotype data in vcf format}
+\item{vcf}{A data.frame with genotype data in vcf format}
 
 \item{locus.info}{A list of column names with the locus info (e.g. c(#CHROM,POS))}
 
