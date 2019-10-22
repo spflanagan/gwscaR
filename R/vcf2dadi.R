@@ -14,23 +14,23 @@
 #' @export
 vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NULL,outgroup=NA){
   #check to see if vcf needs to be read in from file.
-  if(!exists("vcf")){
-    printf("Parsing vcf file")
+  if(!exists(vcf)){
+    print("Parsing vcf file")
     vcf<-parse.vcf(vcf)
   }
   #check to see if there is a pop.list or pop.map
-  if(is.null(pop.list)){
+  if(is.na(pop.list)){
     if(is.null(pop.map)){
       npops<-1
       pop.list<-"Pop1"
       pop.map<-data.frame(Individuals=colnames(vcf[,10:ncol(vcf)]),
                           Pop=rep("Pop1",length(colnames(vcf[,10:ncol(vcf)]))))
     }else{
-      if(!exists("pop.map")){
+      if(!exists(pop.map)){
         pop.map<-read.delim(pop.map)
       }
-      npops<-length(levels(pop.map[,2]))
-      pop.list<-levels(pop.map[,2])
+      npops<-length(levels(as.factor(pop.map[,2])))
+      pop.list<-levels(as.factor(pop.map[,2]))
     }
   }else{
     npops<-length(pop.list)
@@ -56,8 +56,7 @@ vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NUL
   if(is.na(outgroup)){
     ingroup<-rep("---",nrow(vcf))
     outgroup<-rep("---",nrow(vcf))
-  }
-  else{
+  } else{
     ingroup<-outgroup[,1]
     outgroup<-outgroup[,2]
   }
