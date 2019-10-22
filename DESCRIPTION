@@ -11,9 +11,18 @@ License: GPL-2
 LazyData: TRUE
 Imports:
   nlme,
-  ade4
+  ade4,
+  sm
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
+Collate: 
+    'gwscaR.R'
+    'gwscaR_fsts.R'
+    'gwscaR_plot.R'
+    'gwscaR_popgen.R'
+    'gwscaR_sim.R'
+    'gwscaR_utility.R'
+    'vcf2dadi.R'

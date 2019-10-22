@@ -10,14 +10,7 @@ calc.afs.vcf(vcf.row)
 \item{vcf.row}{A single row of a vcf (used in conjunctioin with apply)}
 }
 \value{
-A data.frame with the columns:
- Chrom
- Pos
- Ref
- RefFreq
- Alt
- AltFreq
- @export
+A data.frame with the columns: Chrom,Pos,Ref,RefFreq,Alt,AltFreq
 }
 \description{
 Calculate allele frequencies from a vcf file
