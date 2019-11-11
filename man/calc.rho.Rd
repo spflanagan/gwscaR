@@ -6,6 +6,11 @@
 \usage{
 calc.rho(vcf.row, pop.list)
 }
+\arguments{
+\item{vcf.row}{A row of a data frame containing vcf-formatted data}
+
+\item{pop.list}{A list with the population names (these should be contained within the sample names)}
+}
 \description{
 Calculate rho (private alleles)
 }

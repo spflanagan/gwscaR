@@ -14,6 +14,8 @@ fst.one.plink(raw, group1, group2, cov.thresh = 0.2, loc_names = NULL)
 \item{group2}{A list with the individuals in group 2}
 
 \item{cov.thresh}{A threshold for the number of individuals in the populations (default is 0.2)}
+
+\item{loc_names}{Locus names to be included in the output (optional)}
 }
 \value{
 fst.dat A data.frame with columns:

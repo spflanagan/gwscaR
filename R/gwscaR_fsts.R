@@ -2,7 +2,7 @@
 
 
 #' Calculate pairwise fst between two separate vcf files
-#' @param vcf1 A data.frame containing genotype information in vcf format
+#' @param vcf1.row A row of a data.frame containing genotype information in vcf format
 #' @param vcf2 A data.frame containing genotype information in vcf format (for another set of individuals/samples)
 #' @param match.index The name of the column that should be used to pair the two vcfs (I usually create a new column in which Chrom and Pos are concatenated)
 #' @param cov.thresh A coverage threshold specifying the proportion of individuals that should be included in each population. The default is 0.2
@@ -178,7 +178,7 @@ calc.fst.wright<-function(al1,al2){
 }
 
 #' Calculate fsts from a single vcf
-#' @param vcf A data.frame in vcf format
+#' @param vcf.row A row of a data.frame in vcf format
 #' @param group1 A list of individual names for pop1
 #' @param group2 A list of individual names for pop2
 #' @param cov.thresh A proportion of individuals required for genotyping individuals (default is 0.2)
@@ -261,6 +261,7 @@ fst.one.vcf<-function(vcf.row,group1,group2, cov.thresh=0.2, maf=0.05){
 #' @param group1 A list with the individuals in group 1
 #' @param group2 A list with the individuals in group 2
 #' @param cov.thresh A threshold for the number of individuals in the populations (default is 0.2)
+#' @param loc_names Locus names to be included in the output (optional)
 #' @return fst.dat A data.frame with columns:
 #'  Locus Name = the locus name
 #'  Hs1 = expected heterozygosity in pop 1
@@ -358,6 +359,8 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
 #' @param vcf A data.frame containing the contents of a vcf file
 #' @param pop.list1 A list of populations. This will be used to subset the vcf file to extract individuals for each pairwise comparison so it must contain a string found in individual IDs.
 #' @param pop.list2 A list of populations. Same requirements as pop.list1. Individuals from populations in pop.list1 will be compared to individuals in pop.list2.
+#' @param maf.cutoff An optional value for the minimum allele frequency. Must be between 0 and 1 (default is 0.05)
+#' @param cov.thresh Coverage threshold between 0 and 1 (default is 0.2)
 #' @return mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.
 #' @export
 calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=0.2) {

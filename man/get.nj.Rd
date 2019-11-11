@@ -17,3 +17,9 @@ fst.tree A neighbor-joining tree from the ape package
 \description{
 Generate a distance matrix for a SNP using fsts
 }
+\examples{
+fst.trees<-list()
+for(vcf.row in 1: nrow(vcf)){
+  fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list)) #getting an error
+}
+}

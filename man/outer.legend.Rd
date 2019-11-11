@@ -9,9 +9,13 @@ outer.legend(...)
 \arguments{
 \item{...}{legend parameters}
 }
-\value{
-Nothing is returned
-}
 \description{
 Add a legend to the margins of a multiplot figure
+}
+\note{
+Modified from https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
+}
+\examples{
+plot(rnorm(50), rnorm(50), col=c("steelblue", "indianred"), pch=c(15,19))
+outer.legend("top",legend=c("A","B"),pch=c(15,19),col=c("steelblue", "indianred"),ncol=2)
 }

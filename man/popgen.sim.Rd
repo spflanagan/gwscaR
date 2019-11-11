@@ -16,6 +16,12 @@ popgen.sim(npops = 8, inds = 10, nloc = 10000, p = rep(0.01, 8),
 \item{nloc}{The number of loci to simulate}
 
 \item{p}{A vector of average minor allele frequencies per locus to simulate}
+
+\item{outname}{The output name for the file}
+
+\item{analyze}{A logical value for whether or not to run the analysis (defaults to TRUE)}
+
+\item{ns}{A vector of numbers of individuals to simulate}
 }
 \value{
 A data.frame with ped data

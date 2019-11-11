@@ -4,8 +4,7 @@
 #' Read in a vcf file
 #' @param filename The name of the vcf file
 #' @return a dataframe containing the contents of the vcf file, including headers.
-#' @examples
-#' vcf<-parse.vcf(system.file("extdata/example.vcf",package = "gwscaR"))
+#' @example vcf<-parse.vcf(system.file("extdata/example.vcf",package = "gwscaR"))
 #' @seealso Flanagan & Jones 2017
 #' @export
 parse.vcf<-function(filename){
@@ -121,7 +120,6 @@ vcf.cov.ind<-function(vcf){
 #' Calculate allele frequencies from a vcf file
 #' @param vcf.row A single row of a vcf (used in conjunctioin with apply)
 #' @return A data.frame with the columns: Chrom,Pos,Ref,RefFreq,Alt,AltFreq
-#'
 #' @export
 calc.afs.vcf<-function(vcf.row){
   #use in conjunction with apply

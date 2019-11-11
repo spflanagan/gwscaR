@@ -26,9 +26,6 @@ a dataframe containing the contents of the vcf file, including headers.
 \description{
 Convert a vcf file to a SNPs input file for dadi
 }
-\examples{
-dadi<-vcf2dadiSNPs(system.file("extdata/example.vcf",package = "gwscaR"))
-}
 \seealso{
 Gutenkunst et al. 2013
 }

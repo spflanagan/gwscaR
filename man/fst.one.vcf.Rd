@@ -7,6 +7,8 @@
 fst.one.vcf(vcf.row, group1, group2, cov.thresh = 0.2, maf = 0.05)
 }
 \arguments{
+\item{vcf.row}{A row of a data.frame in vcf format}
+
 \item{group1}{A list of individual names for pop1}
 
 \item{group2}{A list of individual names for pop2}
@@ -14,8 +16,6 @@ fst.one.vcf(vcf.row, group1, group2, cov.thresh = 0.2, maf = 0.05)
 \item{cov.thresh}{A proportion of individuals required for genotyping individuals (default is 0.2)}
 
 \item{maf}{A minimum allele frequency (default is 0.05)}
-
-\item{vcf}{A data.frame in vcf format}
 }
 \value{
 out A data.frame with columns:

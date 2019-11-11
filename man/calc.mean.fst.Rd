@@ -13,6 +13,10 @@ calc.mean.fst(vcf, pop.list1, pop.list2, maf.cutoff = 0.05,
 \item{pop.list1}{A list of populations. This will be used to subset the vcf file to extract individuals for each pairwise comparison so it must contain a string found in individual IDs.}
 
 \item{pop.list2}{A list of populations. Same requirements as pop.list1. Individuals from populations in pop.list1 will be compared to individuals in pop.list2.}
+
+\item{maf.cutoff}{An optional value for the minimum allele frequency. Must be between 0 and 1 (default is 0.05)}
+
+\item{cov.thresh}{Coverage threshold between 0 and 1 (default is 0.2)}
 }
 \value{
 mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.

@@ -3,10 +3,10 @@
 
 #' Subset a ped file and run pcadapt on it
 #' @param ped The ped data.frame or file
-#' @param inds The number of individuals per population to simulate
-#' @param nloc The number of loci to simulate
-#' @param p A vector of average minor allele frequencies per locus to simulate
+#' @param num_inds The number of individuals per population to simulate
+#' @param subname The name for the subset image file
 #' @return A data.frame with ped data
+#' @export
 pcadapt_subset<-function(ped, num_inds,subname){
   #install and load pcadapt if you haven't already
   if("pcadapt" %in% rownames(installed.packages())){
@@ -46,9 +46,13 @@ pcadapt_subset<-function(ped, num_inds,subname){
 #' @param inds The number of individuals per population to simulate
 #' @param nloc The number of loci to simulate
 #' @param p A vector of average minor allele frequencies per locus to simulate
+#' @param outname The output name for the file
+#' @param analyze A logical value for whether or not to run the analysis (defaults to TRUE)
+#' @param ns A vector of numbers of individuals to simulate
 #' @return A data.frame with ped data
+#' @export
 popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated.ped",analyze=TRUE,ns=c(12,24,36,48,96)){
-  
+
   #install and load pcadapt if you haven't already
   if("pcadapt" %in% rownames(installed.packages())){
     do.call('library',list("pcadapt"))
@@ -60,7 +64,7 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
   simped<-data.frame(cbind(rep(1:npops,each=inds),rep(paste("Ind",rep(1:inds),sep=""),npops),
                            rep(0,inds*npops),rep(0,inds*npops),rep(0,inds*npops),rep(-9,inds*npops)),
                      stringsAsFactors = FALSE)
-  
+
   #simulate allele frequencies for each locus
   if(length(p)>1)
   {
@@ -83,30 +87,30 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
       }
       return(y)
     }))
-    
+
   }
-  
-    
-  
+
+
+
   #for each locus, assign genotypes for each population
   for(n in seq(1,nloc*2,by=2)){
     #designate columns
     col1<-n+6
     col2<-n+7
-    
+
     #simulate alleles
     if(length(p)>1){
       al1<-unlist(lapply(frqs,function(f){ rbinom(f[(n+1)/2],n=inds,size=1) } ))
-      al2<-unlist(lapply(frqs,function(f){ rbinom(f[(n+1)/2],n=inds,size=1) } ))  
+      al2<-unlist(lapply(frqs,function(f){ rbinom(f[(n+1)/2],n=inds,size=1) } ))
     }else{
       al1<-al2<-NULL
-      for(i in 1:npops){ 
-        al1<-c(al1,rbinom(frqs[(n+1)/2],n=inds,size=1)) 
+      for(i in 1:npops){
+        al1<-c(al1,rbinom(frqs[(n+1)/2],n=inds,size=1))
         al2<-c(al2,rbinom(frqs[(n+1)/2],n=inds,size=1))
       }
-      
+
     }
-    
+
     if(rbinom(1,1,0.5)==0){ #randomly decide if it's going to be G/C or A/T locus
       if(rbinom(1,1,0.5)==0){ #randomly decide if major allele is G
         al1[al1==0]<-"G"
@@ -117,7 +121,7 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
         al1[al1==0]<-"C"
         al1[al1==1]<-"G"
         al2[al2==0]<-"C"
-        al2[al2==1]<-"G"    
+        al2[al2==1]<-"G"
       }
     }else{
       if(rbinom(1,1,0.5)==0){ #randomly decide if major allele is A
@@ -137,7 +141,7 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
     simped[,col2]<-al2
   }
   write.table(simped,outname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
-  
+
   if(isTRUE(analyze)){
     # now run pcadapt
     filename<-read.pcadapt(outname,type="ped")
@@ -146,7 +150,7 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
     plot(x,option="scores",pop=simped[,1])
     dev.off()
   }
-  
+
   #subset it for further analysis
   pcasubs<-lapply(ns,function(n){
     sub<-pcadapt_subset(ped = simped, num_inds = n, subname=paste("sub",n,outname,sep=""))

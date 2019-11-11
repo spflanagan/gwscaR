@@ -21,7 +21,7 @@
 #'  LG1     3945850
 #'  LG2     435215
 #' This parameter is used to make multiple plots from the same overall dataset have the same widths.
-#' @return new.dat The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+#' @return The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @seealso Flanagan & Jones 2017
 #' @export
 fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
@@ -288,7 +288,6 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
 #' @param xlabcol An optional vector of colors for x-axis labels
 #' @param lab.cex Size of the labels
 #' @export
-
 plotting.structure<-function(structure.out, k, pop.order,
                              filename=paste("str.k",k,".jpeg",sep=""),make.file=TRUE,lab.cex=1,
                              plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL,xlabcol=NULL){
@@ -326,11 +325,14 @@ plotting.structure<-function(structure.out, k, pop.order,
 #' Plot covariance matrix from treemix
 #' @param stem The filename basic stem for that run
 #' @param poporder The list of populations in the order to plot them.
+#' @param colors Default to blue, yellow, and red.
 #' @return cp The covariance matrix in the plotting order.
+#' @export
 treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
   if("package:lattice" %in% search() == FALSE || "package:grid" %in% search()==FALSE){
     stop("ERROR: packages lattice and grid must be loaded")
   }
+
   cov<-read.table(gzfile(paste(stem, ".cov.gz", sep = "")), as.is = T, head = T, quote = "", comment.char = "")
   #reorder
   covplot = data.frame(matrix(nrow = nrow(cov), ncol = ncol(cov)))
@@ -338,10 +340,11 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
     for( j in 1:length(poporder)){
 
       covplot[i, j] = cov[which(names(cov)==poporder[i]), which(names(cov)==poporder[j])]
-      rownames(covplot)[i]<-poporder[i]
-      colnames(covplot)[j]<-poporder[j]
+
     }
   }
+  rownames(covplot)<-poporder
+  colnames(covplot)<-poporder
   cp<-as.matrix(covplot)
   cp[lower.tri(cp)]<-NA
   cp[upper.tri(cp)]<-covplot[upper.tri(covplot)]
@@ -360,9 +363,8 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
 
 #' Add a legend to the margins of a multiplot figure
 #' @param ... legend parameters
-#' @return Nothing is returned
-#' @notes Modified from https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
-#' @example
+#' @note Modified from https://stackoverflow.com/questions/3932038/plot-a-legend-outside-of-the-plotting-area-in-base-graphics
+#' @examples
 #' plot(rnorm(50), rnorm(50), col=c("steelblue", "indianred"), pch=c(15,19))
 #' outer.legend("top",legend=c("A","B"),pch=c(15,19),col=c("steelblue", "indianred"),ncol=2)
 #' @export
@@ -375,10 +377,30 @@ outer.legend <- function(...) {
 }
 
 #' Create violin plots with
+#' @param x the data to plot
 #' @param ... legend parameters
+#' @param range The range for plotting
+#' @param h
+#' @param ylim The y-axis limits
+#' @param names Names to plot (default is NULL)
+#' @param horizontal Whether the plot should be horizontal (defaults to FALSE)
+#' @param col Color for violin plots
+#' @param border Border color
+#' @param lty Line type
+#' @param lwd line width
+#' @param rectCol rectangle color
+#' @param colMed median point color
+#' @param pchMed median point size
+#' @param at The location for things
+#' @param add Whether the plot gets added to others (defaults to FALSE)
+#' @param wex Size of something
+#' @param drawRect Whether to add rectangles to violin plots (defaults to TRUE)
+#' @param plot.axes A logical value that determines whether or not to add axes (defaults to TRUE)
+#' @param axis.box A logical value that determines whether the axes should be a box (defaults to FALSE)
+#' @param plot.ann A logical value that determines whether the annotations should be plotted (defaults to TRUE)
 #' @return Optionally returns the summary statistics of the data.
-#' @notes Modified from vioplot() in library(vioplot)
-#' @example
+#' @note Modified from vioplot() in library(vioplot)
+#' @examples
 #' mu<-2
 #' si<-0.6
 #' bimodal<-c(rnorm(1000,-mu,si),rnorm(1000,mu,si))

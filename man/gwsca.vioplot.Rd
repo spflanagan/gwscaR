@@ -12,11 +12,60 @@ gwsca.vioplot(x, ..., range = 1.5, h = NULL, ylim = NULL,
   plot.ann = TRUE)
 }
 \arguments{
+\item{x}{the data to plot}
+
 \item{...}{legend parameters}
+
+\item{range}{The range for plotting}
+
+\item{ylim}{The y-axis limits}
+
+\item{names}{Names to plot (default is NULL)}
+
+\item{horizontal}{Whether the plot should be horizontal (defaults to FALSE)}
+
+\item{col}{Color for violin plots}
+
+\item{border}{Border color}
+
+\item{lty}{Line type}
+
+\item{lwd}{line width}
+
+\item{rectCol}{rectangle color}
+
+\item{colMed}{median point color}
+
+\item{pchMed}{median point size}
+
+\item{at}{The location for things}
+
+\item{add}{Whether the plot gets added to others (defaults to FALSE)}
+
+\item{wex}{Size of something}
+
+\item{drawRect}{Whether to add rectangles to violin plots (defaults to TRUE)}
+
+\item{plot.axes}{A logical value that determines whether or not to add axes (defaults to TRUE)}
+
+\item{axis.box}{A logical value that determines whether the axes should be a box (defaults to FALSE)}
+
+\item{plot.ann}{A logical value that determines whether the annotations should be plotted (defaults to TRUE)}
 }
 \value{
 Optionally returns the summary statistics of the data.
 }
 \description{
 Create violin plots with
+}
+\note{
+Modified from vioplot() in library(vioplot)
+}
+\examples{
+mu<-2
+si<-0.6
+bimodal<-c(rnorm(1000,-mu,si),rnorm(1000,mu,si))
+uniform<-runif(2000,-4,4)
+normal<-rnorm(2000,0,3)
+gwsca.vioplot(bimodal,uniform,normal,col=c("red","blue","green"))
 }

@@ -9,11 +9,9 @@ pcadapt_subset(ped, num_inds, subname)
 \arguments{
 \item{ped}{The ped data.frame or file}
 
-\item{inds}{The number of individuals per population to simulate}
+\item{num_inds}{The number of individuals per population to simulate}
 
-\item{nloc}{The number of loci to simulate}
-
-\item{p}{A vector of average minor allele frequencies per locus to simulate}
+\item{subname}{The name for the subset image file}
 }
 \value{
 A data.frame with ped data

@@ -1,5 +1,5 @@
 #Author: Sarah P. Flanagan (spflanagan.phd@gmail.com)
-#Purpose: Calculate useful population genetics statistics 
+#Purpose: Calculate useful population genetics statistics
 #Package: gwscaR
 
 
@@ -40,10 +40,12 @@ calc.het<-function(vcf.row,pop.list=NULL){
   het<-length(gt[gt %in% c("0/1","1/0")])/length(gt)
   return(as.numeric(het))
 }
-  
+
 
 #' Calculate rho (private alleles)
 #' @note rho=1 if allele in pop j is only found in that pop and at least one ind was genotyped at that site in each pop; rho = 0 otherwise
+#' @param vcf.row A row of a data frame containing vcf-formatted data
+#' @param pop.list A list with the population names (these should be contained within the sample names)
 #' @export
 calc.rho<-function(vcf.row,pop.list){
   pop.alleles<-lapply(pop.list,function(pop){
@@ -90,6 +92,7 @@ sliding.avg<-function(win.start,dat,width){
 #' @param stat the population genetics statistic you want to use. choices are "pi" or "rho"
 #' @param width The width for the sliding window. Default is 250
 #' @param pop.list An optional parameter allowing you to specificy the populations you want to include.
+#' @param nsteps The number of steps in the sliding window
 #' @return A vector with the averaged statistic
 #' @export
 sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
@@ -123,7 +126,7 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
 #' @param vcf.row A row of a vcf file
 #' @param pop.list A list of populations in the order you want them to appear in the matrix
 #' @return fst.tree A neighbor-joining tree from the ape package
-#' @example fst.trees<-list()
+#' @examples fst.trees<-list()
 #' for(vcf.row in 1: nrow(vcf)){
 #'   fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list)) #getting an error
 #' }
@@ -157,9 +160,9 @@ treemix.from.vcf<-function(vcf,pop.list){
   for(i in 1:nrow(vcf)){
     vcf.row<-vcf[i,]
     #tm.df<-as.matrix(t(apply(vcf,1,function(vcf.row){ #freaking apply was giving me weird results
-    all.alleles<-names(table(vcf.alleles(vcf.row))) 
+    all.alleles<-names(table(vcf.alleles(vcf.row)))
     if(length(all.alleles)==2){
-      this.loc<-do.call("cbind",  
+      this.loc<-do.call("cbind",
                         lapply(pop.list,function(pop){
                           pop.vcf.row<-cbind(vcf.row[1:9],vcf.row[grep(pop,colnames(vcf.row))])
                           pop.alleles<-vcf.alleles(pop.vcf.row)
@@ -168,12 +171,12 @@ treemix.from.vcf<-function(vcf,pop.list){
                           if(length(pop.counts)==1){
                             allele<-names(pop.counts)
                             if(grep(allele,all.alleles)==1){ #maintain order
-                              tm.pop<-paste(pop.counts[[1]],0,sep=",") 
+                              tm.pop<-paste(pop.counts[[1]],0,sep=",")
                             }else{
                               tm.pop<-paste(0,pop.counts[[1]],sep=",") }
                           }
                           if(length(pop.counts)==2){
-                            tm.pop<-paste(pop.counts[[all.alleles[1]]],pop.counts[[all.alleles[2]]],sep=",") 
+                            tm.pop<-paste(pop.counts[[all.alleles[1]]],pop.counts[[all.alleles[2]]],sep=",")
                           }
                           return(tm.pop)
                         }))

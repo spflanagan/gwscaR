@@ -7,13 +7,13 @@
 fst.two.vcf(vcf1.row, vcf2, match.index, cov.thresh = 0.2)
 }
 \arguments{
+\item{vcf1.row}{A row of a data.frame containing genotype information in vcf format}
+
 \item{vcf2}{A data.frame containing genotype information in vcf format (for another set of individuals/samples)}
 
 \item{match.index}{The name of the column that should be used to pair the two vcfs (I usually create a new column in which Chrom and Pos are concatenated)}
 
 \item{cov.thresh}{A coverage threshold specifying the proportion of individuals that should be included in each population. The default is 0.2}
-
-\item{vcf1}{A data.frame containing genotype information in vcf format}
 }
 \value{
 A data.frame with the columns:

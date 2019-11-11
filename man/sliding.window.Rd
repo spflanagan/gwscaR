@@ -17,6 +17,8 @@ sliding.window(vcf, chr, stat = "pi", width = 250, pop.list = NULL,
 \item{width}{The width for the sliding window. Default is 250}
 
 \item{pop.list}{An optional parameter allowing you to specificy the populations you want to include.}
+
+\item{nsteps}{The number of steps in the sliding window}
 }
 \value{
 A vector with the averaged statistic
