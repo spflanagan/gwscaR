@@ -17,3 +17,8 @@ co.gt A dataframe with all of the genotypes
 \description{
 Convert a vcf df to a coancestry input file
 }
+\examples{
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
+co.gts<-vcf2coanGT(vcf,"coancestry_gty.txt")
+}

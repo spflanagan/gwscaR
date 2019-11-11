@@ -10,7 +10,7 @@ fst.sig(fst.df)
 \item{fst.df}{A data.frame containing at least the following columns: Fst, Num1 (number of individuals genotyped in pop 1), Num2 (number of individuals genotyped in pop2)}
 }
 \value{
-fst.df The same dataframe but with additional columns
+The same dataframe but with additional columns
 }
 \description{
 Find significant loci using chi-square test

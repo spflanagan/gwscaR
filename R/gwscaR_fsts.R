@@ -361,9 +361,11 @@ pairwise.fst<-function(ped,allele1,allele2,pop.order){
 #' @param pop.list2 A list of populations. Same requirements as pop.list1. Individuals from populations in pop.list1 will be compared to individuals in pop.list2.
 #' @param maf.cutoff An optional value for the minimum allele frequency. Must be between 0 and 1 (default is 0.05)
 #' @param cov.thresh Coverage threshold between 0 and 1 (default is 0.2)
+#' @param locus.info A vector of column names that contain the information for the vcf loci (by default, if not specified, is the first 9 columns of vcf)
 #' @return mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.
 #' @export
-calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=0.2) {
+calc.mean.fst <- function(vcf,pop.list1,pop.list2, maf.cutoff = 0.05,cov.thresh=0.2,locus.info=NULL) {
+  if(is.null(locus.info)){ locus.info<-colnames(vcf)[1:9] }
   mu<-data.frame(Chrom=vcf$`#CHROM`,Pos=vcf$POS,SNP=vcf$SNP,
                  Sum.Fst=rep(0,nrow(vcf)),Count=rep(0,nrow(vcf)),
                  Mean.Fst=rep(0,nrow(vcf)),stringsAsFactors=FALSE)

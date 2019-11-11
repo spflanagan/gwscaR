@@ -13,6 +13,8 @@ treemix.cov.plot(stem, poporder, colors = c("blue", "yellow", "red"),
 \item{poporder}{The list of populations in the order to plot them.}
 
 \item{colors}{Default to blue, yellow, and red.}
+
+\item{...}{print parameters}
 }
 \value{
 cp The covariance matrix in the plotting order.

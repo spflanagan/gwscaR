@@ -12,7 +12,7 @@ vcf.cov.loc(vcf, subset = NULL)
 \item{subset}{A list of the column names of the individuals to be used (optional)}
 }
 \value{
-cov.dat A data.frame with one row for each locus and 14 columns:
+A data.frame with one row for each locus and 14 columns:
    Chrom: The chromosome
    Pos: The position/BP on the chromosome
    Locus: The Locus ID

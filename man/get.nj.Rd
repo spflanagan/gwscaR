@@ -18,8 +18,11 @@ fst.tree A neighbor-joining tree from the ape package
 Generate a distance matrix for a SNP using fsts
 }
 \examples{
+require(ape)
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
 fst.trees<-list()
 for(vcf.row in 1: nrow(vcf)){
-  fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list)) #getting an error
+  fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list=c("FEM","PRM","OFF")))
 }
 }

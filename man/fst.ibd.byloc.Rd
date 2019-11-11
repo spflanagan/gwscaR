@@ -14,7 +14,7 @@ fst.ibd.byloc(ped.file, dist.mat, pop.order)
 \item{pop.order}{A list with the order for the populations}
 }
 \value{
-results.mantel A data.frame with two columns containing the mantel test results
+A data.frame with two columns containing the mantel test results
 }
 \description{
 Calculate isolation by distance per locus

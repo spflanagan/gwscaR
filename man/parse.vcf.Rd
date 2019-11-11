@@ -10,10 +10,13 @@ parse.vcf(filename)
 \item{filename}{The name of the vcf file}
 }
 \value{
-a dataframe containing the contents of the vcf file, including headers.
+A dataframe containing the contents of the vcf file, including headers.
 }
 \description{
 Read in a vcf file
+}
+\examples{
+vcf<-parse.vcf(system.file("extdata/example.vcf.txt",package = "gwscaR"))
 }
 \seealso{
 Flanagan & Jones 2017

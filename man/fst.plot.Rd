@@ -39,6 +39,8 @@ This parameter is used to make multiple plots from the same overall dataset have
 \item{pt.cols}{The color of the points. The default is c("darkgrey","lightgrey").}
 
 \item{pt.cex}{The size of the points}
+
+\item{...}{plot parameters}
 }
 \value{
 The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.

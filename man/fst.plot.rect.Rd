@@ -43,9 +43,13 @@ e.g.:
  LG1     3945850
  LG2     435215
 This parameter is used to make multiple plots from the same overall dataset have the same widths.}
+
+\item{pt.cex}{The size of the points. Default is 0.5.}
+
+\item{...}{plot parameters}
 }
 \value{
-xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 }
 \description{
 Plot genome-wide statistics from a data frame with rectangles.

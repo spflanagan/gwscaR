@@ -16,7 +16,7 @@ pst.mantel(trait.df, comp.df, id.index, pop.order)
 \item{pop.order}{A vector of population names in the order you want them.}
 }
 \value{
-results.mantel A data.frame with the results of the mantel test
+A data.frame with the results of the mantel test
 }
 \description{
 Calulate pairwise Psts and test for IBD

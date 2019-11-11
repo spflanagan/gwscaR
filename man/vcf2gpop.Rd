@@ -21,3 +21,10 @@ gpop A dataframe in genepop format
 \description{
 Convert a vcf df to a genepop file
 }
+\examples{
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
+gpop<-vcf2gpop(vcf,
+    pop.list=c("FEM","PRM","OFF"),
+    gpop.name="out.genepop")
+}

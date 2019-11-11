@@ -17,3 +17,8 @@ co.afs A dataframe with all of the allele frequencies
 \description{
 Convert a vcf df to a coancestry input file
 }
+\examples{
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
+co.afs<-vcf2coanAF(vcf,"coancestry_afs.txt")
+}

@@ -10,7 +10,7 @@ calc.pi(vcf.row)
 \item{vcf.row}{A row of a vcf file; use this in conjunction with apply}
 }
 \value{
-pi The nucleotide diversity at that site
+The nucleotide diversity at that site
 }
 \description{
 sliding window pi and rho - across all snps
@@ -21,4 +21,9 @@ pi = 1-sum((ni choose 2)/(n choose i)); ni is number of alleles i in sample, n =
 Jones et al. (2012) used 2500bp sliding windows with a step size 500bp<-more than just SNPs, but I'll just focus on SNPs
 
 Hohenlohe did a similar thing and weighted pi by all nt sites (not just SNPs) but rho by SNPs only
+}
+\examples{
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
+all.pi<-apply(vcf,1,calc.pi)
 }

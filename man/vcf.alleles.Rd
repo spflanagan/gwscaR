@@ -10,7 +10,7 @@ vcf.alleles(vcf.row)
 \item{vcf.row}{A vcf row (containing only the individuals and locus info)}
 }
 \value{
-al1 A list of alleles
+A vector of alleles
 }
 \description{
 Extract alleles from a vcf row

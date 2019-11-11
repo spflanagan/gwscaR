@@ -12,11 +12,16 @@ calc.het(vcf.row, pop.list = NULL)
 \item{pop.list}{A list of population strings to search for to subset vcf (pop names must be in individual ID names)}
 }
 \value{
-het Observed heterozygosity
+Observed heterozygosity
 }
 \description{
 calculate observed heterozygosity
 }
 \note{
 proportion of diploid genotypes in the sample that are heterozygotes (Hohenlohe et al 2010)
+}
+\examples{
+vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+vcf<-parse.vcf(vcf.file)
+all.het<-apply(vcf,1,calc.het)
 }

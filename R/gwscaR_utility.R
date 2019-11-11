@@ -55,7 +55,12 @@ choose.one.snp<-function(vcf){
 #' @param gpop.name A name for the output genepop file
 #' @return gpop A dataframe in genepop format
 #' @export
-#' @example gpop<-vcf2gpop(vcf,pop.list=c("TXSP","TXCC","TXFW","TXCB","LAFW","ALST","ALFW","FLSG","FLKB","FLFD","FLSI","FLAB","FLPB","FLHB","FLCC","FLLG")),"out.genepop")
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' gpop<-vcf2gpop(vcf,
+#'     pop.list=c("FEM","PRM","OFF"),
+#'     gpop.name="out.genepop")
 vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP column
   locusids<-paste(vcf$`#CHROM`,as.character(vcf$POS),sep="_")
   locusids<-gsub("\\.","_",locusids)
@@ -101,7 +106,10 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
 #' @param out.name A name for a an output file (default is coancestry_afs.txt)
 #' @return co.afs A dataframe with all of the allele frequencies
 #' @export
-#' @example co.afs<-vcf2coanAF(vcf,"coancestry_afs.txt")
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' co.afs<-vcf2coanAF(vcf,"coancestry_afs.txt")
 vcf2coanAF<-function(vcf,out.name="coancestry_afs.txt"){
   co.afs<-do.call(rbind,apply(vcf,1,function(vcf.row,out.name){
     af<-calc.afs.vcf(vcf.row)
@@ -123,7 +131,10 @@ vcf2coanAF<-function(vcf,out.name="coancestry_afs.txt"){
 #' @param out.name A name for a an output file (default is coancestry_gty.txt)
 #' @return co.gt A dataframe with all of the genotypes
 #' @export
-#' @example co.gts<-vcf2coanGT(vcf,"coancestry_gty.txt")
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' co.gts<-vcf2coanGT(vcf,"coancestry_gty.txt")
 vcf2coanGT<-function(vcf,out.name="coancestry_gty.txt"){
   gts<-extract.gt.vcf(vcf)
   co.gt<-do.call(cbind,apply(gts,1,function(gt){

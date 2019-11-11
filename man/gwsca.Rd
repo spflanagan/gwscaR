@@ -21,7 +21,7 @@ gwsca(vcf, locus.info, group1, group2, prop.ind.thresh = 0.5,
 \item{maf.cutoff}{A minimum allele frequency cutoff (default is 0.05)}
 }
 \value{
-sel A dataframe with the Fst values and Chi-squared values
+A dataframe with the Fst values and Chi-squared values
 }
 \description{
 Conduct selection components analysis

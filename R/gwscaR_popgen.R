@@ -8,8 +8,11 @@
 #' @note Jones et al. (2012) used 2500bp sliding windows with a step size 500bp<-more than just SNPs, but I'll just focus on SNPs
 #' @note Hohenlohe did a similar thing and weighted pi by all nt sites (not just SNPs) but rho by SNPs only
 #' @param vcf.row A row of a vcf file; use this in conjunction with apply
-#' @return pi The nucleotide diversity at that site
-#' @example all.pi<-apply(vcf,1,calc.pi)
+#' @return The nucleotide diversity at that site
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' all.pi<-apply(vcf,1,calc.pi)
 #' @export
 calc.pi<-function(vcf.row){
   alleles<-vcf.alleles(vcf.row)
@@ -23,8 +26,11 @@ calc.pi<-function(vcf.row){
 #' @note proportion of diploid genotypes in the sample that are heterozygotes (Hohenlohe et al 2010)
 #' @param vcf.row A row of a vcf file, used in conjunction with apply
 #' @param pop.list A list of population strings to search for to subset vcf (pop names must be in individual ID names)
-#' @return het Observed heterozygosity
-#' @example all.het<-apply(vcf,1,calc.het)
+#' @return Observed heterozygosity
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' all.het<-apply(vcf,1,calc.het)
 #' @export
 calc.het<-function(vcf.row,pop.list=NULL){
   if(is.null(pop.list)){
@@ -126,12 +132,17 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
 #' @param vcf.row A row of a vcf file
 #' @param pop.list A list of populations in the order you want them to appear in the matrix
 #' @return fst.tree A neighbor-joining tree from the ape package
-#' @examples fst.trees<-list()
+#' @examples
+#' require(ape)
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' vcf<-parse.vcf(vcf.file)
+#' fst.trees<-list()
 #' for(vcf.row in 1: nrow(vcf)){
-#'   fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list)) #getting an error
+#'   fst.trees<-c(fst.trees,get.nj(vcf[vcf.row,],pop.list=c("FEM","PRM","OFF")))
 #' }
 #' @export
 get.nj<-function(vcf.row,pop.list){
+  requireNamespace("ape")
   if("package:ape" %in% search() == FALSE){
     stop("ERROR: You must load the package ape for get.dist() to run.")
   }
@@ -146,7 +157,7 @@ get.nj<-function(vcf.row,pop.list){
   }
   colnames(fst.matrix)<-pop.list
   rownames(fst.matrix)<-pop.list
-  fst.nj<-ape::njs(as.dist(t(fst.matrix)))
+  fst.nj<-ape::njs(stats::as.dist(t(fst.matrix)))
   return(fst.nj)
 }
 
@@ -192,14 +203,14 @@ treemix.from.vcf<-function(vcf,pop.list){
 #' @param ped.file A data.frame in ped format
 #' @param dist.mat A distance matrix containing the geeographic distances between populations
 #' @param pop.order A list with the order for the populations
-#' @return results.mantel A data.frame with two columns containing the mantel test results
+#' @return A data.frame with two columns containing the mantel test results
 #' @export
 fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
   results.mantel<-data.frame()
   for(i in seq(7,ncol(ped.file),2)){
     res<-ade4::mantel.rtest(
-      as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
-      as.dist(t(dist.mat)), nrepet=9999)
+      stats::as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
+      stats::as.dist(t(dist.mat)), nrepet=9999)
     results.mantel<-rbind(results.mantel,cbind(res$obs,res$pvalue))
   }
   results.mantel<-as.data.frame(results.mantel)
@@ -210,7 +221,7 @@ fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
 #' Calculate pairwise Pst between population pairs
 #' @param dat A dataframe with the trait values, first column must be the pop ID
 #' @param pop.order A list of the order of the populations
-#' @return dat.var A data.frame with the pairwise Pst values
+#' @return A data.frame with the pairwise Pst values
 #' @export
 pairwise.pst<-function(dat, pop.order){
   #first column must be pop id/grouping factor
@@ -247,7 +258,7 @@ pairwise.pst<-function(dat, pop.order){
 #' @param comp.df A dataframe with the distance values
 #' @param id.index The index value for the trait being calculated
 #' @param pop.order A vector of population names in the order you want them.
-#' @return results.mantel A data.frame with the results of the mantel test
+#' @return A data.frame with the results of the mantel test
 #' @export
 pst.mantel<-function(trait.df,comp.df,id.index,pop.order){
   results.mantel<-data.frame()
@@ -269,7 +280,7 @@ pst.mantel<-function(trait.df,comp.df,id.index,pop.order){
 #' @param trait.df A data.frame containing all of the traits data
 #' @param pop.order An order in which the populations should be analyzed
 #' @param trait.ind The trait index in the trait.df
-#' @return results.list A dataframe containing the restuls of the mantel test (one column for observations and one for p-values)
+#' @return A dataframe containing the restuls of the mantel test (one column for observations and one for p-values)
 #' @export
 fst.pst.byloc<-function(ped.file,trait.df,pop.order,trait.ind){
   results.list<-list()
@@ -277,8 +288,8 @@ fst.pst.byloc<-function(ped.file,trait.df,pop.order,trait.ind){
     results.mantel<-data.frame()
     for(i in seq(7,ncol(ped.file),2)){
       res<-ade4::mantel.rtest(
-        as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
-        as.dist(t(pairwise.pst(trait.df[,c(trait.ind,j)],pop.order))),
+        stats::as.dist(t(pairwise.fst(ped.file,i,i+1,pop.order))),
+        stats::as.dist(t(pairwise.pst(trait.df[,c(trait.ind,j)],pop.order))),
         nrepet=9999)
       results.mantel<-rbind(results.mantel,cbind(res$obs,res$pvalue))
     }

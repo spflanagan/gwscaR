@@ -3,8 +3,8 @@
 
 #' Read in a vcf file
 #' @param filename The name of the vcf file
-#' @return a dataframe containing the contents of the vcf file, including headers.
-#' @example vcf<-parse.vcf(system.file("extdata/example.vcf",package = "gwscaR"))
+#' @return A dataframe containing the contents of the vcf file, including headers.
+#' @examples vcf<-parse.vcf(system.file("extdata/example.vcf.txt",package = "gwscaR"))
 #' @seealso Flanagan & Jones 2017
 #' @export
 parse.vcf<-function(filename){
@@ -19,7 +19,7 @@ parse.vcf<-function(filename){
 #' Calculate per-locus coverage from a vcf file
 #' @param vcf A data.frame containing data in vcf format.
 #' @param subset A list of the column names of the individuals to be used (optional)
-#' @return cov.dat A data.frame with one row for each locus and 14 columns:
+#' @return A data.frame with one row for each locus and 14 columns:
 #'    Chrom: The chromosome
 #'    Pos: The position/BP on the chromosome
 #'    Locus: The Locus ID
@@ -78,7 +78,7 @@ vcf.cov.loc<-function(vcf,subset=NULL){
 
 #' Calculate per-individual coverage from a vcf file
 #' @param vcf A data.frame containing data in vcf format.
-#' @return icov A data.frame with one row for each individual and columns:
+#' @return A data.frame with one row for each individual and columns:
 #'    NumMissing: The number of missing loci
 #'    NumPresent: The number of loci genotyped in this individual
 #'    AvgCovRef: The average coverage for reference alleles across all genotyped loci in this individual
@@ -160,7 +160,7 @@ calc.afs.vcf<-function(vcf.row){
 
 #' Extract alleles from a vcf row
 #' @param vcf.row A vcf row (containing only the individuals and locus info)
-#' @return al1 A list of alleles
+#' @return A vector of alleles
 #' @export
 vcf.alleles<-function(vcf.row){
   gt1<-unlist(lapply(vcf.row,function(x){
@@ -200,7 +200,7 @@ extract.gt.vcf<-function(vcf){
 #' A function to infer maternal alleles from a vcf file
 #' @param dad.kid A data.frame with two columns, each one with matching father and offspring IDs
 #' @param vcf A data.frame with genomic data in vcf format
-#' @return mat A data.frame of inferred maternal alleles
+#' @return A data.frame of inferred maternal alleles
 #' @export
 infer.mat.alleles<-function(dad.kid, vcf){
   #dad.kid<-read.table("both.dad.kid.pairs.txt")
@@ -244,7 +244,7 @@ infer.mat.alleles<-function(dad.kid, vcf){
 #' @param vcf1 A dataframe with genomic data in vcf format
 #' @param vcf2 A dataframe with genomic data in vcf format
 #' @param vcf.name A name for a file with the new vcf file (default is merge.vcf)
-#' @return vcf A new data.frame in vcf format
+#' @return A new data.frame in vcf format
 #' @export
 combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf1<-extract.gt.vcf(vcf1)
@@ -262,7 +262,7 @@ combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
   vcf<-vcf[,!(colnames(vcf) %in% drops)]
   colnames(vcf)[1:9]<-colnames(vcf1)[1:9]
   if(vcf.name!=""){
-    write.table(vcf,vcf.name,col.names=T,row.names=F,
+    utils::write.table(vcf,vcf.name,col.names=T,row.names=F,
               quote=F,sep='\t')
   }
   return(vcf)
@@ -270,13 +270,13 @@ combine.vcfs<-function(vcf1,vcf2, vcf.name="merge.vcf"){
 
 #' Find significant loci using chi-square test
 #' @param fst.df A data.frame containing at least the following columns: Fst, Num1 (number of individuals genotyped in pop 1), Num2 (number of individuals genotyped in pop2)
-#' @return fst.df The same dataframe but with additional columns
+#' @return The same dataframe but with additional columns
 #' @export
 fst.sig<-function(fst.df){
   fst.df<-fst.df[!is.na(fst.df$Fst),]
   fst.df$Chi<-2*((fst.df$Num1+fst.df$Num2)/2)*fst.df$Fst
-  fst.df$Chi.p<-1-pchisq(fst.df$Chi,1)
-  fst.df$Chi.p.adj<-p.adjust(fst.df$Chi.p,method="BH")
+  fst.df$Chi.p<-1-stats::pchisq(fst.df$Chi,1)
+  fst.df$Chi.p.adj<-stats::p.adjust(fst.df$Chi.p,method="BH")
   return(fst.df)
 }
 
@@ -287,7 +287,7 @@ fst.sig<-function(fst.df){
 #' @param group2 A list of column names with individuals from the second group
 #' @param prop.ind.thresh A proportion of indidivudals requried in each population (default is 0.5)
 #' @param maf.cutoff A minimum allele frequency cutoff (default is 0.05)
-#' @return sel A dataframe with the Fst values and Chi-squared values
+#' @return A dataframe with the Fst values and Chi-squared values
 #' @export
 gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05){
   sel<-do.call(rbind,apply(vcf,1,fst.one.vcf,group1=c(locus.info,group1),group2=c(locus.info,group2),

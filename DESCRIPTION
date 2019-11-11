@@ -12,7 +12,8 @@ LazyData: TRUE
 Imports:
   nlme,
   ade4,
-  sm
+  sm,
+  ape
 Suggests:
     knitr,
     rmarkdown

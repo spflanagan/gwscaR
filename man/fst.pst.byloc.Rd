@@ -16,7 +16,7 @@ fst.pst.byloc(ped.file, trait.df, pop.order, trait.ind)
 \item{trait.ind}{The trait index in the trait.df}
 }
 \value{
-results.list A dataframe containing the restuls of the mantel test (one column for observations and one for p-values)
+A dataframe containing the restuls of the mantel test (one column for observations and one for p-values)
 }
 \description{
 Compare Pst and Fst locus by locus from a ped file

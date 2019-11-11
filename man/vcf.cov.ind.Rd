@@ -10,7 +10,7 @@ vcf.cov.ind(vcf)
 \item{vcf}{A data.frame containing data in vcf format.}
 }
 \value{
-icov A data.frame with one row for each individual and columns:
+A data.frame with one row for each individual and columns:
    NumMissing: The number of missing loci
    NumPresent: The number of loci genotyped in this individual
    AvgCovRef: The average coverage for reference alleles across all genotyped loci in this individual

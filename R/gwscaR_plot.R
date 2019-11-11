@@ -21,6 +21,7 @@
 #'  LG1     3945850
 #'  LG2     435215
 #' This parameter is used to make multiple plots from the same overall dataset have the same widths.
+#' @param ... plot parameters
 #' @return The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @seealso Flanagan & Jones 2017
 #' @export
@@ -91,13 +92,13 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
   colors<-data.frame(lg=as.character(new.dat[,chrom.name]),col=rep(pt.cols[1],nrow(new.dat)),
                      stringsAsFactors = F)
   colors[as.numeric(factor(colors$lg,levels=scaffs.to.plot))%%2==0,"col"]<-pt.cols[2] #defining the levels maintains the order
-  plot(new.dat$plot.pos,new.dat[,fst.name],
+  graphics::plot(new.dat$plot.pos,new.dat[,fst.name],
        xlim=c(x.min,x.max),ylim=y.lim,...,
        cex=pt.cex, col=colors$col,
        bty="n",axes=F, xlab="", ylab="")
   #optionally add the y-axis
   if(axis.size>0){
-    axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
+    graphics::axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
                      round((y.lim[2]-y.lim[1])/2, digits=2)),
          ylim =y.lim, pos=0,
          labels=seq(round(y.lim[1],2),round(y.lim[2],2),
@@ -115,7 +116,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
       xlab.indices<-which(scaffs.to.plot %in% xlabels)
     }
     for(i in 1:length(xlabels)){
-      text(x=median(new.dat[new.dat[,chrom.name] %in% scaffs.to.plot[xlab.indices[i]],"plot.pos"]),
+      graphics::text(x=stats::median(new.dat[new.dat[,chrom.name] %in% scaffs.to.plot[xlab.indices[i]],"plot.pos"]),
            y=(y.lim[1]-((y.lim[2]-y.lim[1])/20)),
            labels=xlabels[i],adj=1,xpd=TRUE,cex=as.numeric(axis.size))
     }
@@ -131,6 +132,7 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
 #' @param sig.col A vector containing two color values, the first for points above the upper cutoff value and the second for points below the lower cutoff value.
 #' The defaults are red and yellow.
 #' @param pt.col The color of the points. The default is grey7.
+#' @param pt.cex The size of the points. Default is 0.5.
 #' @param fst.name The name of the column containing the statistic to be plotted. Default is "Fst".
 #' @param chrom.name The name of the column containing the chromosome information for each locus. Default is "Chrom".
 #' @param bp.name The name of the column containing the basepair information for each locus. Default is "BP".
@@ -145,7 +147,8 @@ fst.plot<-function(fst.dat,scaffold.widths=NULL,scaffs.to.plot=NULL,
 #'  LG1     3945850
 #'  LG2     435215
 #' This parameter is used to make multiple plots from the same overall dataset have the same widths.
-#' @return xes The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
+#' @param ... plot parameters
+#' @return The fst.dat data frame with new values in BP, scaled to be the sequence in which points are plotted based on their position on the chromosome and the order the chromosomes are plotted in.
 #' @seealso Flanagan & Jones 2017
 #' @export
 fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="grey7",
@@ -231,7 +234,7 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
     y.lim<-c(y.min,y.max)
   }
   displacement<-y.lim[1]-((y.lim[2]-y.lim[1])/30)
-  plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
+  graphics::plot(c(x.min,x.max),y.lim,xlim=c(x.min,x.max),
        ylim=y.lim, col=pt.col,...,
        bty="n",type="n",	axes=F, xlab="", ylab="")
   for(i in 1:nrow(rect.xs)){
@@ -240,30 +243,30 @@ fst.plot.rect<-function(fst.dat,ci.dat=NULL, sig.col=c("red","yellow"),pt.col="g
     } else {
       rect.color<-"gray75"
     }
-    rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2],
+    graphics::rect(rect.xs[i,1],y.lim[1],rect.xs[i,2],y.lim[2],
          col=rect.color, border=NA)
     if(print.names==T){
-      text(x=mean(rect.xs[i,]),
+      graphics::text(x=mean(rect.xs[i,]),
            y=displacement,labels=rownames(rect.xs)[i],
            adj=1,xpd=T,srt=45)
     }
   }
   for(i in 1:length(all.scaff)){
-    points(all.scaff[[i]][,bp.name],
+    graphics::points(all.scaff[[i]][,bp.name],
            all.scaff[[i]][,fst.name],
            pch=19, cex=pt.cex,col=pt.col,
            xlim=c(x.min,x.max),ylim=y.lim)
     if(!is.null(ci.dat)){
       temp.sig<-all.scaff[[i]][all.scaff[[i]][,fst.name] >= ci.dat[1],]
-      points(temp.sig[,bp.name], temp.sig[,fst.name],
+      graphics::points(temp.sig[,bp.name], temp.sig[,fst.name],
              col=sig.col[1], pch=19, cex=0.5)
       temp.sig<-all.scaff[[i]][all.scaff[[i]][,fst.name] <= ci.dat[2],]
-      points(temp.sig[,bp.name], temp.sig[,fst.name],
+      graphics::points(temp.sig[,bp.name], temp.sig[,fst.name],
              col=sig.col[2], pch=19, cex=0.5)
     }
   }
   if(axis.size>0){
-    axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
+    graphics::axis(2, at = seq(round(y.lim[1],2),round(y.lim[2],2),
                      round((y.lim[2]-y.lim[1])/2, digits=2)),
          ylim =y.lim, pos=0,
          labels=seq(round(y.lim[1],2),round(y.lim[2],2),
@@ -326,6 +329,7 @@ plotting.structure<-function(structure.out, k, pop.order,
 #' @param stem The filename basic stem for that run
 #' @param poporder The list of populations in the order to plot them.
 #' @param colors Default to blue, yellow, and red.
+#' @param ... print parameters
 #' @return cp The covariance matrix in the plotting order.
 #' @export
 treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
@@ -380,7 +384,7 @@ outer.legend <- function(...) {
 #' @param x the data to plot
 #' @param ... legend parameters
 #' @param range The range for plotting
-#' @param h
+#' @param h The height of the density estimator (in sm.density), if ommitted h will be set to an optimum
 #' @param ylim The y-axis limits
 #' @param names Names to plot (default is NULL)
 #' @param horizontal Whether the plot should be horizontal (defaults to FALSE)
@@ -401,6 +405,7 @@ outer.legend <- function(...) {
 #' @return Optionally returns the summary statistics of the data.
 #' @note Modified from vioplot() in library(vioplot)
 #' @examples
+#' library(sm)
 #' mu<-2
 #' si<-0.6
 #' bimodal<-c(rnorm(1000,-mu,si),rnorm(1000,mu,si))
@@ -412,7 +417,7 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
                         col="magenta", border="black", lty=1, lwd=1, rectCol="black", colMed="white", pchMed=19, at, add=FALSE, wex=1,
                         drawRect=TRUE,plot.axes=TRUE,axis.box=FALSE,plot.ann=TRUE)
 {
-  require(sm)
+  requireNamespace("sm")
   # process multiple datas
   datas <- list(x,...)
   n <- length(datas)

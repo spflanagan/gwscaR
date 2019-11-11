@@ -8,7 +8,9 @@
 #' @param whitelist Optional list of SNPs to include in the output file. If not provided, all SNPs in the vcf will be output.
 #' @param outgroup Optional 2-column dataframe containing ingroup (column 1) and outgroup (column 2) sequences. If not provided, both will be "---".
 #' @return a dataframe containing the contents of the vcf file, including headers.
-#' @example dadi<-vcf2dadiSNPs(system.file("extdata/example.vcf",package = "gwscaR"))
+#' @examples
+#' vcf.file<-system.file("extdata", "example.vcf.txt",package = "gwscaR")
+#' dadi<-vcf2dadiSNPs(vcf.file)
 #' @seealso Gutenkunst et al. 2013
 #' @export
 vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NULL,outgroup=NA){

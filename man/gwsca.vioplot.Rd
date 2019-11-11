@@ -18,6 +18,8 @@ gwsca.vioplot(x, ..., range = 1.5, h = NULL, ylim = NULL,
 
 \item{range}{The range for plotting}
 
+\item{h}{The height of the density estimator (in sm.density), if ommitted h will be set to an optimum}
+
 \item{ylim}{The y-axis limits}
 
 \item{names}{Names to plot (default is NULL)}
@@ -62,6 +64,7 @@ Create violin plots with
 Modified from vioplot() in library(vioplot)
 }
 \examples{
+library(sm)
 mu<-2
 si<-0.6
 bimodal<-c(rnorm(1000,-mu,si),rnorm(1000,mu,si))

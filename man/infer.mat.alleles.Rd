@@ -12,7 +12,7 @@ infer.mat.alleles(dad.kid, vcf)
 \item{vcf}{A data.frame with genomic data in vcf format}
 }
 \value{
-mat A data.frame of inferred maternal alleles
+A data.frame of inferred maternal alleles
 }
 \description{
 A function to infer maternal alleles from a vcf file

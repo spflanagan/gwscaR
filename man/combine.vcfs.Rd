@@ -14,7 +14,7 @@ combine.vcfs(vcf1, vcf2, vcf.name = "merge.vcf")
 \item{vcf.name}{A name for a file with the new vcf file (default is merge.vcf)}
 }
 \value{
-vcf A new data.frame in vcf format
+A new data.frame in vcf format
 }
 \description{
 A function to merge two vcf data frames
