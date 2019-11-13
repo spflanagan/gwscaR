@@ -294,8 +294,8 @@ gwsca<-function(vcf,locus.info,group1,group2,prop.ind.thresh=0.5,maf.cutoff=0.05
     cov.thresh=prop.ind.thresh,maf=maf.cutoff))
   sel<-sel[!is.na(sel$Fst),]
   sel$Chi<-2*((sel$Num1+sel$Num2)/2)*sel$Fst
-  sel$Chi.p<-1-pchisq(sel$Chi,1)
-  sel$Chi.p.adj<-p.adjust(sel$Chi.p,method="BH")
+  sel$Chi.p<-1-stats::pchisq(sel$Chi,1)
+  sel$Chi.p.adj<-stats::p.adjust(sel$Chi.p,method="BH")
   return(sel)
 }
 

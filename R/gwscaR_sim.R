@@ -32,10 +32,10 @@ pcadapt_subset<-function(ped, num_inds,subname){
   }
   pedsub<-ped[ped[,2] %in% keepinds,]
   write.table(pedsub,subname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
-  filename<-read.pcadapt(subname,type="ped")
-  x<-pcadapt(filename,K=10, min.maf=0.001)
+  filename<-pcadapt::read.pcadapt(subname,type="ped")
+  x<-pcadapt::pcadapt(filename,K=10, min.maf=0.001)
   png(gsub("ped","png",subname),height=7,width=7,units="in",res=300)
-  plot(x,option="scores",pop=pedsub[,1])#K=6
+  graphics::plot(x,option="scores",pop=pedsub[,1])#K=6
   dev.off()
   return(x)
 }
@@ -70,20 +70,20 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
   {
     print("simulating different allele frequencies for each population")
     frqs<-lapply(p,function(f){
-      x<-rnorm(f,n=nloc,sd=f)
+      x<-stats::rnorm(f,n=nloc,sd=f)
       z<-unlist(lapply(x,function(y){ #keeps it between 0 and 1
         while(y < 0 | y > 1){
-          y<-rnorm(f,n=1,sd=f)
+          y<-stats::rnorm(f,n=1,sd=f)
         }
         return(y)
       }))
       return(z)
     })
   }else{
-    x<-rnorm(p,n=nloc,sd=p)
+    x<-stats::rnorm(p,n=nloc,sd=p)
     frqs<-unlist(lapply(x,function(y){ #keeps it between 0 and 1
       while(y < 0 | y > 1){
-        y<-rnorm(p,n=1,sd=p)
+        y<-stats::rnorm(p,n=1,sd=p)
       }
       return(y)
     }))
@@ -100,19 +100,19 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
 
     #simulate alleles
     if(length(p)>1){
-      al1<-unlist(lapply(frqs,function(f){ rbinom(f[(n+1)/2],n=inds,size=1) } ))
-      al2<-unlist(lapply(frqs,function(f){ rbinom(f[(n+1)/2],n=inds,size=1) } ))
+      al1<-unlist(lapply(frqs,function(f){ stats::rbinom(f[(n+1)/2],n=inds,size=1) } ))
+      al2<-unlist(lapply(frqs,function(f){ stats::rbinom(f[(n+1)/2],n=inds,size=1) } ))
     }else{
       al1<-al2<-NULL
       for(i in 1:npops){
-        al1<-c(al1,rbinom(frqs[(n+1)/2],n=inds,size=1))
-        al2<-c(al2,rbinom(frqs[(n+1)/2],n=inds,size=1))
+        al1<-c(al1,stats::rbinom(frqs[(n+1)/2],n=inds,size=1))
+        al2<-c(al2,stats::rbinom(frqs[(n+1)/2],n=inds,size=1))
       }
 
     }
 
-    if(rbinom(1,1,0.5)==0){ #randomly decide if it's going to be G/C or A/T locus
-      if(rbinom(1,1,0.5)==0){ #randomly decide if major allele is G
+    if(stats::rbinom(1,1,0.5)==0){ #randomly decide if it's going to be G/C or A/T locus
+      if(stats::rbinom(1,1,0.5)==0){ #randomly decide if major allele is G
         al1[al1==0]<-"G"
         al1[al1==1]<-"C"
         al2[al2==0]<-"G"
@@ -124,7 +124,7 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
         al2[al2==1]<-"G"
       }
     }else{
-      if(rbinom(1,1,0.5)==0){ #randomly decide if major allele is A
+      if(stats::rbinom(1,1,0.5)==0){ #randomly decide if major allele is A
         al1[al1==0]<-"A"
         al1[al1==1]<-"T"
         al2[al2==0]<-"A"
@@ -140,14 +140,14 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
     simped[,col1]<-al1
     simped[,col2]<-al2
   }
-  write.table(simped,outname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
+  utils::write.table(simped,outname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
 
   if(isTRUE(analyze)){
     # now run pcadapt
-    filename<-read.pcadapt(outname,type="ped")
-    x<-pcadapt(filename,K=20,min.maf=0.001)
+    filename<-pcadapt::read.pcadapt(outname,type="ped")
+    x<-pcadapt::pcadapt(filename,K=20,min.maf=0.001)
     png(paste(outname,".png",sep=""),height = 7, width = 7, units="in",res=300)
-    plot(x,option="scores",pop=simped[,1])
+    graphics::plot(x,option="scores",pop=simped[,1])
     dev.off()
   }
 

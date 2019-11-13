@@ -5,7 +5,7 @@
 \title{Calculate mean pairwise Fsts}
 \usage{
 calc.mean.fst(vcf, pop.list1, pop.list2, maf.cutoff = 0.05,
-  cov.thresh = 0.2)
+  cov.thresh = 0.2, locus.info = NULL)
 }
 \arguments{
 \item{vcf}{A data.frame containing the contents of a vcf file}
@@ -17,6 +17,8 @@ calc.mean.fst(vcf, pop.list1, pop.list2, maf.cutoff = 0.05,
 \item{maf.cutoff}{An optional value for the minimum allele frequency. Must be between 0 and 1 (default is 0.05)}
 
 \item{cov.thresh}{Coverage threshold between 0 and 1 (default is 0.2)}
+
+\item{locus.info}{A vector of column names that contain the information for the vcf loci (by default, if not specified, is the first 9 columns of vcf)}
 }
 \value{
 mu A data.frame containing the columns: Chrom, Pos, SNP, Sum.Fst, Count, and Mean.Fst. Sum.Fst is the total sum of Fst values, which are divided by Count (the number of comparisons the locus was present in) to generate Mean.Fst.

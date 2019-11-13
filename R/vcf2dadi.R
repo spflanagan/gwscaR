@@ -88,7 +88,7 @@ vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NUL
   colnames(dadi.snps)<-gsub("_2"," ",colnames(dadi.snps))
   #write to file
   if(!is.null(filename)){
-    write.table(dadi.snps,filename,col.names = TRUE,row.names = FALSE,sep='\t',quote=FALSE)
+    utils::write.table(dadi.snps,filename,col.names = TRUE,row.names = FALSE,sep='\t',quote=FALSE)
   }
   return(dadi.snps)
 }

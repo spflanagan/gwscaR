@@ -224,6 +224,7 @@ fst.ibd.byloc<-function(ped.file,dist.mat,pop.order){
 #' @return A data.frame with the pairwise Pst values
 #' @export
 pairwise.pst<-function(dat, pop.order){
+  requireNamespace("nlme")
   #first column must be pop id/grouping factor
   dat.split<-split(dat, factor(dat[,1]))
   dat.var<-as.data.frame(setNames(
@@ -264,8 +265,8 @@ pst.mantel<-function(trait.df,comp.df,id.index,pop.order){
   results.mantel<-data.frame()
   for(i in 3:ncol(trait.df)){
     res<-ade4::mantel.rtest(
-      as.dist(t(pairwise.pst(trait.df[,c(id.index,i)],pop.order))),
-      as.dist(t(comp.df)), nrepet=9999)
+      stats::as.dist(t(pairwise.pst(trait.df[,c(id.index,i)],pop.order))),
+      stats::as.dist(t(comp.df)), nrepet=9999)
     results.mantel<-rbind(results.mantel,cbind(res$obs,res$pvalue))
   }
   results.mantel<-as.data.frame(results.mantel)

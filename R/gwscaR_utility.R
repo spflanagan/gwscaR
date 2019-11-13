@@ -5,7 +5,7 @@
 #' @export
 std.by.mean<-function(x){
   m<-mean(x)
-  s<-sd(x)
+  s<-stats::sd(x)
   newx<-(x-m)/s
   return(newx)
 }
@@ -15,7 +15,7 @@ std.by.mean<-function(x){
 #' @return sem A value of the standard error of the mean
 #' @export
 sem<-function(x){
-  sem<-sd(x)/sqrt(length(x))
+  sem<-stats::sd(x)/sqrt(length(x))
   return(sem)
 }
 
@@ -73,14 +73,14 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
   gpop[gpop=="1/1" | gpop=="1|1"]<-"0202"
   gpop[gpop=="./." | gpop==".|."]<-"0000"
   #write to file
-  write.table(locusids,gpop.name,sep='\n',quote=FALSE,
+  utils::write.table(locusids,gpop.name,sep='\n',quote=FALSE,
               col.names = paste("Title line: ",gpop.name,sep=""),row.names=FALSE)
   if(!is.null(pop.list)){
     for(i in 1:length(pop.list)){
       pop<-gpop[grep(pop.list[i],rownames(gpop)),,drop=FALSE]
-      write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
+      utils::write.table(paste("POP",pop.list[i],sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
       rownames(pop)<-paste(rownames(pop),",",sep="")
-      write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+      utils::write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
     }
   } else if(!is.null(pop.map)){
     for(i in 1:length(unique(pop.map[,2]))){
@@ -88,9 +88,9 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
       pname<-unique(pop.map[,2])[i]
       pop<-gpop[rownames(gpop) %in% pop.map[pop.map[,2]%in%pname,1],,drop=FALSE]
       if(nrow(pop)>0){
-        write.table(paste("POP",pname,sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
+        utils::write.table(paste("POP",pname,sep=" "),gpop.name,quote=FALSE,col.names = FALSE,row.names=FALSE,append=TRUE)
         rownames(pop)<-paste(rownames(pop),",",sep="")
-        write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
+        utils::write.table(pop,gpop.name,quote=FALSE,col.names=FALSE,row.names=TRUE,sep=" ",append=TRUE)
       }
     }
   } else {
@@ -118,7 +118,7 @@ vcf2coanAF<-function(vcf,out.name="coancestry_afs.txt"){
     aname<-which(bases==vcf.row[["ALT"]])
     co.af<-cbind(round(af$RefFreq,4),round(af$AltFreq,4))
     colnames(co.af)<-c(rname,aname)
-    suppressWarnings(write.table(co.af,out.name,sep='\t',append = TRUE,quote=FALSE,row.names = FALSE,col.names = TRUE))
+    suppressWarnings(utils::write.table(co.af,out.name,sep='\t',append = TRUE,quote=FALSE,row.names = FALSE,col.names = TRUE))
     row.names(co.af)<-vcf.row["ID"]
     colnames(co.af)<-NULL
     return(data.frame(co.af))
@@ -150,6 +150,6 @@ vcf2coanGT<-function(vcf,out.name="coancestry_gty.txt"){
     return(as.data.frame(g))
   }))
 
-  write.table(co.gt,out.name,row.names=TRUE,col.names=FALSE,quote=FALSE,sep='\t')
+  utils::write.table(co.gt,out.name,row.names=TRUE,col.names=FALSE,quote=FALSE,sep='\t')
   return(co.gt)
 }

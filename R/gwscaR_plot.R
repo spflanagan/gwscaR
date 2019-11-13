@@ -305,21 +305,21 @@ plotting.structure<-function(structure.out, k, pop.order,
   }
   if(make.file==TRUE){
     jpeg(filename,width=7, height=1.25, units="in", res=300)
-    par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
+    graphics::par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
   } else {
     if(plot.new==TRUE){
-      par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
+      graphics::par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
     }
   }
   for(i in 1:length(str.split)){
     pop.index<-pop.order[i]
-    barplot(height=as.matrix(t(str.split[[pop.index]][,-1])),
+    graphics::barplot(height=as.matrix(t(str.split[[pop.index]][,-1])),
             beside=FALSE, space=0,	border=NA, col=bar.colors,
             xlab="", ylab="", xaxt='n', yaxt='n')#, new=plot.new)
     if(xlabel==TRUE){
-      mtext(pop.index, 1, line=0.5, cex=lab.cex, outer=F,col=xlabcol[i])}
+      graphics::mtext(pop.index, 1, line=0.5, cex=lab.cex, outer=F,col=xlabcol[i])}
     if(!is.null(ylabel)){
-      if(i == 1) { mtext(ylabel,2,cex=lab.cex) }
+      if(i == 1) { graphics::mtext(ylabel,2,cex=lab.cex) }
     }
   }
   if(make.file==TRUE) {dev.off()}
@@ -337,7 +337,7 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
     stop("ERROR: packages lattice and grid must be loaded")
   }
 
-  cov<-read.table(gzfile(paste(stem, ".cov.gz", sep = "")), as.is = T, head = T, quote = "", comment.char = "")
+  cov<-utils::read.table(gzfile(paste(stem, ".cov.gz", sep = "")), as.is = T, head = T, quote = "", comment.char = "")
   #reorder
   covplot = data.frame(matrix(nrow = nrow(cov), ncol = ncol(cov)))
   for(i in 1:length(poporder)){
@@ -356,12 +356,12 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
   pal<-colorRampPalette(colors)
   ncol=80
   cols<-pal(ncol)
-  cpl<-levelplot(cp,col.regions=cols,alpha.regions=0.7,
+  cpl<-lattice::levelplot(cp,col.regions=cols,alpha.regions=0.7,
                  scales = list(x=list(rot=90),tck = 0),xlab="",ylab="")
   print(cpl,...)
-  trellis.focus("legend", side="right", clipp.off=TRUE, highlight=FALSE)
+  lattice::trellis.focus("legend", side="right", clipp.off=TRUE, highlight=FALSE)
   grid.text("covariance", 0.2, 0, hjust=0.5, vjust=1.2)
-  trellis.unfocus()
+  lattice::trellis.unfocus()
   return(cp)
 }
 
@@ -373,11 +373,11 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
 #' outer.legend("top",legend=c("A","B"),pch=c(15,19),col=c("steelblue", "indianred"),ncol=2)
 #' @export
 outer.legend <- function(...) {
-  opar <- par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0),
+  opar <- graphics::par(fig=c(0, 1, 0, 1), oma=c(0, 0, 0, 0),
               mar=c(0, 0, 0, 0), new=TRUE)
-  on.exit(par(opar))
-  plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
-  legend(...)
+  on.exit(graphics::par(opar))
+  graphics::plot(0, 0, type='n', bty='n', xaxt='n', yaxt='n')
+  graphics::legend(...)
 }
 
 #' Create violin plots with
@@ -522,71 +522,71 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
 
   # setup plot
   if(!add)
-    plot.new()
+    graphics::plot.new()
   if(!horizontal) {
     if(!add){
-      plot.window(xlim = xlim, ylim = ylim)
+      graphics::plot.window(xlim = xlim, ylim = ylim)
       if(plot.axes){
         if(plot.ann){
-          axis(2)
-          axis(1,at = at, label=label )
+          graphics::axis(2)
+          graphics::axis(1,at = at, label=label )
         }else{
-          axis(2,labels=F)
-          axis(1,at = at, labels=F )
+          graphics::axis(2,labels=F)
+          graphics::axis(1,at = at, labels=F )
         }
       }
     }
 
-    if(axis.box){ box() }
+    if(axis.box){ graphics::box() }
     for(i in 1:n) {
       # plot left/right density curve
-      polygon( c(at[i]-height[[i]], rev(at[i]+height[[i]])),
+      graphics::polygon( c(at[i]-height[[i]], rev(at[i]+height[[i]])),
                c(base[[i]], rev(base[[i]])),
                col = col[i], border=border[i], lty=lty, lwd=lwd)
 
       if(drawRect){
         # plot IQR
-        lines( at[c( i, i)], c(lower[i], upper[i]) ,lwd=lwd, lty=lty)
+        graphics::lines( at[c( i, i)], c(lower[i], upper[i]) ,lwd=lwd, lty=lty)
 
         # plot 50% KI box
-        rect( at[i]-boxwidth/2, q1[i], at[i]+boxwidth/2, q3[i], col=rectCol)
+        graphics::rect( at[i]-boxwidth/2, q1[i], at[i]+boxwidth/2, q3[i], col=rectCol)
 
         # plot median point
-        points( at[i], med[i], pch=pchMed, col=colMed )
+        graphics::points( at[i], med[i], pch=pchMed, col=colMed )
       }
     }
 
   }
   else {
     if(!add){
-      plot.window(xlim = ylim, ylim = xlim,bty=axis.bty)
+      graphics::plot.window(xlim = ylim, ylim = xlim,bty=axis.bty)
       if(plot.axes){
         if(plot.ann){
-          axis(2)
-          axis(1,at = at, label=label )
+          graphics::axis(2)
+          graphics::axis(1,at = at, label=label )
         }else{
-          axis(2,labels=F)
-          axis(1,at = at, labels=F )
+          graphics::axis(2,labels=F)
+          graphics::axis(1,at = at, labels=F )
         }
       }
     }
 
-    if(axis.box){ box() }
+    if(axis.box){ graphics::box() }
     for(i in 1:n) {
       # plot left/right density curve
-      polygon( c(base[[i]], rev(base[[i]])),
+      graphics::polygon( c(base[[i]], rev(base[[i]])),
                c(at[i]-height[[i]], rev(at[i]+height[[i]])),
                col = col[i], border=border[i], lty=lty, lwd=lwd)
 
       if(drawRect){
         # plot IQR
-        lines( c(lower[i], upper[i]), at[c(i,i)] ,lwd=lwd, lty=lty)
+        graphics::lines( c(lower[i], upper[i]), at[c(i,i)] ,lwd=lwd, lty=lty)
 
         # plot 50% KI box
-        rect( q1[i], at[i]-boxwidth/2, q3[i], at[i]+boxwidth/2,  col=rectCol)
+        graphics::rect( q1[i], at[i]-boxwidth/2, q3[i], at[i]+boxwidth/2,  col=rectCol)
 
         # plot median point
-        points( med[i], at[i], pch=pchMed, col=colMed )
+        graphics::points( med[i], at[i], pch=pchMed, col=colMed )
       }
     }
   }
