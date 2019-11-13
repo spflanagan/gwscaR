@@ -9,16 +9,16 @@
 #' @export
 pcadapt_subset<-function(ped, num_inds,subname){
   #install and load pcadapt if you haven't already
-  if("pcadapt" %in% rownames(installed.packages())){
+  if("pcadapt" %in% rownames(utils::installed.packages())){
     do.call('library',list("pcadapt"))
   }else{
-    install.packages(package,dependencies = TRUE)
+    utils::install.packages("pcadapt",dependencies = TRUE)
     do.call("library",list("pcadapt"))
   }
   if(ped %in% ls()){
     ped<-ped
   }else if(ped %in% list.files()){
-    ped<-read.delim(ped,)
+    ped<-utils::read.delim(ped)
   }else{
     stop("ped does not exist as an object or a file")
   }
@@ -31,12 +31,12 @@ pcadapt_subset<-function(ped, num_inds,subname){
     keepinds<-unlist(tapply(ped[,2],ped[,1],sample,size=num_inds,replace=FALSE))
   }
   pedsub<-ped[ped[,2] %in% keepinds,]
-  write.table(pedsub,subname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
+  utils::write.table(pedsub,subname,col.names = FALSE,row.names = FALSE,quote=FALSE,sep=" ")
   filename<-pcadapt::read.pcadapt(subname,type="ped")
   x<-pcadapt::pcadapt(filename,K=10, min.maf=0.001)
-  png(gsub("ped","png",subname),height=7,width=7,units="in",res=300)
+  grDevices::png(gsub("ped","png",subname),height=7,width=7,units="in",res=300)
   graphics::plot(x,option="scores",pop=pedsub[,1])#K=6
-  dev.off()
+  grDevices::dev.off()
   return(x)
 }
 
@@ -54,10 +54,10 @@ pcadapt_subset<-function(ped, num_inds,subname){
 popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated.ped",analyze=TRUE,ns=c(12,24,36,48,96)){
 
   #install and load pcadapt if you haven't already
-  if("pcadapt" %in% rownames(installed.packages())){
+  if("pcadapt" %in% rownames(utils::installed.packages())){
     do.call('library',list("pcadapt"))
   }else{
-    install.packages(package,dependencies = TRUE)
+    utils::install.packages("pcadapt",dependencies = TRUE)
     do.call("library",list("pcadapt"))
   }
   #create ped first columns
@@ -146,9 +146,9 @@ popgen.sim<-function(npops=8,inds=10,nloc=10000,p=rep(0.01,8),outname="simulated
     # now run pcadapt
     filename<-pcadapt::read.pcadapt(outname,type="ped")
     x<-pcadapt::pcadapt(filename,K=20,min.maf=0.001)
-    png(paste(outname,".png",sep=""),height = 7, width = 7, units="in",res=300)
+    grDevices::png(paste(outname,".png",sep=""),height = 7, width = 7, units="in",res=300)
     graphics::plot(x,option="scores",pop=simped[,1])
-    dev.off()
+    grDevices::dev.off()
   }
 
   #subset it for further analysis

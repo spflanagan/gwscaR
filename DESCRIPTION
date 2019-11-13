@@ -10,6 +10,8 @@ Description: Implements an Fst-based genome-wide selection components analysis.
 License: GPL-2
 LazyData: TRUE
 Imports:
+  lattice,
+  pcadapt,
   nlme,
   ade4,
   sm,

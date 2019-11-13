@@ -323,7 +323,7 @@ fst.one.plink<-function(raw,group1, group2, cov.thresh=0.2,loc_names=NULL){
 pairwise.fst<-function(ped,allele1,allele2,pop.order){
   #V1 of ped should be pop index
   ped.split<-split(ped[,c(allele1,allele2)], factor(ped[,1]))
-  dat.var<-as.data.frame(setNames(
+  dat.var<-as.data.frame(stats::setNames(
     replicate(length(pop.order),numeric(0), simplify = F), pop.order))
   for(i in 1:(length(pop.order)-1)){
     for(j in (i+1):length(pop.order)){

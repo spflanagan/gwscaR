@@ -122,7 +122,7 @@ sliding.window<-function(vcf,chr,stat="pi",width=250,pop.list=NULL,nsteps=50){
     avg.stat<-data.frame(Avg.Pos=c(dat$Pos[1],avg.stat$Avg.Pos,dat$Pos[nrow(chr.vcf)]),
                          Avg.Stat=c(avg1$Avg.Stat, avg.stat$Avg.Stat,avg2$Avg.Stat))
     avg.stat$Chr<-rep(chr,nrow(avg.stat))
-    head(avg.stat)
+    utils::head(avg.stat)
     return(avg.stat)
   })
   return(avg.dat)
@@ -227,7 +227,7 @@ pairwise.pst<-function(dat, pop.order){
   requireNamespace("nlme")
   #first column must be pop id/grouping factor
   dat.split<-split(dat, factor(dat[,1]))
-  dat.var<-as.data.frame(setNames(
+  dat.var<-as.data.frame(stats::setNames(
     replicate(length(pop.order),numeric(0), simplify = F), pop.order))
   for(i in 1:(length(pop.order)-1)){
     for(j in (i+1):length(pop.order)){

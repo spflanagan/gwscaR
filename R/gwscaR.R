@@ -9,7 +9,7 @@
 #' @export
 parse.vcf<-function(filename){
   #if(substr(filename,nchar(filename)-3,nchar(filename)) != ".vcf") { filename<-paste(filename,"vcf",sep=".") }
-  vcf<-read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F,strip.white = T)
+  vcf<-utils::read.delim(filename,comment.char="#",sep='\t',header=F,stringsAsFactors = F,strip.white = T)
   header.start<-grep("#CHROM",scan(filename,what="character"))
   header<-scan(filename,what="character")[header.start:(header.start+ncol(vcf)-1)]
   colnames(vcf)<-header
@@ -59,7 +59,7 @@ vcf.cov.loc<-function(vcf,subset=NULL){
                                         as.numeric(strsplit(as.character(x),",")[[1]][1]) +
                                           as.numeric(strsplit(as.character(x),",")[[1]][2])
                                       }))))
-    var.cov<-var(as.numeric(unlist(lapply(cov[cov!=".,."],
+    var.cov<-stats::var(as.numeric(unlist(lapply(cov[cov!=".,."],
                                           function(x){
                                             as.numeric(strsplit(as.character(x),",")[[1]][1]) +
                                               as.numeric(strsplit(as.character(x),",")[[1]][2])

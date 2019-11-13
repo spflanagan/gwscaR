@@ -9,7 +9,7 @@ gwsca.vioplot(x, ..., range = 1.5, h = NULL, ylim = NULL,
   border = "black", lty = 1, lwd = 1, rectCol = "black",
   colMed = "white", pchMed = 19, at, add = FALSE, wex = 1,
   drawRect = TRUE, plot.axes = TRUE, axis.box = FALSE,
-  plot.ann = TRUE)
+  plot.ann = TRUE, axis.bty = "l")
 }
 \arguments{
 \item{x}{the data to plot}
@@ -53,6 +53,8 @@ gwsca.vioplot(x, ..., range = 1.5, h = NULL, ylim = NULL,
 \item{axis.box}{A logical value that determines whether the axes should be a box (defaults to FALSE)}
 
 \item{plot.ann}{A logical value that determines whether the annotations should be plotted (defaults to TRUE)}
+
+\item{axis.bty}{The axis box type (default is L)}
 }
 \value{
 Optionally returns the summary statistics of the data.

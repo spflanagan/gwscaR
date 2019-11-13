@@ -28,7 +28,7 @@ vcf2dadiSNPs<-function(vcf, filename=NULL,pop.list=NA,pop.map=NULL,whitelist=NUL
                           Pop=rep("Pop1",length(colnames(vcf[,10:ncol(vcf)]))))
     }else{
       if(!exists(pop.map)){
-        pop.map<-read.delim(pop.map)
+        pop.map<-utils::read.delim(pop.map)
       }
       npops<-length(levels(as.factor(pop.map[,2])))
       pop.list<-levels(as.factor(pop.map[,2]))

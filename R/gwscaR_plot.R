@@ -296,7 +296,7 @@ plotting.structure<-function(structure.out, k, pop.order,
                              plot.new=TRUE,colors=NULL,xlabel=TRUE,ylabel=NULL,xlabcol=NULL){
   str.split<-split(structure.out,structure.out[,1])
   if(is.null(colors)){
-    bar.colors<-rainbow(k,s=0.5)
+    bar.colors<-grDevices::rainbow(k,s=0.5)
   } else {
     bar.colors<-colors
   }
@@ -304,7 +304,7 @@ plotting.structure<-function(structure.out, k, pop.order,
     xlabcol<-rep("black",length(str.split))
   }
   if(make.file==TRUE){
-    jpeg(filename,width=7, height=1.25, units="in", res=300)
+    grDevices::jpeg(filename,width=7, height=1.25, units="in", res=300)
     graphics::par(mfrow=c(1,length(str.split)),mar=c(1,0,0,0), oma=c(1,0,0,0),cex=0.5)
   } else {
     if(plot.new==TRUE){
@@ -322,7 +322,7 @@ plotting.structure<-function(structure.out, k, pop.order,
       if(i == 1) { graphics::mtext(ylabel,2,cex=lab.cex) }
     }
   }
-  if(make.file==TRUE) {dev.off()}
+  if(make.file==TRUE) {grDevices::dev.off()}
 }
 
 #' Plot covariance matrix from treemix
@@ -353,14 +353,14 @@ treemix.cov.plot<-function(stem,poporder,colors=c("blue","yellow","red"),...){
   cp[lower.tri(cp)]<-NA
   cp[upper.tri(cp)]<-covplot[upper.tri(covplot)]
   #set up the colors
-  pal<-colorRampPalette(colors)
+  pal<-grDevices::colorRampPalette(colors)
   ncol=80
   cols<-pal(ncol)
   cpl<-lattice::levelplot(cp,col.regions=cols,alpha.regions=0.7,
                  scales = list(x=list(rot=90),tck = 0),xlab="",ylab="")
   print(cpl,...)
   lattice::trellis.focus("legend", side="right", clipp.off=TRUE, highlight=FALSE)
-  grid.text("covariance", 0.2, 0, hjust=0.5, vjust=1.2)
+  grid::grid.text("covariance", 0.2, 0, hjust=0.5, vjust=1.2)
   lattice::trellis.unfocus()
   return(cp)
 }
@@ -402,6 +402,7 @@ outer.legend <- function(...) {
 #' @param plot.axes A logical value that determines whether or not to add axes (defaults to TRUE)
 #' @param axis.box A logical value that determines whether the axes should be a box (defaults to FALSE)
 #' @param plot.ann A logical value that determines whether the annotations should be plotted (defaults to TRUE)
+#' @param axis.bty The axis box type (default is L)
 #' @return Optionally returns the summary statistics of the data.
 #' @note Modified from vioplot() in library(vioplot)
 #' @examples
@@ -415,7 +416,7 @@ outer.legend <- function(...) {
 #' @export
 gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizontal=FALSE,
                         col="magenta", border="black", lty=1, lwd=1, rectCol="black", colMed="white", pchMed=19, at, add=FALSE, wex=1,
-                        drawRect=TRUE,plot.axes=TRUE,axis.box=FALSE,plot.ann=TRUE)
+                        drawRect=TRUE,plot.axes=TRUE,axis.box=FALSE,plot.ann=TRUE,axis.bty="l")
 {
   requireNamespace("sm")
   # process multiple datas
@@ -453,9 +454,9 @@ gwsca.vioplot <- function(x,...,range=1.5,h=NULL,ylim=NULL,names=NULL, horizonta
     #   1- and 3-quantile, median, IQR, upper- and lower-adjacent
     data.min <- min(data)
     data.max <- max(data)
-    q1[i]<-quantile(data,0.25)
-    q3[i]<-quantile(data,0.75)
-    med[i]<-median(data)
+    q1[i]<-stats::quantile(data,0.25)
+    q3[i]<-stats::quantile(data,0.75)
+    med[i]<-stats::median(data)
     iqd <- q3[i]-q1[i]
     upper[i] <- min( q3[i] + range*iqd, data.max )
     lower[i] <- max( q1[i] - range*iqd, data.min )
