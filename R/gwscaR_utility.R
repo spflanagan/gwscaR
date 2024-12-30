@@ -66,12 +66,13 @@ vcf2gpop<-function(vcf,pop.list=NULL,pop.map=NULL,gpop.name){#without the SNP co
   locusids<-gsub("\\.","_",locusids)
   indids<-colnames(vcf)[10:ncol(vcf)]
   gpop.mat<-extract.gt.vcf(vcf[,colnames(vcf)!="SNP"])
-  gpop<-t(gpop.mat[,10:ncol(gpop.mat)])
-  gpop[gpop=="0/0" | gpop=="0|0"]<-"0101"
-  gpop[gpop=="0/1" | gpop=="0|1"]<-"0102"
-  gpop[gpop=="1/0" | gpop=="1|0"]<-"0201"
-  gpop[gpop=="1/1" | gpop=="1|1"]<-"0202"
-  gpop[gpop=="./." | gpop==".|."]<-"0000"
+  gpop_old <- t(gpop.mat[, 10:ncol(gpop.mat)])
+  gpop <- matrix("0000", nrow = nrow(gpop_old), ncol = ncol(gpop_old))
+  dimnames(gpop) <- dimnames(gpop_old)
+  gpop[gpop_old == "0/0" | gpop_old == "0|0"] <- "0101"
+  gpop[gpop_old == "0/1" | gpop_old == "0|1"] <- "0102"
+  gpop[gpop_old == "1/0" | gpop_old == "1|0"] <- "0201"
+  gpop[gpop_old == "1/1" | gpop_old == "1|1"] <- "0202"
   #write to file
   utils::write.table(locusids,gpop.name,sep='\n',quote=FALSE,
               col.names = paste("Title line: ",gpop.name,sep=""),row.names=FALSE)
